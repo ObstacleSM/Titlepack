@@ -14,7 +14,7 @@
 	<use_hmd>false</use_hmd>
 	<unlock_features>0</unlock_features>
 	<packaging>
-		<image name="Media\Images\Logos\PackImage.jpg"/>
+		<image name="Media\Images\Logos\PackImage.webm"/>
 		<logos name="Media\Images\Logos\Logos.png"/>
 		<collection></collection>
 		<sortindex>100</sortindex>
@@ -23,7 +23,7 @@
 		<boxcase_manialink url=""/>
 	</packaging>
 	<menu>
-		<background_img name="Media\Images\Logos\PackImage.png"/>
+		<background_img name="Media\Images\Logos\PackImage.webm"/>
 		<background_replay name=""/>
 		<header name=""/>
 		<music name=""/>

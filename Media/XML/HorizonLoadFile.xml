@@ -1,12 +1,12 @@
 <titlePackXML projectenviro="Storm" titlewasmadeonce="yes">
 	<global>
-		<News color="fff"/>
+		<News color="666"/>
 		<Logo path="file://Media\Images\Logos\Logos.png" />
 		<Background path="" />
-		<BackgroundImage path="file://Media\Images\Logos\PackImage.jpg" />
+		<BackgroundImage path="file://Media\Images\Logos\PackImage.webm" />
 		<Music path="" />
 		<Style MainTitlePolice="TextTitle3" SectionsPolice="TextRaceMessageBig" />
-		<Station stationlogos="file://Media\Images\Logos\Logos.png" stationimage="file://Media\Images\Logos\PackImage.jpg"/>
+		<Station stationlogos="file://Media\Images\Logos\Logos.png" stationimage="file://Media\Images\Logos\PackImage.webm"/>
 	</global>
 <Solo activated="True" color="fff" logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_Solo.dds" allowevaluate="False" contextname="" scriptname="Modes/ShootMania/ObstacleSolo">
 <campaign type="Mini">
