@@ -1,0 +1,236 @@
+/****************************************
+*	Auto Mirror Editor Plugin			*
+*	Author:		steeffeen				*
+*	Contact:	schteffens@gmail.com	*
+****************************************/
+
+#RequireContext	CEditorPlugin
+
+#Include "MapUnits" as MapUnits
+#Include "MathLib" as MathLib
+
+#Const	ScriptName	"AutoMirrorSteff.Script.txt"
+#Const	Version		"0.0.1 (2013-06-10)"
+
+// FUNCTIONS
+
+// Return manialink
+Text GetManialink() {
+	return """<script><!--
+		#Const	C_MirrorModes	[0 => "None",	1 => "Horizontal",	2 => "Vertical",	3 => "Diagonal"]
+		#Const	C_IconModes		[0 => "LvlRed",	1 => "ShowRight",	2 => "ShowUp",		3 => "Close"]
+		
+		main() {
+			declare Quad_Mode	<=> (Page.GetFirstChild("Quad_Mode") as CMlQuad);
+			declare Label_Mode	<=> (Page.GetFirstChild("Label_Mode") as CMlLabel);
+			
+			declare Integer MirrorMode for Page;
+			MirrorMode = 0;
+			
+			while (True) {
+				yield;
+				
+				// Handle events
+				foreach (Event in PendingEvents) {
+					switch (Event.Type) {
+						case CMlEvent::Type::MouseClick: {
+							switch (Event.ControlId) {
+								case "Quad_ModeQuad": {
+									MirrorMode += 1;
+								}
+							}
+						}
+					}
+				}
+				
+				// Reset mirror mode to start
+				if (MirrorMode >= C_MirrorModes.count) {
+					MirrorMode = 0;
+				}
+				
+				// UI
+				Quad_Mode.Substyle	= C_IconModes[MirrorMode];
+				Label_Mode.Value	= C_MirrorModes[MirrorMode];
+			}
+		}
+		--></script>
+		<frame posn="150 -51 -1">
+			<quad id="Quad_ModeQuad" posn="0 0 -1" sizen="20 15 -2" style="Bgs1" substyle="BgList" scriptevents="1" halign="center" valign="center2"/>
+			<quad id="Quad_Mode" posn="0 2 1" sizen="9 9" style="Icons64x64_1" substyle="None" halign="center" valign="center2"/>
+			<label id="Label_Mode" posn="0 -4 1" sizen="19 0" textsize="2" halign="center" valign="center2"/>
+		</frame>""";
+}
+
+// Return mirrored coordinates
+Int3 MirrorCoords(Int3 _Coords, Integer _Mode) {
+	declare NewCoords = _Coords;
+	if (_Mode == 1 || _Mode == 3) {
+		// Horizontal mirror
+		NewCoords.X = This.Map.Size.X - 1 - _Coords.X;
+	}
+	if (_Mode == 2 || _Mode == 3) {
+		// Vertical mirror
+		NewCoords.Z = This.Map.Size.Z - 1 - _Coords.Z;
+	}
+	return NewCoords;
+}
+
+// Return mirrored direction
+CEditorPlugin::CardinalDirections MirrorDir(CEditorPlugin::CardinalDirections _Dir, Integer _Mode) {
+	declare NewDir = _Dir;
+	if (_Mode == 1 || _Mode == 3) {
+		// Horizontal mirror
+		if (_Dir == CEditorPlugin::CardinalDirections::East || _Dir == CEditorPlugin::CardinalDirections::West) {
+			NewDir = MapUnits::GetOpposedDir(NewDir);
+		}
+	}
+	if (_Mode == 2 || _Mode == 3) {
+		// Vertical mirror
+		if (_Dir == CEditorPlugin::CardinalDirections::North || _Dir == CEditorPlugin::CardinalDirections::South) {
+			NewDir = MapUnits::GetOpposedDir(NewDir);
+		}
+	}
+	return NewDir;
+}
+
+// Highlights given coords
+Void HighlightCoords(Int3[] _Coords) {
+	This.CustomSelectionCoords.clear();
+	foreach (Coords in _Coords) {
+		This.CustomSelectionCoords.add(Coords);
+	}
+}
+
+// Return array of coords to check for new block
+Int3[] CoordsAround(Int3 _Coords) {
+	return [_Coords,
+			_Coords + < 1,	0,	0>,
+			_Coords + <-1,	0,	0>,
+			_Coords + < 0,	0,	1>,
+			_Coords + < 0,	0, -1>];
+}
+
+// Check for base ground block
+Boolean IsBaseGround(CBlock _Block) {
+	if (_Block == Null || _Block.BlockModel == Null) return False;
+	switch (_Block.BlockModel.Name) {
+		case "Grass": {
+			return True;
+		}
+	}
+	return False;
+}
+
+// MAIN
+main() {
+	log(Now^"> Script: "^ScriptName^" | Version: "^Version);
+	
+	// Init variables
+	This.CustomSelectionRGB = <1., 0.2, 0.2>;
+	This.ManialinkText = GetManialink();
+	declare MirrorMode for ManialinkPage = 0;
+	
+	// Edit loop
+	while (True) {
+		yield;
+		
+		switch (This.PlaceMode) {
+			case CEditorPlugin::PlaceMode::Block: {
+				switch (This.EditMode) {
+					case CEditorPlugin::EditMode::Erase: {
+						// Block erase mode
+						declare CursorBlock = This.GetBlock(This.CursorCoord);
+						if (MirrorMode == 0 || CursorBlock == Null || IsBaseGround(CursorBlock)) {
+							HighlightCoords(Int3[]);
+							continue;
+						}
+						declare MirrorCoords = MirrorCoords(This.CursorCoord, MirrorMode);
+						HighlightCoords([MirrorCoords]);
+						log(Now);
+						foreach (Event in PendingEvents) {
+								log(Now^Event);
+							switch (Event.Type) {
+								case CEditorPluginEvent::Type::MapModified: {
+									foreach (Coords in This.CustomSelectionCoords) {
+										declare MirrorBlock = This.GetBlock(Coords);
+										if (MirrorBlock != CursorBlock) continue;
+										declare Success = This.RemoveBlock(Coords);
+										if (!Success) {
+											// Can't erase block!
+											log(Now^"> Can't erase block! "^Coords^" "^MirrorBlock);
+										}
+									}
+								}
+							}
+						}
+					}
+					case CEditorPlugin::EditMode::Place: {
+						// Block place mode
+						if (MirrorMode == 0 || This.CursorBlockModel == Null) {
+							HighlightCoords(Int3[]);
+							continue;
+						}
+						declare MirrorCoords = MirrorCoords(This.CursorCoord, MirrorMode);
+						HighlightCoords([MirrorCoords]);
+						
+						foreach (Event in PendingEvents) {
+							switch (Event.Type) {
+								case CEditorPluginEvent::Type::MapModified: {
+									// Check for newly added block
+									declare CBlock Block;
+									declare Int3 Coords;
+									declare PossibleCoords = CoordsAround(This.CursorCoord);
+									
+									foreach (PossCoords in PossibleCoords) {
+										declare PossBlock = This.GetBlock(PossCoords);
+										if (PossBlock == Null || PossBlock.BlockModel != This.CursorBlockModel) continue;
+										Block <=> PossBlock;
+										Coords = PossCoords;
+										break;
+									}
+									
+									if (Block == Null) continue;
+									
+									// New block - Mirror it!
+									declare Direction = MirrorDir(This.CursorDir, MirrorMode);
+									foreach (Coords in This.CustomSelectionCoords) {
+										declare Placed = False;
+										declare Boolean OnGround;
+										declare Integer VariantIndex;
+										// Try ground variant
+										if (CanPlaceBlock(This.CursorBlockModel, Coords, Direction, OnGround, VariantIndex)) {
+											// Place the block
+											Placed = PlaceBlock(This.CursorBlockModel, Coords, Direction);
+											if (!Placed) {
+												log(Now^"> Block placement failed! "^Coords^" "^Block);
+											}
+										} else {
+											// Try air variant
+											if (CanPlaceBlock(This.CursorBlockModel, Coords, Direction, OnGround, VariantIndex)) {
+												// Place the block
+												Placed = PlaceBlock(This.CursorBlockModel, Coords, Direction);
+												if (!Placed) {
+													log(Now^"> Block placement failed! "^Coords^" "^Block);
+												}
+											}
+										}
+										if (!Placed) {
+											// Can't place block!
+											log(Now^"> Can't place block! "^Coords^" "^Block);
+										}
+									}
+								}
+							}
+						}
+					}
+					default: {
+						HighlightCoords(Int3[]);
+					}
+				}
+			}
+			default: {
+				HighlightCoords(Int3[]);
+			}
+		}
+	}
+}

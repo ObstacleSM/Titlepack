@@ -1,0 +1,163 @@
+/************************************************
+*	Tools Library								*
+*	Author:		steeffeen						*
+*	Contact:	steeffeen@team-devota.com		*
+*												*
+*	Various often needed functions.				*
+************************************************/
+
+#Include "TextLib" as TextLib
+#Include "MathLib" as MathLib
+
+/***************************************
+	CONSTANTS
+***************************************/
+
+#Const	Version		"2013-09-13"
+#Const	ScriptName	"Tools.Script.txt"
+
+/***************************************
+	GLOBALES
+***************************************/
+
+/***************************************
+	FUNCTIONS
+***************************************/
+
+// Get posn string from Vec3
+Text GetPosn(Vec3 _Posn) {
+	return _Posn.X^" "^_Posn.Y^" "^_Posn.Z;
+}
+
+// Get posn string from Vec2
+Text GetPosn(Vec2 _Posn) {
+	return _Posn.X^" "^_Posn.Y;
+}
+
+// Get the rankings for xmlrpc callback
+Text GetRankings() {
+	declare PlayerList = "";
+	foreach (Score in Scores) {
+		if (Score.User == Null || Score.User.IsFakeUser) continue;
+		PlayerList ^= Score.User.Login^":"^Score.Points^";";
+	}
+	return PlayerList;
+}
+
+// Get player from login
+CSmPlayer GetPlayer(Text _Login) {
+	foreach (Player in AllPlayers) {
+		if (Player.Login == _Login) return Player;
+	}
+	return Null;
+}
+
+// Get anything from the given data
+CNod GetFromId(Text _Data) {
+	if (_Data == "") return Null;
+	foreach (Player in AllPlayers) if (_Data == ""^Player.Id) return Player;
+	foreach (Pole in BlockPoles) if (_Data == ""^Pole.Id) return Pole;
+	foreach (Spawn in BlockSpawns) if (_Data == ""^Spawn.Id) return Spawn;
+	foreach (Object in Objects) if (_Data == ""^Object.Id) return Object;
+	return Null;
+}
+
+// Update mode status message
+Void UpdateModeStatusMessage(Text _Description) {
+	if (Players.count > 0) {
+		declare Message = TextLib::Compose("%1\n$<$o%2:$> %3", _Description, _("Score"),
+			"$<"^Teams[0].ColorizedName^"$> $<"^Teams[0].ColorText^ClanScores[0]^"$> : $<"
+				^Teams[1].ColorText^ClanScores[1]^"$> $<"^Teams[1].ColorizedName^"$>");
+		ModeStatusMessage = Message;
+	} else {
+		ModeStatusMessage = _Description;
+	}
+}
+
+// Round a given real to fit a given number of decimal places
+Real Round(Real _Number, Integer _Places) {
+	// Calculate factor
+	declare Factor = 10.0;
+	for (Index, 2, _Places) {
+		Factor *= Factor;
+	}
+	// Round number
+	return MathLib::NearestInteger(_Number * Factor) / Factor;
+}
+
+// Updates clan scores at the top
+Void UpdateClanScoresSummary(Boolean _Tolerant) {
+	declare PlayerClan1Id = NullId;
+	declare PlayerClan2Id = NullId;
+	foreach (Player in Players) {
+		if (PlayerClan1Id == NullId && (Player.CurrentClan == 1 || _Tolerant && Player.RequestedClan == 1)) {
+			PlayerClan1Id = Player.Id;
+		} else {
+			if (PlayerClan2Id == NullId && (Player.CurrentClan == 2 || _Tolerant && Player.RequestedClan == 2)) {
+				PlayerClan2Id = Player.Id;
+			} else {
+				if (PlayerClan1Id != NullId && PlayerClan2Id != NullId) {
+					break;
+				}
+			}
+		}
+	}
+	if (PlayerClan1Id != NullId && PlayerClan2Id != NullId) {
+		UIManager.UIAll.OverlayScoreSummary = True;
+		UIManager.UIAll.ScoreSummary_Player1 = PlayerClan1Id;
+		UIManager.UIAll.ScoreSummary_Points1 = ClanScores[Players[PlayerClan1Id].RequestedClan];
+		UIManager.UIAll.ScoreSummary_Player2 = PlayerClan2Id;
+		UIManager.UIAll.ScoreSummary_Points2 = ClanScores[Players[PlayerClan2Id].RequestedClan];
+	} else {
+		if (!_Tolerant) {
+			UpdateClanScoresSummary(True);
+		} else {
+			UIManager.UIAll.OverlayScoreSummary = False;
+		}
+	}
+}
+Void UpdateClanScoresSummary() {
+	UpdateClanScoresSummary(True);
+}
+
+// Build colorized player name with team color
+Text GetColorizedPlayerName(CSmPlayer _Player) {
+	if (_Player == Null) return "";
+	declare TeamColor = "";
+	if (Teams.existskey(_Player.CurrentClan-1)) TeamColor = Teams[_Player.CurrentClan-1].ColorText;
+	return "$<"^TeamColor^"> $<"^_Player.Name^"$>$>";
+}
+
+// Build colorized team name
+Text GetColorizedTeamName(Integer _Clan, Boolean _Open) {
+	if (!Teams.existskey(_Clan)) return "";
+	declare Team <=> Teams[_Clan];
+	declare Name = "$<"^Team.ColorText^"$<"^Team.ColorizedName^"$>";
+	if (!_Open) Name ^= "$>";
+	return Name;
+}
+Text GetColorizedTeamName(Integer _Clan) {
+	return GetColorizedTeamName(_Clan, False);
+}
+
+// Get weapon from index
+CSmMode::EWeapon GetWeapon(Integer _Index) {
+	switch (_Index) {
+		case 0: {
+			return CSmMode::EWeapon::Laser;
+		}
+		case 2: {
+			return CSmMode::EWeapon::Nucleus;
+		}
+		case 4: {
+			return CSmMode::EWeapon::Arrow;
+		}
+	}
+	return CSmMode::EWeapon::Rocket;
+}
+
+// Get current weapon of the player
+CSmMode::EWeapon GetCurrentWeapon(CSmPlayer _Player) {
+	if (_Player == Null) return CSmMode::EWeapon::Rocket;
+	return GetWeapon(_Player.CurWeapon-1);
+}

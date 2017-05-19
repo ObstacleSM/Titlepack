@@ -1,0 +1,45 @@
+/**
+ *	SpeedBall XmlRpc Lib
+ */
+#Include "TextLib" as TextLib
+#Include "Libs/Nadeo/ShootMania/XmlRpc.Script.txt" as XmlRpc
+
+#Const	Version		"2014-07-12"
+#Const	ScriptName	"SpeedBallXmlRpc.Script.txt"
+
+#Const	CB_OnPass		"SpeedBall_OnPass"
+#Const	CB_OnCapture	"SpeedBall_OnCapture"
+
+// Wrapper for SendCallbackArray()
+Void Private_SendCallbackArray(Text _Type, Text[] _Data) {
+	XmlRpc.SendCallbackArray(_Type, _Data);
+}
+
+// Return script version
+Text GetScriptVersion() {
+	return Version;
+}
+
+// Return script name
+Text GetScriptName() {
+	return ScriptName;
+}
+
+// Callback for passes
+Void OnPass(CSmModeEvent _Event) {
+	declare ShooterLogin = "Null";
+	declare VictimLogin = "Null";
+	if (_Event.Shooter != Null) ShooterLogin = _Event.Shooter.Login;
+	if (_Event.Victim != Null) VictimLogin = _Event.Victim.Login;
+	declare Data = [ShooterLogin, VictimLogin, TextLib::ToText(_Event.WeaponNum)];
+	Private_SendCallbackArray(CB_OnPass, Data);
+}
+
+// Callback for captures
+Void OnCapture(CSmModeEvent _Event, CSmObject _BallObject) {
+	declare CarrierLogin = "Null";
+	if (_BallObject != Null && _BallObject.Player != Null) CarrierLogin = _BallObject.Player.Login;
+	declare Data = [CarrierLogin];
+	Private_SendCallbackArray(CB_OnCapture, Data);
+	Private_SendCallbackArray("LibXmlRpc_OnCapture", Data);
+}

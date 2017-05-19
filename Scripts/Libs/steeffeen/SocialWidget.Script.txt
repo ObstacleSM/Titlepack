@@ -1,0 +1,31 @@
+
+#Const	C_BackgroundImageUrl	"http://series.cplay.de/wp-content/uploads/2014/04/widget.png"
+#Const	C_WebsiteUrl			"http://series.cplay.de"
+#Const	C_FacebookUrl			"http://www.facebook.com/coreplay"
+#Const	C_TeamspeakUrl			"ts3server://62.210.162.238"
+
+declare Ident G_WidgetLayerId;
+
+Text Build() {
+	declare Manialink = """
+		<frame posn="145 -70">
+			<format textsize="1" style="TextCardSmallScores2Rank" opacity="0.9"/>
+			<quad posn="-9 -0.2" sizen="24 10" image="{{{C_BackgroundImageUrl}}}" valign="center"/>
+			<label posn="0 2.5" sizen="15 2" url="{{{C_WebsiteUrl}}}" text="Website" valign="center" scale="0.9"/>
+			<label posn="0 0" sizen="15 2" url="{{{C_FacebookUrl}}}" text="Facebook" valign="center" scale="0.9"/>
+			<label posn="0 -2.5" sizen="15 2" url="{{{C_TeamspeakUrl}}}" text="Teamspeak" valign="center" scale="0.9"/>
+		</frame>""";
+	return Manialink;
+}
+
+Void Load() {
+	declare WidgetLayer <=> UIManager.UILayerCreate();
+	WidgetLayer.ManialinkPage = Build();
+	UIManager.UIAll.UILayers.add(WidgetLayer);
+	G_WidgetLayerId = WidgetLayer.Id;
+}
+
+Void Unload() {
+	if (!UIManager.UIAll.UILayers.existskey(G_WidgetLayerId)) return;
+	declare Removed = UIManager.UIAll.UILayers.removekey(G_WidgetLayerId);
+}

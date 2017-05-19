@@ -1,0 +1,407 @@
+/********************************************
+*	Mini Map Library						*
+*	Author:		steeffeen					*
+*	Contact:	schteffens@gmail.com		*
+*											*
+*	Shows a manialink for the current map.	*
+********************************************/
+
+#Include "TextLib" as TextLib
+#Include "Libs/steeffeen/Tools.Script.txt" as Tools
+
+/***************************************
+	CONSTANTS
+***************************************/
+
+#Const	Version				"2014-02-19"
+#Const	ScriptName			"MiniMap.Script.txt"
+
+#Const	C_QuadSize			130.		// Width/Height of the map quad
+#Const	C_SpotSize			5.			// Width/Height of each object spot
+#Const	C_Margin			12.			// Margin of content from edge of map quad
+#Const	C_LabelOffset		2.5			// X/Y offset of labels from object spot
+
+#Const	C_SpotsCount		100			// Max number of object spots in each group
+
+/***************************************
+	GLOBALES
+***************************************/
+
+declare Ident	G_MiniMap_LayerId;		// Id of the minimap layer
+
+/***************************************
+	FUNCTIONS
+***************************************/
+
+// Get layer
+CUILayer Private_GetLayer() {
+	if (UIManager.UILayers.existskey(G_MiniMap_LayerId)) {
+		return UIManager.UILayers[G_MiniMap_LayerId];
+	}
+	return Null;
+}
+
+// Unload library
+Void Unload() {
+	// Destroy layer
+	if (UIManager.UILayers.existskey(G_MiniMap_LayerId)) {
+		declare Layer <=> UIManager.UILayers[G_MiniMap_LayerId];
+		UIManager.UILayerDestroy(Layer);
+	}
+	G_MiniMap_LayerId = NullId;
+}
+
+// Load library
+Void Load() {
+	Unload();
+	
+	// Create layer
+	declare Layer <=> UIManager.UILayerCreate();
+	UIManager.UIAll.UILayers.add(Layer);
+	G_MiniMap_LayerId = Layer.Id;
+}
+
+// Build manialink
+Void Build() {
+	declare Layer <=> Private_GetLayer();
+	if (Layer == Null) return;
+	
+	declare Manialink = """
+<manialink version="1" name="MiniMap">
+	<script><!--
+		#Include "MathLib" as MathLib
+		#Include "TextLib" as TextLib
+		
+		#Const	C_QuadSize		{{{C_QuadSize - 2. * C_Margin}}}
+		#Const	C_LabelOffset	{{{C_LabelOffset}}}
+		#Const	C_DefaultCoord	-0.333
+		
+		declare Vec3	G_MiniMap_CoordsLow;
+		declare Vec3	G_MiniMap_CoordsHigh;
+		declare Vec3	G_MiniMap_CoordsDiff;
+		
+		declare CMlFrame	G_MiniMap_Frame_Spawns;
+		declare CMlFrame	G_MiniMap_Frame_Poles;
+		declare CMlFrame	G_MiniMap_Frame_Players;
+		
+		Vec3 GetPosn(Vec3 _Pos) {
+			declare Vec3 Pos;
+			declare Vec3 Rel;
+			
+			for (Index, 0, 2) {
+				Rel[Index] = (_Pos[Index] - G_MiniMap_CoordsLow[Index]) / G_MiniMap_CoordsDiff[Index];
+			}
+			
+			Pos[0] = C_QuadSize * (Rel[0] - 0.5);
+			Pos[1] = C_QuadSize * (Rel[2] - 0.5);
+			Pos[2] = C_QuadSize * (Rel[1] - 0.5);
+			
+			Pos[1] *= -1.;
+
+			return Pos;
+		}
+		
+		CSmPlayer GetPlayer(Text _Login) {
+			if (_Login == "") return Null;
+			foreach (Player in Players) {
+				if (Player.Login == _Login) return Player;
+			}
+			return Null;
+		}
+		
+		CSmScriptBlock GetBlock(Text _Id) {
+			if (_Id == "") return Null;
+			foreach (Block in Blocks) {
+				if (Block.Id^"" == _Id) return Block;
+			}
+			return Null;
+		}
+		
+		Void PrepareMap() {
+			if (Map != Null && Map.MapInfo != Null) {
+				// Set header text
+				declare Label_Header <=> (Page.GetFirstChild("Label_Header") as CMlLabel);
+				Label_Header.Value = TextLib::Compose("$<%1$> %2 $<%3$>", Map.MapInfo.Name, _("|Made by|by"), Map.MapInfo.AuthorLogin);
+			}
+			
+			// Get map size
+			G_MiniMap_CoordsLow = <C_DefaultCoord, C_DefaultCoord, C_DefaultCoord>;
+			G_MiniMap_CoordsHigh = <C_DefaultCoord, C_DefaultCoord, C_DefaultCoord>;
+			foreach (Block in Blocks) {
+				declare Posi = Block.Position;
+				for (Index, 0, 2) {
+					if (G_MiniMap_CoordsLow[Index] > Posi[Index] - 1. || G_MiniMap_CoordsLow[Index] == C_DefaultCoord) {
+						G_MiniMap_CoordsLow[Index] = Posi[Index] - 1.;
+					}
+					if (G_MiniMap_CoordsHigh[Index] < Posi[Index] + 1. || G_MiniMap_CoordsHigh[Index] == C_DefaultCoord) {
+						G_MiniMap_CoordsHigh[Index] = Posi[Index] + 1.;
+					}
+				}
+			}
+			
+			// Get differences
+			for (Index, 0, 2) {
+				declare CoordsDiff = G_MiniMap_CoordsHigh[Index] - G_MiniMap_CoordsLow[Index];
+				if (CoordsDiff == 0.) {
+					CoordsDiff = 5.;
+				}
+				G_MiniMap_CoordsDiff[Index] = CoordsDiff;
+			}
+			
+			// Prepare blocks
+			declare Integer Index;
+			
+			// Spawns
+			Index = 0;
+			foreach (Control in G_MiniMap_Frame_Spawns.Controls) {
+				Control.Visible = False;
+			}
+			foreach (Spawn in BlockSpawns) {
+				declare Quad_Spawn <=> (G_MiniMap_Frame_Spawns.GetFirstChild("Spaw"^Index) as CMlQuad);
+				if (Quad_Spawn == Null) continue;
+				
+				Quad_Spawn.Visible = True;
+				declare Text Tag for Quad_Spawn;
+				Tag = Spawn.Id^"";
+				
+				declare Pos = GetPosn(Spawn.Position);
+				Quad_Spawn.PosnX = Pos.X;
+				Quad_Spawn.PosnY = Pos.Y;
+				
+				Index += 1;
+			}
+			
+			// Poles
+			Index = 0;
+			foreach (Control in G_MiniMap_Frame_Poles.Controls) {
+				Control.Visible = False;
+			}
+			foreach (Pole in BlockPoles) {
+				declare Frame_Pole <=> (G_MiniMap_Frame_Poles.GetFirstChild("Frame_Pole_"^Index) as CMlFrame);
+				if (Frame_Pole == Null) continue;
+				declare Quad_Pole <=> (Frame_Pole.GetFirstChild("Pole"^Index) as CMlQuad);
+				declare Label_Pole <=> (Frame_Pole.GetFirstChild("Label_Pole_"^Index) as CMlLabel);
+				
+				Frame_Pole.Visible = True;
+				declare Text Tag for Quad_Pole;
+				Tag = Pole.Id^"";
+				
+				declare Pos = GetPosn(Pole.Position);
+				Frame_Pole.PosnX = Pos.X;
+				Frame_Pole.PosnY = Pos.Y;
+				
+				Label_Pole.Visible = True;
+				if (Pole.Order > 0 && TextLib::SubText(Pole.Tag, 0, 10) == "Checkpoint") {
+					Quad_Pole.Substyle = "LvlGreen";
+					Label_Pole.Value = TextLib::ToText(Pole.Order);
+				} else {
+					if (Pole.Tag == "Goal") {
+						Quad_Pole.Substyle = "Finish";
+					} else {
+						Label_Pole.Visible = False;
+					}
+				}
+				
+				Index += 1;
+			}
+		}
+		
+		Boolean IsObjectControl(CMlControl _Control) {
+			if (_Control == Null) return False;
+			declare Tag = TextLib::SubText(_Control.ControlId^"", 0, 4);
+			return (Tag == "Play" || Tag == "Pole" || Tag == "Spaw");
+		}
+		
+		main() {
+			wait(InputPlayer != Null && UI != Null && Page != Null && Map != Null);
+			
+			declare Frame_Main <=> (Page.GetFirstChild("Frame_Main") as CMlFrame);
+			declare Frame_Tooltip <=> (Frame_Main.GetFirstChild("Frame_Tooltip") as CMlFrame);
+			declare Label_Tooltip <=> (Frame_Tooltip.GetFirstChild("Label_Tooltip") as CMlLabel);
+			
+			G_MiniMap_Frame_Spawns <=> (Frame_Main.GetFirstChild("Frame_Spawns") as CMlFrame);
+			G_MiniMap_Frame_Poles <=> (Frame_Main.GetFirstChild("Frame_Poles") as CMlFrame);
+			G_MiniMap_Frame_Players <=> (Frame_Main.GetFirstChild("Frame_Players") as CMlFrame);
+			
+			declare netwrite Boolean Net_MiniMap_ShowingMap for UI;
+			Net_MiniMap_ShowingMap = False;
+			
+			declare LastUIUpdate = 0;
+			declare LastMapId = NullId;
+			
+			while (True) {
+				yield;
+				
+				if (LastMapId != Map.Id) {
+					LastMapId = Map.Id;
+					PrepareMap();
+				}
+				
+				Frame_Main.Visible = Net_MiniMap_ShowingMap;
+				
+				if (!PageIsVisible) {
+					Net_MiniMap_ShowingMap = False;
+					continue;
+				}
+				
+				foreach (Event in PendingEvents) {
+					switch (Event.Type) {
+						case CMlEvent::Type::KeyPress: {
+							switch (Event.KeyCode) {
+								case 42: {
+									// F6
+									Net_MiniMap_ShowingMap = !Net_MiniMap_ShowingMap;
+								}
+								default: {
+									declare KeyNameInt = TextLib::ToInteger(Event.KeyName);
+									if (KeyNameInt < 0) continue;
+									declare netwrite Integer Net_CameraType for UI;
+									Net_CameraType = KeyNameInt;
+								}
+							}
+						}
+						case CMlEvent::Type::MouseClick: {
+							if (Event.ControlId == "Quad_Close") {
+								Net_MiniMap_ShowingMap = False;
+								continue;
+							}
+							if (!IsObjectControl(Event.Control)) continue;
+							
+							declare netwrite Integer Net_MiniMap_LastClick for UI;
+							declare netwrite Text Net_MiniMap_LastClickData for UI;
+							Net_MiniMap_LastClick = ArenaNow;
+							
+							declare Tag for Event.Control = "";
+							Net_MiniMap_LastClickData = Tag;
+						}
+						case CMlEvent::Type::MouseOver: {
+							if (!IsObjectControl(Event.Control)) continue;
+							
+							declare Text LastTag for Label_Tooltip;
+							declare Tag for Event.Control = "";
+							
+							declare Player <=> GetPlayer(Tag);
+							if (Player != Null) {
+								Label_Tooltip.Value = "$<"^Player.Name^"$>";
+								LastTag = Tag;
+							} else {
+								declare Block <=> GetBlock(Tag);
+								if (Block == Null) continue;
+								declare LabelText = Block.Tag;
+								if (Block.Order > 0) LabelText ^= " ("^Block.Order^")";
+								Label_Tooltip.Value = LabelText;
+								LastTag = Tag;
+							}
+							
+							Frame_Tooltip.Visible = True;
+							Frame_Tooltip.PosnX = MouseX;
+							Frame_Tooltip.PosnY = MouseY + 5.;
+						}
+						case CMlEvent::Type::MouseOut: {
+							if (!IsObjectControl(Event.Control)) continue;
+							declare Tag for Event.Control = "";
+							declare LastTag for Label_Tooltip = "";
+							if (LastTag == Tag) {
+								Frame_Tooltip.Visible = False;
+							}
+						}
+					}
+				}
+				
+				if (LastUIUpdate + 100 > Now) continue;
+				LastUIUpdate = Now;
+				
+				// Players
+				declare Index = 0;
+				foreach (Player in Players) {
+					if (Player.SpawnStatus != CSmPlayer::ESpawnStatus::Spawned) continue;
+					declare Quad_Player <=> (G_MiniMap_Frame_Players.GetFirstChild("Play"^Index) as CMlQuad);
+					if (Quad_Player == Null) continue;
+					declare Text Tag for Quad_Player;
+					Tag = Player.Login;
+					declare Pos = GetPosn(Player.Position);
+					Quad_Player.Visible = True;
+					Quad_Player.PosnX = Pos.X;
+					Quad_Player.PosnY = Pos.Y;
+					Index += 1;
+				}
+				for (ControlIndex, Index, G_MiniMap_Frame_Players.Controls.count-1) {
+					declare Quad_Player <=> (G_MiniMap_Frame_Players.GetFirstChild("Play"^Index) as CMlQuad);
+					if (Quad_Player == Null) continue;
+					Quad_Player.Visible = False;
+				}
+			}
+		}
+	--></script>
+	<frame id="Frame_Main" hidden="1">
+		<label id="Label_Header" posn="{{{Tools::GetPosn(<-0.486*C_QuadSize, 0.48*C_QuadSize>)}}}" textsize="1" style="TextTitle1"
+			halign="left" valign="center2"/>
+		<quad sizen="{{{Tools::GetPosn(<C_QuadSize, C_QuadSize, -10.>)}}}" style="Bgs1InRace" substyle="BgList"
+			halign="center" valign="center2"/>
+		<quad id="Quad_Close" posn="{{{Tools::GetPosn(<0.478*C_QuadSize,0.478*C_QuadSize,-20.>)}}}" sizen="6 6" style="Icons64x64_1" substyle="Close"
+			scriptevents="1" halign="center" valign="center2"/>
+		<frame id="Frame_Tooltip" hidden="1">
+			<quad sizen="45 5" style="Bgs1InRace" substyle="BgList" halign="center" valign="center2"/>
+			<label id="Label_Tooltip" textsize="1" style="TextTitle1" halign="center" valign="center2"/>
+		</frame>
+		<frame id="Frame_Spawns">""";
+	for (Index, 0, C_SpotsCount) {
+		Manialink ^= """
+			<quad id="Spaw{{{Index}}}" posn="0 0 1" sizen="{{{C_SpotSize}}} {{{C_SpotSize}}}" style="Icons64x64_1" substyle="LvlYellow"
+				halign="center" valign="center2" scriptevents="1"/>""";
+	}
+	Manialink ^= """
+		</frame>
+		<frame id="Frame_Poles">""";
+	for (Index, 0, C_SpotsCount) {
+		Manialink ^= """
+			<frame id="Frame_Pole_{{{Index}}}" hidden="1">
+				<quad id="Pole{{{Index}}}" posn="0 0 2" sizen="{{{C_SpotSize}}} {{{C_SpotSize}}}" style="Icons64x64_1" substyle="LvlGreen"
+					halign="center" valign="center2" scriptevents="1"/>
+				<label id="Label_Pole_{{{Index}}}" posn="{{{Tools::GetPosn(<C_LabelOffset, -C_LabelOffset>)}}}" textsize="1" style="TextTitle1"
+					halign="center" valign="center2"/>
+			</frame>""";
+	}
+	Manialink ^= """
+		</frame>
+		<frame id="Frame_Players">""";
+	for (Index, 0, C_SpotsCount) {
+		Manialink ^= """
+			<quad id="Play{{{Index}}}" posn="0 0 3" sizen="{{{C_SpotSize}}} {{{C_SpotSize}}}" style="Icons64x64_1" substyle="LvlRed"
+				halign="center" valign="center2" hidden="1" scriptevents="1"/>""";
+	}
+	Manialink ^= """
+		</frame>
+	</frame>
+</manialink>""";
+	
+	Layer.ManialinkPage = Manialink;
+}
+
+// Loop through events and update variables
+Void Loop() {
+	foreach (Player in AllPlayers) {
+		declare UI <=> UIManager.GetUI(Player);
+		if (UI == Null) continue;
+		
+		// Track map showing
+		declare netread Net_MiniMap_ShowingMap for UI = False;
+		declare Boolean MiniMap_ShowingMap for Player;
+		MiniMap_ShowingMap = Net_MiniMap_ShowingMap;
+		
+		// Track clicks
+		declare netread Net_MiniMap_LastClick for UI = -1;
+		declare netread Net_MiniMap_LastClickData for UI = "";
+		declare Last_MiniMap_LastClick for UI = Net_MiniMap_LastClick;
+		declare Last_MiniMap_LastClickData for UI = Net_MiniMap_LastClickData;
+		if (Last_MiniMap_LastClick != Net_MiniMap_LastClick && Last_MiniMap_LastClickData != Net_MiniMap_LastClickData) {
+			Last_MiniMap_LastClick = Net_MiniMap_LastClick;
+			Last_MiniMap_LastClickData = Net_MiniMap_LastClickData;
+			
+			declare Integer MiniMap_LastClickEvent for Player;
+			declare Text MiniMap_ClickEventData for Player;
+			MiniMap_LastClickEvent = Net_MiniMap_LastClick;
+			MiniMap_ClickEventData = Net_MiniMap_LastClickData;
+		}
+	}
+}

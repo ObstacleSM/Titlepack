@@ -1,0 +1,24 @@
+/****************************************
+*	MapType Base Script					*
+*	Author:		steeffeen				*
+*	Contact:	mail@steeffeen.com		*
+****************************************/
+
+#RequireContext CSmMapType
+
+/********************
+	MAIN
+********************/
+
+main() {
+	+++LogVersion+++
+	+++StartScript+++
+	
+	while (True) {
+		yield;
+		
+		+++Loop+++
+	}
+	
+	+++EndScript+++
+}

@@ -1,0 +1,55 @@
+<titlePackXML projectenviro="Storm">
+	<global>
+		<News color="fff"/>
+		<Logo path="file://Media\Images\Logos\Logos.png" />
+		<Background path="" />
+		<BackgroundImage path="file://Media\Images\Logos\PackImage.jpg" />
+		<Music path="file://Media/Nadeo/Musics/StormMenu.ogg" />
+		<Style MainTitlePolice="TextTitle3" SectionsPolice="TextRaceMessageBig" />
+	</global>
+<Solo color="fff" logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_Solo.dds" allowevaluate="False" scriptname="Modes/ShootMania/ObstacleSolo">
+	<category name="White">
+<track path="Campaigns\0\A01 - Welcome to Obstacle.Map.Gbx" thumbnail="file://Thumbnails/MapUid/nuMKfmFi620gwKpPg8RBFLaYPhd/" name="$sA01 - Welcome to Obstacle" medalnb="0" medaltype="Bronze"/>
+<track path="Campaigns\0\A05 - Darkham City.Map.Gbx" thumbnail="file://Thumbnails/MapUid/tD7c41iVrlzfB4vE4YrogHt9DP9/" name="$sA05 - Darkham City" medalnb="0" medaltype="Bronze"/>
+<track path="Campaigns\0\A09 - Sprint Practice.Map.Gbx" thumbnail="file://Thumbnails/MapUid/0hk3Tu68ENdHUMsqKEATAc4VVN4/" name="$sA09 - Sprint Practice" medalnb="0" medaltype="Bronze"/>
+<track path="" thumbnail="" medalnb="0" medaltype="Bronze"/>
+<track path="" thumbnail="" medalnb="0" medaltype="Bronze"/>
+<track path="Campaigns\0\A02 - Obstacle Castle.Map.Gbx" thumbnail="file://Thumbnails/MapUid/uL4ePn4wBcfzvWNg3DPlRgWVjs3/" name="$sA02 - Obstacle Castle" medalnb="3" medaltype="Bronze"/>
+<track path="Campaigns\0\A06 - The Loch Mess.Map.Gbx" thumbnail="file://Thumbnails/MapUid/3bshgDQJiiPLDwV1jU9hT2blxZg/" name="$sA06 - The Loch Mess" medalnb="3" medaltype="Bronze"/>
+<track path="Campaigns\0\A10 - No Rest.Map.Gbx" thumbnail="file://Thumbnails/MapUid/I2UjLSyY4fDZCCt8ZUNcncJSywg/" name="$sA10 - No Rest" medalnb="3" medaltype="Bronze"/>
+<track path="" thumbnail="" medalnb="3" medaltype="Bronze"/>
+<track path="" thumbnail="" medalnb="3" medaltype="Bronze"/>
+<track path="Campaigns\0\A03 - Rescue Yourself!.Map.Gbx" thumbnail="file://Thumbnails/MapUid/ByxIxwCOhvMBYivcrxtBN8Qe2pj/" name="$sA03 - Rescue Yourself!" medalnb="6" medaltype="Bronze"/>
+<track path="Campaigns\0\A07 - Runtime.Map.Gbx" thumbnail="file://Thumbnails/MapUid/Fiwb0c7KYYuCxLYPxwOYLNBoQdd/" name="$sA07 - Runtime" medalnb="6" medaltype="Bronze"/>
+<track path="Campaigns\0\A11 - EasyPeasy.Map.Gbx" thumbnail="file://Thumbnails/MapUid/M7d4Cjm72N3uSzN_nqiRNo6e4Of/" name="$sA11 - EasyPeasy?" medalnb="6" medaltype="Bronze"/>
+<track path="" thumbnail="" medalnb="6" medaltype="Bronze"/>
+<track path="" thumbnail="" medalnb="6" medaltype="Bronze"/>
+<track path="Campaigns\0\A04 - Ruined.Map.Gbx" thumbnail="file://Thumbnails/MapUid/OAh92ZRAk1EY6aCyg1UOWbPCm6a/" name="$sA04 - Ruined" medalnb="9" medaltype="Bronze"/>
+<track path="Campaigns\0\A08 - Grapple Practice.Map.Gbx" thumbnail="file://Thumbnails/MapUid/QNMkD7MtfJD5nazv8e01dw32EHc/" name="$sA08 - Grapple Practice" medalnb="9" medaltype="Bronze"/>
+<track path="" thumbnail="" medalnb="9" medaltype="Bronze"/>
+<track path="" thumbnail="" medalnb="9" medaltype="Bronze"/>
+<track path="" thumbnail="" medalnb="9" medaltype="Bronze"/>
+	</category>
+</Solo>
+	<Multiplayer logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_Online.dds" activated="True" color="fff" allowallmodes="False">
+			<asset id="Online_UGCAsset-0" isdefault="no" titlename="Modes/ShootMania/Obstacle"/>
+
+	</Multiplayer>
+	<LocalPlay logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_LocalPlay.dds" activated="True" color="fff">
+			<asset id="LocalNetHack" isdefault="yes" titlename="Local Network" isvisibleinmaker="True"/>
+	<asset id="LocalPlay_UGCAsset-0" isdefault="no" titlename="Modes/ShootMania/Obstacle"/>
+
+	</LocalPlay>
+	<Editors logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_Editor.dds" activated="True" color="fff" mapeditor="MapTypes/ShootMania/ObstacleTitleArena">
+	<asset id="NewMap" isdefault="yes" titlename="MapTypes/ShootMania/ObstacleTitleArena"/>
+	<asset id="EditReplay" isdefault="yes" titlename=""/>
+	<asset id="TitleTools" isdefault="yes" titlename=""/>
+
+	</Editors>
+<Resources flashurl="obstacle@smokegun"/>
+	<Ingame accelcoef="1." controlcoef="1." gravitycoef="1.">
+	</Ingame>
+	<Profile>
+		<param id="0" MonParam="aaa" />
+	</Profile>
+</titlePackXML>

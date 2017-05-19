@@ -1,0 +1,200 @@
+/********************************************
+*	Automatic Bot Management Library		*
+*	Author:		steeffeen					*
+*	Contact:	steeffeen@team-devota.com	*
+********************************************/
+
+#Include "MathLib" as MathLib
+
+#Const Version		"2013-09-29"
+
+/****************************************
+	CONSTANTS
+****************************************/
+
+#Const	C_DefaultAnchorPoint	<-1., -1., -1.>
+
+/****************************************
+	GLOBALES
+****************************************/
+
+declare Ident[Integer]	G_Bots_TargetObjectIds;
+declare Vec3[Integer]	G_Bots_AnchorPoints;
+declare Real			G_Bots_Power;
+
+/****************************************
+	FUNCTIONS
+****************************************/
+
+// Set number of bots
+Void SetNbBots(Integer _NbClan1, Integer _NbClan2) {
+	declare Nb1 = _NbClan1;
+	declare Nb2 = _NbClan2;
+	if (Nb1 < 0) Nb1 = 0;
+	if (Nb2 < 0) Nb2 = 0;
+	Users_SetNbFakeUsers(Nb1, Nb2);
+}
+Void SetNbBots(Integer _NbClan1) {
+	SetNbBots(_NbClan1, 0);
+}
+
+// Set central anchor points
+Void SetAnchorPoint(Vec3 _Point, Integer _Clan) {
+	G_Bots_AnchorPoints[_Clan] = _Point;
+}
+Void SetAnchorPoint(Vec3 _Point) {
+	SetAnchorPoint(_Point, 1);
+	SetAnchorPoint(_Point, 2);
+}
+
+// Clear central anchor points
+Void ClearAnchorPoint(Integer _Clan) {
+	if (!G_Bots_AnchorPoints.existskey(_Clan)) return;
+	declare Temp = G_Bots_AnchorPoints.removekey(_Clan);
+}
+Void ClearAnchorPoint() {
+	G_Bots_AnchorPoints.clear();
+}
+
+// Set target object
+Void SetTargetOjectId(Ident _ObjectId, Integer _Clan) {
+	G_Bots_TargetObjectIds[_Clan] = _ObjectId;
+}
+Void SetTargetOjectId(Ident _ObjectId) {
+	SetTargetOjectId(_ObjectId, 1);
+	SetTargetOjectId(_ObjectId, 2);
+}
+
+// Clear target object
+Void ClearTargetObject(Integer _Clan) {
+	if (!G_Bots_TargetObjectIds.existskey(_Clan)) return;
+	declare Temp = G_Bots_TargetObjectIds.removekey(_Clan);
+}
+Void ClearTargetObject() {
+	G_Bots_TargetObjectIds.clear();
+}
+
+// Set power
+Void SetPower(Real _Power) {
+	if (_Power <= 0.) {
+		G_Bots_Power = 0.1;
+	} else if (_Power >= 10.) {
+		G_Bots_Power = 10.;
+	} else {
+		G_Bots_Power = _Power;
+	}
+}
+
+// Unload library and clean up
+Void Unload() {
+	ClearAnchorPoint();
+	ClearTargetObject();
+}
+
+// Load and initialize library
+Void Load() {
+	Unload();
+	
+	// Init values
+	ForceNavMapsComputation = True;
+	SetPower(1.);
+}
+
+// Initialize driver values of the given player
+Void Private_InitDriver(CSmPlayer _Player) {
+	if (_Player == Null || _Player.Driver == Null) return;
+	declare LibBots_NewPlayer for _Player = True;
+	if (LibBots_NewPlayer) {
+		LibBots_NewPlayer = False;
+		// Init driver
+		_Player.Driver.Behaviour = CSmPlayerDriver::ESmDriverBehaviour::Saunter;
+		_Player.Driver.AttackFilter = CSmPlayerDriver::ESmAttackFilter::AllOpposite;
+		_Player.Driver.Accuracy = G_Bots_Power;
+		_Player.Driver.ReactionTime = MathLib::NearestInteger(1000. / G_Bots_Power);
+		_Player.Driver.RocketAnticipation = True;
+		_Player.Driver.ShootPeriodMin = MathLib::NearestInteger(500. / G_Bots_Power);
+		_Player.Driver.Fov = 3.;
+	}
+}
+
+Void Private_CarryObject(CSmPlayer _Player) {
+	if (_Player == Null || _Player.Driver == Null) return;
+	_Player.Driver.AttackFilter = CSmPlayerDriver::ESmAttackFilter::Nobody;
+	foreach (GaugeLandmark in MapLandmarks_Gauge) {
+		if (GaugeLandmark.Gauge.Clan == _Player.CurrentClan && GaugeLandmark.Gauge.ValueReal < 1.) {
+			_Player.Driver.Saunter_AnchorPoint = GaugeLandmark.Position;
+			_Player.Driver.Saunter_Radius = 2.;
+			break;
+		}
+	}
+}
+
+Void Private_PursuitObject(CSmPlayer _Player, CSmObject _Object) {
+	if (_Player == Null || _Player.Driver == Null || _Object == Null) return;
+	_Player.Driver.AttackFilter = CSmPlayerDriver::ESmAttackFilter::AllOpposite;
+	if (_Object.Player != Null) {
+		_Player.Driver.Saunter_AnchorPoint = _Object.Player.Position;
+		if (_Player.CurrentClan == _Object.Player.CurrentClan) {
+			// Support team mate
+			_Player.Driver.Saunter_Radius = 15.;
+		} else {
+			// Shoot enemy
+			_Player.Driver.Saunter_Radius = 10.;
+		}
+	} else {
+		_Player.Driver.Saunter_AnchorPoint = _Object.Position;
+	}
+}
+
+Void Private_RunToPoint(CSmPlayer _Player, Vec3 _Point) {
+	if (_Player == Null || _Player.Driver == Null) return;
+	_Player.Driver.AttackFilter = CSmPlayerDriver::ESmAttackFilter::AllOpposite;
+	_Player.Driver.Saunter_AnchorPoint = _Point;
+	_Player.Driver.Saunter_Radius = 2.;
+}
+
+Void Private_GetObject(CSmPlayer _Player, CSmObject _Object) {
+	if (_Object == Null) return;
+	Private_RunToPoint(_Player, _Object.Position);
+}
+
+// Update targets of the bots
+Void Loop() {
+	foreach (Player in Players) {
+		if (Player.Driver == Null) continue;
+		Private_InitDriver(Player);
+		if (G_Bots_TargetObjectIds.existskey(Player.CurrentClan) && Objects.existskey(G_Bots_TargetObjectIds[Player.CurrentClan])) {
+			declare TargetObject <=> Objects[G_Bots_TargetObjectIds[Player.CurrentClan]];
+			if (TargetObject != Null && TargetObject.Status != CSmObject::EStatus::Unspawned) {
+				// Chase target object
+				switch (TargetObject.Status) {
+					case CSmObject::EStatus::OnPlayer: {
+						if (TargetObject.Player == Player) {
+							// Carry object to the goal
+							Private_CarryObject(Player);
+						} else {
+							// Chase object carrying player
+							Private_PursuitObject(Player, TargetObject);
+						}
+					}
+					case CSmObject::EStatus::InWorld: {
+						// Get object
+						Private_GetObject(Player, TargetObject);
+					}
+					case CSmObject::EStatus::OnAnchor: {
+						// Get object
+						Private_GetObject(Player, TargetObject);
+					}
+				}
+				continue;
+			}
+		}
+		
+		// Saunter around anchor point
+		if (G_Bots_AnchorPoints.existskey(Player.CurrentClan)) {
+			Private_RunToPoint(Player, G_Bots_AnchorPoints[Player.CurrentClan]);
+		} else {
+			Private_RunToPoint(Player, C_DefaultAnchorPoint);
+		}
+	}
+}

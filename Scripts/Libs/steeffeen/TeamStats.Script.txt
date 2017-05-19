@@ -1,0 +1,260 @@
+/********************************************
+*	TeamStats Library						*
+*	Author:		steeffeen					*
+*	Contact:	steeffeen@team-devota.com	*
+********************************************/
+
+#Include "TextLib" as TextLib
+
+/****************************************
+	CONSTANTS
+****************************************/
+
+#Const	C_LibStats_BackgroundImagePath		""
+#Const	C_LibStats_BackgroundImageSize		<-1., -1.>
+#Const	C_LibStats_BackgroundImagePosition	<-1., -1.>
+#Const	C_LibStats_BackgroundColor			"0007"
+#Const	C_LibStats_BackgroundSize			<220., 90.6>
+#Const	C_LibStats_BackgroundPosition		<0., -3.3>
+
+/****************************************
+	GLOBALES
+****************************************/
+
+declare Text		G_LibStats_TabName;					// Name of the manialink tab
+declare Ident		G_LibStats_LayerStatsId;			// Id of the stats layer
+declare Real[Text]	G_LibStats_StatsPos;				// Postions of the stats
+
+declare Text		G_LibStats_BackgroundImagePath;		// Background image
+declare Vec2		G_LibStats_BackgroundImageSize;		// Background image size
+declare Vec2		G_LibStats_BackgroundImagePosition;	// Background image position
+
+declare Vec2		G_LibStats_BackgroundSize;			// Background size
+declare Text		G_LibStats_BackgroundColor;			// Background color
+declare Vec2		G_LibStats_BackgroundPosition;		// Background position
+
+declare Text		G_LibStats_Title;					// Title for the stats layer
+
+/****************************************
+	FUNCTIONS
+****************************************/
+
+// Get the stats layer
+CUILayer Private_GetLayerStats() {
+	if (UIManager.UILayers.existskey(G_LibStats_LayerStatsId)) {
+		return UIManager.UILayers[G_LibStats_LayerStatsId];
+	}
+	return Null;
+}
+
+// Load the stats library
+Void Load(Text _TabName) {
+	// Create the stats layer
+	declare LayerStats	= UIManager.UILayerCreate();
+	LayerStats.Type = CUILayer::EUILayerType::AltMenu;
+	G_LibStats_LayerStatsId	= LayerStats.Id;
+	UIManager.UIAll.UILayers.add(LayerStats);
+	
+	// Set tab name
+	G_LibStats_TabName = TextLib::MLEncode(_TabName);
+	
+	// Initialize the stats
+	G_LibStats_Title		= _("Team Statistics");
+	G_LibStats_StatsPos		= Real[Text];
+	
+	declare netwrite Text[Text] Net_Steff_LibStats_StatsNames for Teams[0];
+	Net_Steff_LibStats_StatsNames = Text[Text];
+	foreach (Clan => Team in Teams) {
+		declare netwrite Text[Text] Net_Steff_LibStats_StatsValues for Team;
+		Net_Steff_LibStats_StatsValues = Text[Text];
+	}
+	
+	// Inialize the manialink properties
+	G_LibStats_BackgroundImagePath = TextLib::MLEncode(C_LibStats_BackgroundImagePath);
+	G_LibStats_BackgroundImageSize = C_LibStats_BackgroundImageSize;
+	G_LibStats_BackgroundImagePosition = C_LibStats_BackgroundImagePosition;
+	
+	G_LibStats_BackgroundColor = C_LibStats_BackgroundColor;
+	G_LibStats_BackgroundSize = C_LibStats_BackgroundSize;
+	G_LibStats_BackgroundPosition = C_LibStats_BackgroundPosition;
+}
+
+// Unload the stats library
+Void Unload() {
+	// Destroy the stats layer
+	if (UIManager.UILayers.existskey(G_LibStats_LayerStatsId)) {
+		declare LayerStats = UIManager.UILayers[G_LibStats_LayerStatsId];
+		declare Removed = UIManager.UIAll.UILayers.remove(LayerStats);
+		UIManager.UILayerDestroy(LayerStats);
+	}
+}
+
+// Set background image and size
+Void SetBackgroundImage(Text _ImagePath, Vec2 _Size, Vec2 _Position) {
+	G_LibStats_BackgroundImagePath		= TextLib::MLEncode(_ImagePath);
+	G_LibStats_BackgroundImageSize		= _Size;
+	G_LibStats_BackgroundImagePosition	= _Position;
+}
+
+// Set background color and size
+Void SetBackgroundColor(Text _Color, Vec2 _Size, Vec2 _Position) {
+	G_LibStats_BackgroundColor		= _Color;
+	G_LibStats_BackgroundSize		= _Size;
+	G_LibStats_BackgroundPosition	= _Position;
+}
+
+// Set the title of the stats display
+Void SetTitle(Text _Title) {
+	G_LibStats_Title = TextLib::MLEncode(_Title);
+}
+
+// Create a new stat
+Void CreateStat(Text _StatId, Text _Name, Text _Default, Real _Pos) {
+	if (G_LibStats_StatsPos.existskey(_StatId)) return;
+	
+	// Initialize the new stat
+	declare netwrite Net_Steff_LibStats_StatsNames for Teams[0] = Text[Text];
+	Net_Steff_LibStats_StatsNames[_StatId] = TextLib::MLEncode(_Name);
+	G_LibStats_StatsPos[_StatId] = _Pos;
+	foreach (Clan => Team in Teams) {
+		declare netwrite Net_Steff_LibStats_StatsValues for Team = Text[Text];
+		Net_Steff_LibStats_StatsValues[_StatId] = TextLib::MLEncode(_Default);
+	}
+}
+
+// Set a specific stat for the given team
+Void SetStat(Text _StatId, Integer _Clan, Text _Value) {
+	if (!Teams.existskey(_Clan)) return;
+	if (!G_LibStats_StatsPos.existskey(_StatId)) return;
+	
+	declare netwrite Net_Steff_LibStats_StatsValues for Teams[_Clan] = Text[Text];
+	if (!Net_Steff_LibStats_StatsValues.existskey(_StatId)) return;
+	Net_Steff_LibStats_StatsValues[_StatId] = TextLib::MLEncode(_Value);
+}
+
+// Find the stat for the given team
+Text GetStat(Text _StatId, Integer _Clan) {
+	if (!Teams.existskey(_Clan)) return "";
+	if (!G_LibStats_StatsPos.existskey(_StatId)) return "";
+	
+	declare netwrite Net_Steff_LibStats_StatsValues for Teams[_Clan] = Text[Text];
+	if (!Net_Steff_LibStats_StatsValues.existskey(_StatId)) return "";
+	return Net_Steff_LibStats_StatsValues[_StatId];
+}
+
+// Build the stats manialink
+Void BuildManialink() {
+	declare Manialink = """
+<manialink version="1" name="LibTeamStats">
+	<script><!--
+		#Include "TextLib" as TextLib
+		
+		/**
+		 * Called By the client UI.
+		 * Update a Manialink page, showing the frame of [Page] with Id [FrameTabId]
+		 * iff the tab [TabKey] is selected.
+		 * @param UI		 	UI of the player (variable "UI" in client manialink).
+		 * @param Page 			Manialink page containing the tab page (assumably variable "Page" in client manialink).
+		 * @param TabKey 		The key associated to this tab, as defined in CreateTabPaneLayer.
+		 * @param FrameTabId	Id of the frame containing the tab page.
+		 */
+		Void UpdateFrameTab(CUIConfig UI, CMlPage Page, Text TabKey, CMlFrame MainFrame) {
+			declare netread Boolean	_TabsLib_UseTabs for UI;
+			if (!_TabsLib_UseTabs) return;
+			
+			declare Boolean			_TabsLib_ScoresLayerIsVisible 	for UI;
+			declare Boolean 		_TabsLib_AltLayerIsVisible 		for UI;
+			declare Text 			_TabsLib_CurrentTab 			for UI;
+			declare netread Text	_TabsLib_ScoresTableTab 		for UI;
+			
+			declare ShowCurrentTab = _TabsLib_AltLayerIsVisible && _TabsLib_CurrentTab == TabKey;
+			
+			if (TabKey == _TabsLib_ScoresTableTab) {
+				ShowCurrentTab = _TabsLib_ScoresLayerIsVisible || _TabsLib_AltLayerIsVisible && _TabsLib_CurrentTab == _TabsLib_ScoresTableTab;
+			}
+
+			if (ShowCurrentTab) {
+				MainFrame.Show();
+			} else {
+				MainFrame.Hide();
+			}
+		}
+		
+		main() {
+			declare MainFrame <=> (Page.GetFirstChild("Frame_Stats") as CMlFrame);
+			
+			declare netread Net_Steff_LibStats_StatsNames	as StatsNames		for Teams[0] = Text[Text];
+			declare netread Net_Steff_LibStats_StatsValues	as StatsValues0		for Teams[0] = Text[Text];
+			declare netread Net_Steff_LibStats_StatsValues	as StatsValues1		for Teams[1] = Text[Text];
+			
+			declare LastUpdate = Now;
+			
+			while (True) {
+				yield;
+				
+				if (InputPlayer == Null) continue;
+				if (!PageIsVisible) continue;
+				
+				UpdateFrameTab(UI, Page, "{{{G_LibStats_TabName}}}", MainFrame);
+				if (!MainFrame.Visible) continue;
+				
+				if (LastUpdate + 250 < Now) {
+					LastUpdate = Now;
+					
+					foreach (Key => Name in StatsNames) {
+						declare Frame_Stat	<=> (Page.GetFirstChild(Key) as CMlFrame);
+						declare Label_Name	<=> (Frame_Stat.GetFirstChild("Label_Name") as CMlLabel);
+						declare Label_Clan0	<=> (Frame_Stat.GetFirstChild("Label_Clan0") as CMlLabel);
+						declare Label_Clan1	<=> (Frame_Stat.GetFirstChild("Label_Clan1") as CMlLabel);
+						
+						Label_Name.Value = Name;
+						Label_Clan0.Value = StatsValues0[Key];
+						Label_Clan1.Value = StatsValues1[Key];
+					}
+				}
+			}
+		}
+	--></script>
+	<frame id="Frame_Stats" hidden="1">""";
+	
+	// Title
+	Manialink ^= """
+		<label posn="0 {{{G_LibStats_BackgroundSize.Y * 0.38}}}" textprefix="$o$s" text="{{{TextLib::MLEncode(G_LibStats_Title)}}}" textsize="4"
+			halign="center" valign="center2"/>""";
+	foreach (Clan => Team in Teams) {
+		Manialink ^= """
+			<label posn="{{{(-1 + Clan * 2) * G_LibStats_BackgroundSize.X * 0.25}}} {{{G_LibStats_BackgroundSize.Y * 0.31}}}" textsize="5" textemboss="1"
+				text="{{{TextLib::MLEncode(Team.ColorizedName)}}}" halign="center" valign="center2"/>""";
+	}
+	
+	// Background
+	Manialink ^= """<quad halign="center" valign="center2" """;
+	if (G_LibStats_BackgroundImagePath != "") {
+		// Use background image
+		Manialink ^= """posn="{{{G_LibStats_BackgroundImagePosition.X}}} {{{G_LibStats_BackgroundImagePosition.Y}}}"
+			image="{{{G_LibStats_BackgroundImagePath}}}" sizen="{{{G_LibStats_BackgroundImageSize.X}}} {{{G_LibStats_BackgroundImageSize.Y}}}"/>""";
+	} else {
+		// Use background color
+		Manialink ^= """posn="{{{G_LibStats_BackgroundPosition.X}}} {{{G_LibStats_BackgroundPosition.Y}}}"
+			bgcolor="{{{G_LibStats_BackgroundColor}}}" sizen="{{{G_LibStats_BackgroundSize.X}}} {{{G_LibStats_BackgroundSize.Y}}}"/>""";
+	}
+	
+	// Stats labels
+	Manialink ^= """
+		<framemodel id="Model_Stats">
+			<label id="Label_Name" posn="0 0" textsize="4" halign="center" valign="center2"/>
+			<label id="Label_Clan0" posn="-{{{G_LibStats_BackgroundSize.X * 0.25}}} 0" textsize="5" halign="center" valign="center2"/>
+			<label id="Label_Clan1" posn="{{{G_LibStats_BackgroundSize.X * 0.25}}} 0" textsize="5" halign="center" valign="center2"/>
+		</framemodel>""";
+	foreach (StatId => Pos in G_LibStats_StatsPos) {
+		Manialink ^= """
+			<frameinstance id="{{{TextLib::MLEncode(StatId)}}}" modelid="Model_Stats" posn="0 {{{Pos}}}"/>""";
+	}
+	Manialink ^= """
+		</frame>
+</manialink>""";
+	
+	// Set manialink
+	declare LayerStats = Private_GetLayerStats();
+	LayerStats.ManialinkPage = Manialink;
+}

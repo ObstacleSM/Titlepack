@@ -1,0 +1,64 @@
+
+#Include "TextLib" as TextLib
+
+/****************************************
+	CONSTANTS
+****************************************/
+
+#Const	Version			"2013-08-29"
+
+#Const	C_Matches_Url	"http://www.team-devota.com/steeffeen/reports/matches.php"
+#Const	C_Logins		["speedball_title", "speedball_title1", "speedball_title2", "speedball_title3", "speedball_title4"]
+
+/****************************************
+	GLOBALES
+****************************************/
+
+declare Ident[]	G_Requests;
+
+/****************************************
+	FUNCTIONS
+****************************************/
+
+Boolean ShouldSendReport() {
+	return C_Logins.exists(ServerLogin) && Map != Null && Map.MapInfo != Null && Http != Null && Http.SlotsAvailable > 0;
+}
+
+Text GetTeamLogins() {
+	if (!Teams.existskey(0) || !Teams.existskey(1)) return "";
+	declare BlueLogins = "";
+	declare RedLogins = "";
+	foreach (Player in Players) {
+		switch (Player.CurrentClan) {
+			case 1: {
+				BlueLogins ^= Player.Login^",";
+			}
+			case 2: {
+				RedLogins ^= Player.Login^",";
+			}
+		}
+	}
+	return Teams[0].Name^":"^BlueLogins^"\n"^Teams[1].Name^":"^RedLogins;
+}
+
+Void AddRequest(Text _Section, Text _Content2) {
+	if (!ShouldSendReport()) return;
+	declare Request = Http.CreateGet(C_Matches_Url
+		^"?subject="^TextLib::URLEncode(ServerLogin^"_"^_Section^"_"^Map.MapInfo.Name)
+		^"&content1="^TextLib::URLEncode(GetTeamLogins())
+		^"&content2="^TextLib::URLEncode(_Content2)
+		^"&now="^Now);
+	G_Requests.add(Request.Id);
+}
+
+Void Loop() {
+	for (Index, 0, Http.Requests.count - 1) {
+		if (!Http.Requests.existskey(Index)) continue;
+		declare Request = Http.Requests[Index];
+		if (Request == Null) continue;
+		if (!G_Requests.exists(Request.Id)) continue;
+		if (!Request.IsCompleted) continue;
+		declare Temp = G_Requests.remove(Request.Id);
+		Http.Destroy(Request);
+	}
+}

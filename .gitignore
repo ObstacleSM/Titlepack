@@ -1,1 +1,6 @@
-.gbx
+*.Gbx
+*.dds
+*.png
+*.jpg
+*.loc
+*.zip
