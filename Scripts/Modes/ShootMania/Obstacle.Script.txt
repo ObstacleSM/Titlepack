@@ -2048,7 +2048,7 @@ Text CreateLayerUtilities() {
 							}
 							switch (Event.CharPressed) {""";
 	if (!G_Solo) {
-		Manialink ^= """		case "2555904": {
+		Manialink ^= """		case "2621440": {
 									// F3 - Change next map vote
 									if (C_UseNextMapVoting) {
 										if (Net_NextMapVote == 1) {
@@ -2059,7 +2059,7 @@ Text CreateLayerUtilities() {
 									}
 								}""";
 	}
-	Manialink ^= """			case "2621440": {
+	Manialink ^= """			case "2686976": {
 									// F4 - Change respawn behavior
 									Net_RespawnOnCheckpoint = !Net_RespawnOnCheckpoint;
 								}
