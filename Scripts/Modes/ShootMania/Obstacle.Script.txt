@@ -214,8 +214,8 @@ if (Last_TimeLimit != S_TimeLimit) {
 // Map end conditions
 if (Now >= EndTime) {
 	MB_StopMap = True;
-	XmlRpc.SendCallback("endMap1", GetRankings());
-	continue;
+	XmlRpc.SendCallback("endMap", GetRankings());
+	//continue;
 }
 ***
 
