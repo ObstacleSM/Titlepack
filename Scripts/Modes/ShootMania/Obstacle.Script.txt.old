@@ -7,10 +7,10 @@
 *	You can respawn at the last reached checkpoints.		*
 ************************************************************/
 
-#Extends "Modes/ShootMania/Base/ModeBase.Script.txt"
+#Extends "Modes/ShootMania/Base/ModeShootmania.Script.txt"
 
 #Const ScriptName				"Obstacle.Script.txt"
-#Const Version					"2.5 (2014-12-18)"
+#Const Version					"3.0 (2017-06-19)"
 #Const CompatibleMapTypes		"ObstacleArena,ObstacleTitleArena,TimeAttackArena"
 
 /*********************************************
@@ -90,26 +90,27 @@ declare Integer		G_LastUIUpdate;				// Last UI Update
 declare Text		G_DefaultMarkers;			// Set of default markers
 declare Text		G_DefaultMarkerFrames;		// Set of default marker frames
 declare	Ident[Text]	G_ItemIdents;				// Idents of loaded items
+//declare CSmObject [] G_ItemList;
 
 /*********************************************
 	LABELS
 *********************************************/
-
-***LogVersion***
+***Match_LogVersions***
 ***
-MB_LogVersion(ScriptName, Version);
-MB_LogVersion(Color::GetScriptName(), Color::GetScriptVersion());
-MB_LogVersion(CustomUI::GetScriptName(), CustomUI::GetScriptVersion());
-MB_LogVersion(Json::GetScriptName(), Json::GetScriptVersion());
-MB_LogVersion(Map::GetScriptName(), Map::GetScriptVersion());
-MB_LogVersion(Message::GetScriptName(), Message::GetScriptVersion());
-MB_LogVersion(ScoresTable::GetScriptName(), ScoresTable::GetScriptVersion());
-MB_LogVersion(SM::GetScriptName(), SM::GetScriptVersion());
-MB_LogVersion(SpawnScreen::GetScriptName(), SpawnScreen::GetScriptVersion());
-MB_LogVersion(Tabs::GetScriptName(), Tabs::GetScriptVersion());
+Env::Set("development");
+Log::RegisterScript(ScriptName, Version);
+Log::RegisterScript(Color::GetScriptName(), Color::GetScriptVersion());
+Log::RegisterScript(CustomUI::GetScriptName(), CustomUI::GetScriptVersion());
+Log::RegisterScript(Json::GetScriptName(), Json::GetScriptVersion());
+Log::RegisterScript(Map::GetScriptName(), Map::GetScriptVersion());
+Log::RegisterScript(Message::GetScriptName(), Message::GetScriptVersion());
+Log::RegisterScript(ScoresTable::GetScriptName(), ScoresTable::GetScriptVersion());
+Log::RegisterScript(SM::GetScriptName(), SM::GetScriptVersion());
+Log::RegisterScript(SpawnScreen::GetScriptName(), SpawnScreen::GetScriptVersion());
+Log::RegisterScript(Tabs::GetScriptName(), Tabs::GetScriptVersion());
 ***
 
-***Rules***
+***Match_Rules***
 ***
 SpawnScreen::ResetRulesSection();
 
@@ -148,6 +149,10 @@ ModeRules ^= """
 Press {{{OpenSpecial4Text}}}F4{{{CloseText}}} to disable/enable Respawning at Checkpoints.
 Press {{{OpenSpecial4Text}}}F6{{{CloseText}}} to get an Overview of the Map.""";
 
+
+
+ModeInfo::SetName("Obstacle");
+
 SpawnScreen::AddSubsection(_("Rules"), ModeRules, 5.);
 
 SpawnScreen::CreatePrettyRules(G_ModeName);
@@ -171,7 +176,7 @@ ScoresTable::SetDefaultFooterStats(TextLib::Compose("%1: %2", _("Time Limit"),
 	TextLib::TimeToText(MathLib::NearestInteger(S_TimeLimit * 60. * 1000.), False)));
 ScoresTable::SetTableBackgroundImage("file://Media/Manialinks/Shootmania/Common/topsBg.dds", <0., 64.>, <242., 200.>);
 ScoresTable::Build();
-ScoresTable::GetLayerScoresTable().Type = CUILayer::EUILayerType::Normal;
+ScoresTable::GetLayerScoresTable().Type = CUILayer::EUILayerType::ScoresTable;
 
 // Tabs
 Tabs::Load();
@@ -184,11 +189,6 @@ CPTimes::Load("CPTimes");
 CPTimes::SetSize(<240., 100.>);
 CPTimes::SetBackgroundImage("file://Media/Manialinks/Shootmania/Common/topsBg.dds", <242., 200.>, <0., 6.>);
 CPTimes::Build();
-***
-
-***Ladder_OpenMatch_All***
-***
-Mode::Ladder_OpenMatch_All();
 ***
 
 ***CheckTimes***
@@ -213,7 +213,7 @@ if (Last_TimeLimit != S_TimeLimit) {
 
 // Map end conditions
 if (Now >= EndTime) {
-	MB_StopMap = True;
+	MB_StopMap();
 	XmlRpc.SendCallback("endMap", GetRankings());
 	//continue;
 }
@@ -319,14 +319,30 @@ if (UI != Null) {
 }
 ***
 
-***InitServer***
+***Match_Settings***
+***
+Env::Set("development");
+log("Start");
+MB_Settings_UseDefaultHud = False;
+//MB_Settings_UseDefaultObjects = False;
+//MB_Settings_UseDefaultDispenserObjects = False;
+***
+
+***Match_InitServer***
 ***
 G_Solo = False;
 G_ModeName = "Obstacle";
 G_LastUIUpdate = 0;
+
+// Declare layers
+declare LayerUtilities <=> UIManager.UILayerCreate();
+declare LayerMarkers <=> UIManager.UILayerCreate();
+declare LayerInfo <=> UIManager.UILayerCreate();
+declare LayerTimeDiff <=> UIManager.UILayerCreate();
+declare LayerItems <=> UIManager.UILayerCreate();
 ***
 
-***StartServer***
+***Match_StartServer***
 ***
 // Load items
 ItemList_Begin();
@@ -339,7 +355,7 @@ Color::Load();
 UsePvPCollisions = False;
 UsePvPWeapons = S_PvPWeapons;
 UseClans = False;
-if (MB_NeutralEmblemUrl == "") MB_NeutralEmblemUrl = C_DefaultNeutralEmblemUrl;
+//if (MB_NeutralEmblemUrl == "") MB_NeutralEmblemUrl = C_DefaultNeutralEmblemUrl;
 
 // UI
 UIManager.UIAll.UISequence_CanSkipIntroMT = True;
@@ -351,25 +367,21 @@ ObstSpawnScreen::CreateScores();
 {---Rules---}
 
 // Layers
-declare LayerInfo <=> UIManager.UILayerCreate();
 LayerInfo.ManialinkPage = CreateLayerInfo();
 UIManager.UIAll.UILayers.add(LayerInfo);
 
-declare LayerTimeDiff <=> UIManager.UILayerCreate();
 LayerTimeDiff.ManialinkPage = CreateLayerTimeDiff();
 UIManager.UIAll.UILayers.add(LayerTimeDiff);
 
-declare LayerUtilities <=> UIManager.UILayerCreate();
 LayerUtilities.ManialinkPage = CreateLayerUtilities();
 UIManager.UIAll.UILayers.add(LayerUtilities);
 
-declare LayerMarkers <=> UIManager.UILayerCreate();
 LayerMarkers.Type = CUILayer::EUILayerType::Markers;
 UIManager.UIAll.UILayers.add(LayerMarkers);
 
-declare LayerItems <=> UIManager.UILayerCreate();
 LayerItems.ManialinkPage = CreateLayerItems();
 UIManager.UIAll.UILayers.add(LayerItems);
+
 
 {---ScoresTable---}
 
@@ -391,7 +403,7 @@ CustomUI::Add(C_Module_TimeDiff, <0., 65.>, <60., 12.>);
 CustomUI::Build();
 ***
 
-***StartMap***
+***Match_StartMap***
 ***
 CPTimes::Synchro();
 
@@ -424,6 +436,7 @@ foreach (AnchorLandmark in MapLandmarks_ObjectAnchor) {
 			ItemName = T_ItemOffzone;
 			Duration = Meta_BuffDuration;
 			AnchorLandmarkId = AnchorLandmark.Id;
+//			G_ItemList.add(Object);
 		}
 		case T_ItemAmmo: {
 			declare Object = ObjectCreate(G_ItemIdents[T_ItemAmmo]);
@@ -438,6 +451,7 @@ foreach (AnchorLandmark in MapLandmarks_ObjectAnchor) {
 			Duration = Meta_GrantAmmoDuration;
 			Amount = Meta_GrantAmmoAmount;
 			AnchorLandmarkId = AnchorLandmark.Id;
+//			G_ItemList.add(Object);
 		}
 	}
 	if (Objects.count > 100) break;
@@ -447,7 +461,6 @@ foreach (AnchorLandmark in MapLandmarks_ObjectAnchor) {
 InitPlayer(Null, True);
 InitScore(Null, True);
 
-{---Ladder_OpenMatch_All---}
 ScoresTable::StartMatch();
 MiniMap::Build();
 
@@ -461,6 +474,13 @@ if (Players.count > 0) {
 	TargetId = Players[MathLib::Rand(0, Players.count-1)].Id;
 }
 UpdateAutoTarget(TargetId);
+
+foreach (Player in AllPlayers) {
+  declare MB_NewPlayer for Player = True;
+  declare MB_NewSpectator for Player = True;
+  MB_NewPlayer = True;
+  MB_NewSpectator = True;
+}
 ***
 
 ***OnNewPlayer***
@@ -497,14 +517,39 @@ UI.SpectatorForcedTarget = NullId;
 Tabs::UseTabs(UI, "ScoresTab");
 ***
 
-***Yield***
+***Match_Yield***
 ***
 Tabs::XmlRpcLoop();
 MiniMap::Loop();
 ***
 
-***PlayLoop***
+***Match_PlayLoop***
 ***
+
+// Create a custom event when a player is added to the Players array
+foreach (Player in Players) {
+  declare MB_NewPlayer for Player = True;
+	declare MB_NewSpectator for Player = True;
+
+	if (MB_NewPlayer) {
+			MB_NewPlayer = False;
+			MB_NewSpectator = True;
+			+++OnNewPlayer+++
+	}
+}
+// ---------------------------------- //
+//Create a custom event when a spectator is added to the Spectators array
+foreach (Spectator in Spectators) {
+	declare MB_NewPlayer for Spectator = True;
+	declare MB_NewSpectator for Spectator = True;
+
+	if (MB_NewSpectator) {
+		MB_NewPlayer = True;
+		MB_NewSpectator = False;
+		+++OnNewSpectator+++
+	}
+}
+
 ManageAfkPlayers();
 {---CheckTimes---}
 CheckMiniMapEvents();
@@ -526,7 +571,7 @@ foreach (Event in PendingEvents) {
 				}
 				RestartPlayer(Event.Victim, False, False);
 				if (!Event.Victim.IsFakePlayer) {
-					XmlRpc::OnArmorEmpty(Event);
+					//XmlRpc::OnArmorEmpty(Event);
 				}
 			}
 			Discard(Event);
@@ -535,7 +580,7 @@ foreach (Event in PendingEvents) {
 			if (Event.Player != Null) {
 				RestartPlayer(Event.Player, False, False);
 				if (!Event.Player.IsFakePlayer) {
-					XmlRpc::OnPlayerRequestRespawn(Event);
+					//XmlRpc::OnPlayerRequestRespawn(Event);
 				}
 			}
 			Discard(Event);
@@ -563,7 +608,7 @@ foreach (Event in PendingEvents) {
 				case T_ItemAmmo: {
 					// Ammo item
 					declare netwrite ItemBuffTimes for Event.Player = Integer[Text];
-					if (!ItemBuffTimes.existskey(T_ItemAmmo)) {
+					if (!ItemBuffTimes.existskey(T_ItemAmmo) || ItemBuffTimes[T_ItemAmmo] < Now) {
 						declare Duration for Event.Object = 0.;
 						declare Amount for Event.Object = 1.;
 						ItemBuffTimes[T_ItemAmmo] = Now + MathLib::NearestInteger(Duration * 1000.);
@@ -767,9 +812,11 @@ if (G_LastUIUpdate + 250 < Now) {
 }
 ***
 
-***ObstacleEndMap***
+***Match_EndMap***
 ***
 ScoresTable::EndMatch();
+
+// Reset each players
 foreach (Player in AllPlayers) {
 	declare netwrite Integer Net_StartTime for Player;
 	Net_StartTime = 0;
@@ -782,7 +829,10 @@ EndTime = -1;
 Message::CleanBigMessages();
 Message::CleanStatusMessages();
 MB_Yield();
+***
 
+***MB_Private_BeforeCloseLadder***
+***
 // Search the user id of the winner
 declare ScoreTimes = Integer[Ident];
 declare CSmScore WinnerScore <=> Null;
@@ -794,41 +844,29 @@ foreach (Score in Scores) {
 	declare RunBest for Score = -1;
 	if (RunBest > 0) {
 		ScoreTimes[Score.Id] = RunBest;
+
+		// Current run is better
 		if (RunBest < Best || Best < 0) {
-			// Better time
 			Best = RunBest;
 			WinnerScore <=> Score;
-		} else {
-			if (RunBest == Best) {
-				// Same time - Check respawn counts
+		// Same time - Check respawn counts
+		} else { if (RunBest == Best) {
 				declare BestRespawnCount as BestRS for WinnerScore = -1;
 				declare BestRespawnCount as RSCount for Score = -1;
 				if (RSCount >= 0 && (BestRS < 0 || RSCount < BestRS)) {
 					Best = RunBest;
 					WinnerScore <=> Score;
 				}
-			}
-		}
+		}}
 		if (RunBest > Worst) {
 			Worst = RunBest;
 		}
 	}
 }
-// Sort scores for the ladder
-foreach (Score in Scores) {
-	declare RunBest for Score = -1;
-	if (RunBest > 0) {
-		Score.LadderRankSortValue = RunBest;
-	} else {
-		declare CheckpointsTimeLast for Score = Integer[Ident];
-		declare SortValue = MathLib::ToReal(Worst);
-		if (G_CheckpointsTotal > 0) {
-			SortValue *= 2. - (1. * CheckpointsTimeLast.count / (1. * G_CheckpointsTotal));
-		}
-		Score.LadderRankSortValue = MathLib::NearestInteger(SortValue);
-	}
-}
+
+Scores::SetPlayerWinner(WinnerScore);
 ScoreTimes = ScoreTimes.sort();
+
 declare Index = 0;
 foreach (Id => Time in ScoreTimes) {
 	if (!Scores.existskey(Id)) continue;
@@ -837,34 +875,27 @@ foreach (Id => Time in ScoreTimes) {
 	Index += 1;
 }
 
-Mode::Ladder_CloseMatch();
+// Sort scores for the ladder
+foreach (Score in Scores) {
+	declare RunBest for Score = -1;
+	if (RunBest > 0) {
+		Score.LadderRankSortValue = RunBest;
+	} else {
+		declare CheckpointsTimeLast for Score = Integer[Ident];
+		// 356 400 000ms is 99 hours
+		Score.LadderRankSortValue = 356400000 - CheckpointsTimeLast.count;
+	}
+}
+***
 
+***MB_Private_AfterCloseLadder***
+***
 // Hide ui stuff
 LayerMarkers.IsVisible = False;
 LayerUtilities.IsVisible = False;
-
-// Announce winner
-UIManager.UIAll.UISequence = CUIConfig::EUISequence::EndRound;
-declare Message = _("|Match|Draw");
-if (WinnerScore != Null && WinnerScore.User != Null) {
-	Message = TextLib::Compose(_("%1 wins the Map!"), "$<"^WinnerScore.User.Name^"$>");
-}
-Message::SendBigMessage(Message, 4000, 3, CUIConfig::EUISound::EndRound, 2);
-MB_Sleep(2500);
-UIManager.UIAll.ScoreTableVisibility = CUIConfig::EVisibility::ForcedVisible;
-UIManager.UIAll.UISequence = CUIConfig::EUISequence::Podium;
-MB_Sleep(4500);
-wait(UIManager.UIAll.UISequenceIsCompleted);
-Message::CleanBigMessages();
 ***
 
-***EndMap***
-***
----ObstacleEndMap---
-ObjectDestroyAll();
-***
-
-***EndServer***
+***Match_EndServer***
 ***
 ScoresTable::Unload();
 SpawnScreen::DestroyRules();
@@ -878,9 +909,6 @@ UIManager.UILayerDestroyAll();
 /*********************************************
 	FUNCTIONS
 *********************************************/
-
-// Dummy method for empty labels
-Void DoNothing() {}
 
 // Check if the given player is free to spec anyone
 Boolean CanFreeSpec(CSmPlayer _Player) {
@@ -917,6 +945,10 @@ Boolean IsCheckpoint(CSmMapLandmark _GaugeLandmark) {
 	if (_GaugeLandmark == Null || _GaugeLandmark.Gauge == Null) return False;
 	return ("Checkpoint" == TextLib::SubText(_GaugeLandmark.Tag, 0, 10));
 }
+
+/*
+_GaugeLandmark != Null && _GaugeLandmark.Gauge != Null)
+*/
 
 // Send xmlrpc callback
 Void SendXmlRpcCallback(Text _CallbackName, CSmPlayer _Player, Integer _RunTime, Ident _CheckpointId) {
@@ -1242,7 +1274,7 @@ Void PrepareMap() {
 		// Error in map
 		log("ERROR: No Start Spawn on this Map!");
 		UIManager.UIAll.SendChat("$f00ERROR: No Start Spawn on this Map!");
-		MB_StopMap = True;
+		MB_StopMap();
 	}
 }
 
@@ -1278,16 +1310,20 @@ Void UpdateRanking() {
 	// Finished players based on their times
 	declare FinishTimes = Integer[Ident];
 	declare Worst = -1;
+
 	foreach (Score in Finished) {
 		declare RunBest for Score = -1;
-		declare Time = RunBest / 1000;
-		FinishTimes[Score.Id] = Time;
+		FinishTimes[Score.Id] = RunBest;
 		if (RunBest > Worst) {
-			Worst = Time;
+			Worst = RunBest;
 		}
 	}
+
+	FinishTimes.sort();
+	declare Index = 0;
 	foreach (ScoreId => Time in FinishTimes) {
-		Scores[ScoreId].Points = Worst - Time + 4 * G_CheckpointsTotal;
+		Scores[ScoreId].Points = (Worst - Time) / 1000 + 4 * G_CheckpointsTotal + FinishTimes.count - Index;
+		Index += 1;
 	}
 }
 
@@ -1837,6 +1873,8 @@ Void RestartPlayer(CSmPlayer _Player, Boolean _FullRestart, Boolean _Jump) {
 					SM::SpawnPlayer(_Player, 0, MapLandmarks_PlayerSpawn[CPSpawnId].PlayerSpawn, Now + Delay);
 				}
 
+				//TODO: wait for player to spawn
+
 				if (S_FullAmmoSpawn) {
 					FillUpPlayerAmmo(_Player);
 				}
@@ -1873,6 +1911,7 @@ Void RestartPlayer(CSmPlayer _Player, Boolean _FullRestart, Boolean _Jump) {
 		ApplyWeaponType(_Player, WeaponType);
 
 		SM::SpawnPlayer(_Player, 0, SpawnLandmark.PlayerSpawn, Now + Delay);
+
 		if (S_FullAmmoSpawn) {
 			FillUpPlayerAmmo(_Player);
 		}

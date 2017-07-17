@@ -4,15 +4,15 @@
 *	Contact:	steeffeen@team-devota.com	*
 ********************************************/
 
-#Extends "Modes/ShootMania/Obstacle.Script.txt"
+#Extends "Modes/ShootMania/ObstacleOld.Script.txt"
 
-#Const SoloScriptName	"ObstacleSolo.Script.txt"
+#Const SoloScriptName	"ObstacleMapEditor.Script.txt"
 #Const SoloVersion		"1.1 (2014-06-28)"
 
 #Setting	S_FastRespawn			False
 #Setting	S_FastRespawnOldMap		False
 #Setting	S_RespawnPenalty		0
-#Setting	S_AllowJump				False
+#Setting	S_AllowJump				True
 #Setting	S_DisplayMedals			False
 
 /***************************************************
@@ -23,7 +23,7 @@
 ***
 MB_LogVersion(SoloScriptName, SoloVersion);
 ***
-
+/*
 ***ScoresTable***
 ***
 ScoresTable::Load(G_Solo);
@@ -52,7 +52,7 @@ declare TabsLayer <=> Tabs::CreateTabPaneLayer(["ScoresTab" => "Rankings"], -500
 TabsLayer.Type = CUILayer::EUILayerType::AltMenu;
 UIManager.UIAll.UILayers.add(TabsLayer);
 ***
-
+*/
 ***Ladder_OpenMatch_All***
 ***
 DoNothing();
@@ -137,7 +137,7 @@ MB_StopMap();
 ***InitServer***
 ***
 G_Solo = True;
-G_ModeName = "Obstacle Solo";
+G_ModeName = "Obstacle Map Editor";
 ***
 
 ***StartServer***

@@ -1,10 +1,10 @@
 <maniaplanet_title version="4">
-	<id>obstacle@smokegun</id>
-	<name>ObstacleMP4</name>
+	<id>testobstacle@smokegun</id>
+	<name>testobstacle@smokegun</name>
 	<desc>Update of steeffeen's Obstacle</desc>
-	<url>ObstacleMP4</url>
+	<url>testobstacle@smokegun</url>
 	<download_url></download_url>
-	<title_version>0.1</title_version>
+	<title_version>0.2</title_version>
 	<allowed_client_title_version></allowed_client_title_version>
 	<maker>SMStormMaker@nadeo</maker>
 	<base>SMStorm</base>
@@ -14,8 +14,8 @@
 	<use_hmd>false</use_hmd>
 	<unlock_features>0</unlock_features>
 	<packaging>
-		<image name="Media\Images\Logos\PackImage.webm"/>
-		<logos name="Media\Images\Logos\Logos.png"/>
+		<image name="Media\Nadeo\Images\Station\PackImage.jpg"/>
+		<logos name="Media\Nadeo\Images\Station\Logos.png"/>
 		<collection></collection>
 		<sortindex>100</sortindex>
 		<station_manialink url=""/>
@@ -66,15 +66,9 @@
 			<author_medals_enabled>true</author_medals_enabled>
 			<skillpoints_enabled>true</skillpoints_enabled>
 		</score_context>
-		<campaign num="0">
-			<playlist name=""/>
-			<score_context></score_context>
-			<official_record_enabled>true</official_record_enabled>
-			<maps folder="Campaigns\"/>
-		</campaign>
 	</solo>
 	<network>
-		<mode name="Modes\ShootMania\Obstacle.Script.txt"/>
+		<mode name="Modes\ShootMania\ObstacleBeta.Script.txt"/>
 		<playlist name=""/>
 	</network>
 	<splitscreen>

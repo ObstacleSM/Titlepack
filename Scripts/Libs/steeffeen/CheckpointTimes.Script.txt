@@ -51,29 +51,29 @@ CUILayer Private_GetLayer() {
 Void Load(Text _TabName) {
 	// Create the layer
 	declare Layer = UIManager.UILayerCreate();
-	Layer.Type = CUILayer::EUILayerType::ScoresTable;
+	Layer.Type = CUILayer::EUILayerType::AltMenu;
 	UIManager.UIAll.UILayers.add(Layer);
 	G_CPTimes_LayerId = Layer.Id;
-	
+
 	// Inialize the manialink properties
 	G_CPTimes_BackgroundImage = "";
 	G_CPTimes_BackgroundSize = <230., 100.6>;
 	G_CPTimes_BackgroundPosition = <0., 0.>;
 	G_CPTimes_BackgroundColor = "0007";
-	
+
 	// Set tab name
 	G_CPTimes_TabName = _TabName;
-	
+
 	// Initialize values
 	G_CPTimes_Title = _("Best Checkpoint Times");
 	G_CPTimes_Size = <230., 100.>;
 	G_CPTimes_Position = <0., 0.>;
-	
+
 	declare Integer[Integer] Net_Steff_LibTimes_BestCPTimes for Teams[0];
 	declare Text[Integer] Net_Steff_LibTimes_BestCPNames for Teams[0];
 	Net_Steff_LibTimes_BestCPTimes.clear();
 	Net_Steff_LibTimes_BestCPNames.clear();
-	
+
 	declare netwrite Integer CPTimes_SynchroServer for Teams[0];
 	CPTimes_SynchroServer = 1;
 }
@@ -86,7 +86,7 @@ Void Unload() {
 	declare Removed = UIManager.UIAll.UILayers.remove(Layer);
 	UIManager.UILayerDestroy(Layer);
 	G_CPTimes_LayerId = NullId;
-	
+
 	declare netwrite Integer CPTimes_SynchroServer for Teams[0];
 	CPTimes_SynchroServer = 0;
 }
@@ -105,55 +105,55 @@ Void Build() {
 <manialink version="1" name="CPTimes">
 	<script><!--
 		#Include "TextLib" as TextLib
-		
+
 		Void UpdateFrameTab(CUIConfig UI, CMlPage Page, Text TabKey, CMlFrame MainFrame) {
 			declare netread Boolean _TabsLib_UseTabs for UI;
 			if (!_TabsLib_UseTabs) return;
-			
+
 			declare Boolean _TabsLib_ScoresLayerIsVisible 	for UI;
 			declare Boolean _TabsLib_AltLayerIsVisible 		for UI;
 			declare Text 	_TabsLib_CurrentTab 			for UI;
 			declare netread Text _TabsLib_ScoresTableTab 	for UI;
-			
+
 			declare ShowCurrentTab = _TabsLib_AltLayerIsVisible && _TabsLib_CurrentTab == TabKey;
-			
+
 			if (TabKey == _TabsLib_ScoresTableTab) {
 				ShowCurrentTab = _TabsLib_ScoresLayerIsVisible
 					|| _TabsLib_AltLayerIsVisible && _TabsLib_CurrentTab == _TabsLib_ScoresTableTab;
 			}
-		
+
 			if (ShowCurrentTab) {
 				MainFrame.Show();
 			} else {
 				MainFrame.Hide();
 			}
 		}
-		
+
 		main() {
 			wait(InputPlayer != Null);
-			
+
 			declare MainFrame <=> (Page.GetFirstChild("Frame_Times") as CMlFrame);
 			declare Quad_Prev <=> (Page.GetFirstChild("Quad_Prev") as CMlQuad);
 			declare Quad_Next <=> (Page.GetFirstChild("Quad_Next") as CMlQuad);
-			
+
 			declare netread Net_Steff_LibTimes_BestCPTimes for Teams[0] = Integer[Integer];
 			declare netread Net_Steff_LibTimes_BestCPNames for Teams[0] = Text[Integer];
 			declare netread Net_Steff_LibTimes_CPTimes for UI = Integer[Integer];
-			
+
 			declare PageNb = 1;
-			
+
 			declare LastUpdate = 0;
-			
+
 			while (True) {
 				yield;
-				
+
 				if (!PageIsVisible) continue;
-				
+
 				UpdateFrameTab(UI, Page, "{{{TextLib::MLEncode(G_CPTimes_TabName)}}}", MainFrame);
 				if (!MainFrame.Visible) continue;
-				
+
 				declare PageCount = Net_Steff_LibTimes_BestCPTimes.count / 21 + 1;
-				
+
 				foreach (Event in PendingEvents) {
 					switch (Event.Type) {
 						case CMlEvent::Type::MouseClick: {
@@ -182,10 +182,10 @@ Void Build() {
 						}
 					}
 				}
-				
+
 				if (LastUpdate + 250 > Now) continue;
 				LastUpdate = Now;
-				
+
 				// Pagers
 				if (PageCount <= 1) {
 					Quad_Prev.Visible = False;
@@ -204,24 +204,24 @@ Void Build() {
 						Quad_Next.Substyle = "ArrowNext";
 					}
 				}
-				
+
 				// List checkpoint times
 				for (Index, 1, 20) {
 					declare CP = Index + (PageNb - 1) * 20;
-					
+
 					declare Frame_Time <=> (Page.GetFirstChild("Frame_Time"^Index) as CMlFrame);
-					
+
 					if (!Net_Steff_LibTimes_BestCPTimes.existskey(CP)) {
 						Frame_Time.Visible = False;
 						continue;
 					}
 					Frame_Time.Visible = True;
-					
+
 					declare Label_Rank <=> (Frame_Time.GetFirstChild("Label_Rank") as CMlLabel);
 					declare Label_Name <=> (Frame_Time.GetFirstChild("Label_Name") as CMlLabel);
 					declare Label_Time <=> (Frame_Time.GetFirstChild("Label_Time") as CMlLabel);
 					declare Label_TimeDiff <=> (Frame_Time.GetFirstChild("Label_TimeDiff") as CMlLabel);
-					
+
 					declare CPId for Label_Rank = -1;
 					if (CP != Net_Steff_LibTimes_BestCPTimes.count) {
 						Label_Rank.Value = TextLib::ToText(CP);
@@ -259,7 +259,7 @@ Void Build() {
 				halign="center" valign="center2"/>
 			<quad id="Quad_Prev" posn="-6 -54 5" sizen="7 7" style="Icons64x64_1" scriptevents="1" hidden="1" halign="center" valign="center2"/>
 			<quad id="Quad_Next" posn="6 -54 5" sizen="7 7" style="Icons64x64_1" scriptevents="1" hidden="1" halign="center" valign="center2"/>""";
-	
+
 	// Background
 	Manialink ^= """
 		<quad posn="{{{Tools::GetPosn(G_CPTimes_BackgroundPosition)}}}" sizen="{{{Tools::GetPosn(G_CPTimes_BackgroundSize)}}}"
@@ -269,7 +269,7 @@ Void Build() {
 	} else {
 		Manialink ^= """image="{{{G_CPTimes_BackgroundImage}}}"/>""";
 	}
-	
+
 	// Times
 	Manialink ^= """
 		<framemodel id="Model_Time">
@@ -280,11 +280,11 @@ Void Build() {
 				halign="left" valign="center2"/>
 			<label id="Label_TimeDiff" posn="{{{G_CPTimes_Size.X * 0.34}}} 0" sizen="{{{G_CPTimes_Size.X * 0.09}}} 0" halign="left" valign="center2"/>
 		</framemodel>""";
-	
+
 	declare BaseX = G_CPTimes_Size.X * -0.422;
 	declare BaseY = 34.7;
 	declare RowHeight = G_CPTimes_Size.Y * 0.08;
-	
+
 	for (Index, 1, 20) {
 		if (Index == 11) {
 			BaseX = G_CPTimes_Position.X + 5.;
@@ -293,11 +293,11 @@ Void Build() {
 		declare Y = BaseY - Index * RowHeight;
 		Manialink ^= """<frameinstance id="Frame_Time{{{Index}}}" modelid="Model_Time" posn="{{{BaseX}}} {{{Y}}}"/>""";
 	}
-	
+
 	Manialink ^= """
 	</frame>
 </manialink>""";
-	
+
 	// Set manialink
 	Layer.ManialinkPage = Manialink;
 }
@@ -352,7 +352,7 @@ Boolean SubmitCheckpointTime(Integer _CheckpointNb, CSmPlayer _Player, Integer _
 	if (_CheckpointNb < 1 || _Player == Null || _CPTime <= 0) return False;
 	declare netwrite Integer[Integer] Net_Steff_LibTimes_BestCPTimes for Teams[0];
 	if (!Net_Steff_LibTimes_BestCPTimes.existskey(_CheckpointNb)) return False;
-	
+
 	declare UI <=> UIManager.GetUI(_Player);
 	if (UI != Null) {
 		declare netwrite Net_Steff_LibTimes_CPTimes for UI = Integer[Integer];
@@ -360,30 +360,30 @@ Boolean SubmitCheckpointTime(Integer _CheckpointNb, CSmPlayer _Player, Integer _
 			Net_Steff_LibTimes_CPTimes[_CheckpointNb] = _CPTime;
 		}
 	}
-	
+
 	if (Net_Steff_LibTimes_BestCPTimes[_CheckpointNb] > _CPTime || Net_Steff_LibTimes_BestCPTimes[_CheckpointNb] <= 0) {
 		Net_Steff_LibTimes_BestCPTimes[_CheckpointNb] = _CPTime;
 		declare netwrite Text[Integer] Net_Steff_LibTimes_BestCPNames for Teams[0];
 		Net_Steff_LibTimes_BestCPNames[_CheckpointNb] = _Player.Name;
 		return True;
 	}
-	
+
 	return False;
 }
 
 // Check if a player request a jump to a CP
 Integer[CSmPlayer] PendingJumps() {
 	declare Result = Integer[CSmPlayer];
-	
+
 	foreach (Player in Players) {
 		declare UI <=> UIManager.GetUI(Player);
 		if (UI == Null) continue;
-		
+
 		declare CPTimes_PrevJumpToCPUpdate for Player = -1;
 		declare netread Integer CPTimes_JumpToCPUpdate for UI;
 		if (CPTimes_PrevJumpToCPUpdate != CPTimes_JumpToCPUpdate) {
 			CPTimes_PrevJumpToCPUpdate = CPTimes_JumpToCPUpdate;
-			
+
 			declare netwrite Integer CPTimes_SynchroServer for Teams[0];
 			declare netread Integer CPTimes_SynchroClient for UI;
 			if (CPTimes_SynchroServer == CPTimes_SynchroClient) {
@@ -392,6 +392,6 @@ Integer[CSmPlayer] PendingJumps() {
 			}
 		}
 	}
-	
+
 	return Result;
 }

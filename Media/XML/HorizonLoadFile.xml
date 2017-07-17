@@ -1,14 +1,14 @@
 <titlePackXML projectenviro="Storm" titlewasmadeonce="yes">
 	<global>
-		<News color="666"/>
-		<Logo path="file://Media\Images\Logos\Logos.png" />
+		<News color="f00"/>
+		<Logo path="" />
 		<Background path="" />
-		<BackgroundImage path="file://Media\Images\Logos\PackImage.webm" />
+		<BackgroundImage path="" />
 		<Music path="" />
 		<Style MainTitlePolice="TextTitle3" SectionsPolice="TextRaceMessageBig" />
-		<Station stationlogos="file://Media\Images\Logos\Logos.png" stationimage="file://Media\Images\Logos\PackImage.webm"/>
+		<Station stationlogos="file://Media/Nadeo/Images/Station/Logos.png" stationimage="file://Media/Nadeo/Images/Station/PackImage.jpg"/>
 	</global>
-<Solo activated="True" color="fff" logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_Solo.dds" allowevaluate="False" contextname="" scriptname="Modes/ShootMania/ObstacleSolo">
+<Solo activated="True" color="FF0" logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_Solo.dds" allowevaluate="False" contextname="" scriptname="">
 <campaign type="Mini">
 	<unlockcriterias>
 		<unlockcriteria id="1" name="semi-open"/>
@@ -16,87 +16,6 @@
 	</unlockcriterias>
 	<categories>
 	<category name="White">
-		<track path="Campaigns\0\A01 - Welcome to Obstacle.Map.Gbx" thumbnail="file://Thumbnails/MapUid/nuMKfmFi620gwKpPg8RBFLaYPhd/" name="$sA01 - Welcome to Obstacle">
-			<unlock id="1" medalnb="0" medaltype="Bronze"/>
-			<unlock id="2" medalnb="0" medaltype="Bronze"/>
-		</track>
-		<track path="Campaigns\0\A05 - Darkham City.Map.Gbx" thumbnail="file://Thumbnails/MapUid/tD7c41iVrlzfB4vE4YrogHt9DP9/" name="$sA05 - Darkham City">
-			<unlock id="1" medalnb="0" medaltype="Bronze"/>
-			<unlock id="2" medalnb="0" medaltype="Bronze"/>
-		</track>
-		<track path="Campaigns\0\A09 - Sprint Practice.Map.Gbx" thumbnail="file://Thumbnails/MapUid/0hk3Tu68ENdHUMsqKEATAc4VVN4/" name="$sA09 - Sprint Practice">
-			<unlock id="1" medalnb="0" medaltype="Bronze"/>
-			<unlock id="2" medalnb="0" medaltype="Bronze"/>
-		</track>
-		<track path="" thumbnail="">
-			<unlock id="1" medalnb="0" medaltype="Bronze"/>
-			<unlock id="2" medalnb="0" medaltype="Bronze"/>
-		</track>
-		<track path="" thumbnail="">
-			<unlock id="1" medalnb="0" medaltype="Bronze"/>
-			<unlock id="2" medalnb="0" medaltype="Bronze"/>
-		</track>
-		<track path="Campaigns\0\A02 - Obstacle Castle.Map.Gbx" thumbnail="file://Thumbnails/MapUid/uL4ePn4wBcfzvWNg3DPlRgWVjs3/" name="$sA02 - Obstacle Castle">
-			<unlock id="1" medalnb="5" medaltype="Bronze"/>
-			<unlock id="2" medalnb="5" medaltype="Bronze"/>
-		</track>
-		<track path="Campaigns\0\A06 - The Loch Mess.Map.Gbx" thumbnail="file://Thumbnails/MapUid/3bshgDQJiiPLDwV1jU9hT2blxZg/" name="$sA06 - The Loch Mess">
-			<unlock id="1" medalnb="5" medaltype="Bronze"/>
-			<unlock id="2" medalnb="5" medaltype="Bronze"/>
-		</track>
-		<track path="Campaigns\0\A10 - No Rest.Map.Gbx" thumbnail="file://Thumbnails/MapUid/I2UjLSyY4fDZCCt8ZUNcncJSywg/" name="$sA10 - No Rest">
-			<unlock id="1" medalnb="5" medaltype="Bronze"/>
-			<unlock id="2" medalnb="5" medaltype="Bronze"/>
-		</track>
-		<track path="" thumbnail="">
-			<unlock id="1" medalnb="5" medaltype="Bronze"/>
-			<unlock id="2" medalnb="5" medaltype="Bronze"/>
-		</track>
-		<track path="" thumbnail="">
-			<unlock id="1" medalnb="5" medaltype="Bronze"/>
-			<unlock id="2" medalnb="5" medaltype="Bronze"/>
-		</track>
-		<track path="Campaigns\0\A03 - Rescue Yourself!.Map.Gbx" thumbnail="file://Thumbnails/MapUid/ByxIxwCOhvMBYivcrxtBN8Qe2pj/" name="$sA03 - Rescue Yourself!">
-			<unlock id="1" medalnb="10" medaltype="Bronze"/>
-			<unlock id="2" medalnb="10" medaltype="Bronze"/>
-		</track>
-		<track path="Campaigns\0\A07 - Runtime.Map.Gbx" thumbnail="file://Thumbnails/MapUid/Fiwb0c7KYYuCxLYPxwOYLNBoQdd/" name="$sA07 - Runtime">
-			<unlock id="1" medalnb="10" medaltype="Bronze"/>
-			<unlock id="2" medalnb="10" medaltype="Bronze"/>
-		</track>
-		<track path="Campaigns\0\A11 - EasyPeasy.Map.Gbx" thumbnail="file://Thumbnails/MapUid/M7d4Cjm72N3uSzN_nqiRNo6e4Of/" name="$sA11 - EasyPeasy?">
-			<unlock id="1" medalnb="10" medaltype="Bronze"/>
-			<unlock id="2" medalnb="10" medaltype="Bronze"/>
-		</track>
-		<track path="" thumbnail="">
-			<unlock id="1" medalnb="10" medaltype="Bronze"/>
-			<unlock id="2" medalnb="10" medaltype="Bronze"/>
-		</track>
-		<track path="" thumbnail="">
-			<unlock id="1" medalnb="10" medaltype="Bronze"/>
-			<unlock id="2" medalnb="10" medaltype="Bronze"/>
-		</track>
-		<track path="Campaigns\0\A04 - Ruined.Map.Gbx" thumbnail="file://Thumbnails/MapUid/OAh92ZRAk1EY6aCyg1UOWbPCm6a/" name="$sA04 - Ruined">
-			<unlock id="1" medalnb="15" medaltype="Bronze"/>
-			<unlock id="2" medalnb="15" medaltype="Bronze"/>
-		</track>
-		<track path="Campaigns\0\A08 - Grapple Practice.Map.Gbx" thumbnail="file://Thumbnails/MapUid/QNMkD7MtfJD5nazv8e01dw32EHc/" name="$sA08 - Grapple Practice">
-			<unlock id="1" medalnb="15" medaltype="Bronze"/>
-			<unlock id="2" medalnb="15" medaltype="Bronze"/>
-		</track>
-		<track path="" thumbnail="">
-			<unlock id="1" medalnb="15" medaltype="Bronze"/>
-			<unlock id="2" medalnb="15" medaltype="Bronze"/>
-		</track>
-		<track path="" thumbnail="">
-			<unlock id="1" medalnb="15" medaltype="Bronze"/>
-			<unlock id="2" medalnb="15" medaltype="Bronze"/>
-		</track>
-		<track path="" thumbnail="">
-			<unlock id="1" medalnb="15" medaltype="Bronze"/>
-			<unlock id="2" medalnb="15" medaltype="Bronze"/>
-		</track>
-	</category>	<category name="Green">
 		<track path="" thumbnail="">
 			<unlock id="1" medalnb="0" medaltype="Bronze"/>
 			<unlock id="2" medalnb="0" medaltype="Bronze"/>
@@ -181,22 +100,20 @@
 	</categories>
 </campaign>
 </Solo>
-	<Multiplayer logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_Online.dds" activated="True" color="fff" allowallmodes="False">
-			<asset id="Modes/ShootMania/Obstacle" isdefault="no" titlename="Modes/ShootMania/Obstacle" makername="Modes/ShootMania/Obstacle" isvisibleinmaker="yes"/>
-
+	<Multiplayer logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_Online.dds" activated="True" color="c39" allowallmodes="False" displaytitleserversonly="False">
+		
 	</Multiplayer>
-	<LocalPlay logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_LocalPlay.dds" activated="True" color="fff">
-			<asset id="LocalNetHack" isdefault="yes" titlename="Local Network" makername="Local Network" isvisibleinmaker="True" isactivated="True"/>
-	<asset id="Modes/ShootMania/Obstacle" isdefault="no" titlename="Modes/ShootMania/Obstacle" makername="Modes/ShootMania/Obstacle" isvisibleinmaker="yes"/>
+	<LocalPlay logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_LocalPlay.dds" activated="True" color="0f8">
+			<asset id="LocalNetwork" isdefault="yes" titlename="Local Network" makername="Local Network" isvisibleinmaker="True" isactivated="True"/>
 
 	</LocalPlay>
-	<Editors logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_Editor.dds" activated="True" color="fff" mapeditor="MapTypes/ShootMania/ObstacleTitleArena">
-	<asset id="MapTypes/ShootMania/ObstacleTitleArena" isdefault="yes" titlename="NewMap" isactivated="True"/>
+	<Editors logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_Editor.dds" activated="True" color="48e" mapeditor="">
+	<asset id="" isdefault="yes" titlename="NewMap" isactivated="True"/>
 	<asset id="" isdefault="yes" titlename="EditReplay" isactivated="True"/>
 	<asset id="" isdefault="yes" titlename="TitleTools" isactivated="True"/>
 
 	</Editors>
-<Resources flashurlcustom="obstacle@smokegun" flashurlfocus="0"/>
+<Resources flashurlcustom="testobstacle@smokegun" flashurlfocus="0"/>
 	<Ingame accelcoef="1." controlcoef="1." gravitycoef="1.">
 	</Ingame>
 	<Profile>

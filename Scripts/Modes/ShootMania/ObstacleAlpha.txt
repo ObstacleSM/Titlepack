@@ -1,0 +1,344 @@
+/**
+ *	Mode melee
+ */
+
+#Extends "Modes/ShootMania/Base/ModeShootmania.Script.txt"
+
+#Const CompatibleMapTypes		"ObstacleArena,ObstacleTitleArena,TimeAttackArena"
+#Const	Version							"2017-07-10"
+#Const	ScriptName					"Modes/ShootMania/ObstacleAlpha.Script.txt"
+
+// ---------------------------------- //
+// Libraries
+// ---------------------------------- //
+#Include "TextLib" as TL
+#Include "MathLib" as ML
+#Include "Libs/Nadeo/Layers2.Script.txt" as Layers
+#Include "Libs/smokegun/ObstacleLib.Script.txt" as Obstacle
+#Include "Libs/smokegun/UI.Script.txt" as ObsUI
+#Include "Libs/smokegun/Items.Script.txt" as Items
+
+// ---------------------------------- //
+// Settings
+// ---------------------------------- //
+#Setting S_TimeLimit 10 as _("Time limit") ///< Time limit on a map
+#Setting S_PvPWeapons			False	as _("Enable PvP Weapons")
+#Setting S_FullAmmoSpawn			True	as _("Spawning with full Ammunition")
+#Setting S_FastRespawn			True	as _("Fast respawn on the checkpoint")
+#Setting S_FastRespawnOldMap		True	as _("Fast respawn on old maps")
+#Setting S_LegacyRespawn	False as _("Enable old respawn")
+
+// ---------------------------------- //
+// Constants
+// ---------------------------------- //
+#Const C_HudModulePath "Obstacle/UI.Module.Gbx" ///< Path to the hud module
+
+#Const Description _("Genius.")
+#Const C_DefaultTimeLimit 10
+
+declare Integer G_LastUpdate;
+
+// ---------------------------------- //
+// Extends
+// ---------------------------------- //
+***Match_LogVersions***
+***
+Log::RegisterScript(ScriptName, Version);
+***
+
+***Match_Settings***
+***
+MB_Settings_UseDefaultHud = False;
+MB_Settings_UseDefaultTimer = False;
+
+UsePvPCollisions = False;
+UseClans = False;
+UseSameWallJump = True;
+UsePvPWeapons = S_PvPWeapons;
+***
+
+***Match_Rules***
+***
+ModeInfo::SetName("Obstacle");
+ModeInfo::SetType(ModeInfo::Type_FreeForAll());
+
+declare OpenSpecial1Text = "$<$00f";
+	declare OpenSpecial2Text = "$<$88f";
+	declare OpenSpecial3Text = "$<$0f0";
+	declare OpenSpecial4Text = "$<$f80";
+	declare OpenBoldText = "$<$o";
+	declare OpenSettingText = "$<$08f";
+	declare CloseText = "$>";
+	
+	declare ModeRules = """
+Finish the {{{OpenSpecial2Text}}}Obstacle Course{{{CloseText}}} as fast as possible.	
+To validate a Race you must touch the Finish after going through all the {{{OpenSpecial2Text}}}Checkpoints{{{CloseText}}}.
+You can start over and improve your Time as often as you want during {{{OpenSettingText^S_TimeLimit^CloseText}}} Minutes.
+The Player with the best Time wins the Map.
+Press the {{{OpenBoldText}}}Respawn{{{CloseText}}} Button (default: {{{OpenSpecial2Text}}}Backspace{{{CloseText}}}) or die to {{{OpenSpecial3Text}}}Respawn{{{CloseText}}} at the last reached Checkpoint.
+Press the {{{OpenBoldText}}}Give Up{{{CloseText}}} Button (default: {{{OpenSpecial2Text}}}Delete{{{CloseText}}}) to {{{OpenSpecial3Text}}}Restart{{{CloseText}}} from the beginning. (You can also set another Restart Button at the bottom.)
+
+Press {{{OpenSpecial4Text}}}F3{{{CloseText}}} when you're ready for the next Map (Press F3 again to change your Decision).
+Press {{{OpenSpecial4Text}}}F4{{{CloseText}}} to disable/enable Respawning at Checkpoints.
+Press {{{OpenSpecial4Text}}}F6{{{CloseText}}} to get an Overview of the Map.
+""";
+
+
+ModeInfo::SetRules(ModeRules);
+//L16N [Melee] Short description of the Obstacle game mode rules
+ModeInfo::SetStatusMessage(_("Run."));
+***
+
+***Match_LoadHud***
+***
+Hud_Load(C_HudModulePath);
+if (Hud != Null && Hud.ScoresTable != Null) {
+	Hud.ScoresTable.Scores_Sort(CModulePlaygroundScoresTable::EScoreSortOrder::SMPoints);
+}
+***
+
+***Match_SpawnScreen***
+***
+SpawnScreen::CreateScores("Score.Points");
+***
+
+***Match_InitServer***
+***
+DoNothing();
+***
+
+***Match_StartServer***
+***
+G_LastUpdate = 0;
+
+Layers::Create("Info", ObsUI::CreateLayerInfo());
+Layers::Create("TimeDiff", ObsUI::CreateLayerTimeDiff());
+Layers::Create("Utils", ObsUI::CreateLayerUtilities());
+Layers::Create("Markers");
+Layers::SetType("Markers", CUILayer::EUILayerType::Markers);
+Layers::Create("Items", Items::CreateLayerItems());
+
+Layers::Attach("Info");
+Layers::Attach("TimeDiff");
+Layers::Attach("Utils");
+Layers::Attach("Markers");
+Layers::Attach("Items");
+
+ObsUI::StartUI();
+Items::Init();
+***
+
+***Match_InitMap***
+***
+declare Integer PrevTimeLimit;
+declare Boolean PrevPvPWeapons;
+declare Ident[] SpawnsList;
+declare Ident LeaderId;
+***
+
+***Match_StartMap***
+***
+PrevTimeLimit = S_TimeLimit;
+PrevPvPWeapons = S_PvPWeapons;
+SpawnsList = Ident[];
+LeaderId = NullId;
+
+// map is invalid
+if(!Obstacle::PrepareMap()) {
+	MB_StopMap();
+}
+
+UIManager.UIAll.MarkersXML = ObsUI::CreateHud3dMarkers();
+Layers::Get("Markers").ManialinkPage = ObsUI::CreateLayerMarkers();
+
+Items::Place();
+
+if (Hud != Null && Hud.ScoresTable != Null) {
+	//L16N [Melee] Message displayed in the scores table footer informing the players about the current points limit to reach in order to win.
+	Hud.ScoresTable.SetFooterText(TL::Compose("%1 "^TL::TimeToText(S_TimeLimit * 60 * 1000), _("Time limit : ")));
+}
+
+foreach(Player in AllPlayers) {
+	Obstacle::InitPlayer(Player);
+}
+
+StartTime = Now;
+if (S_TimeLimit > 0) {
+	EndTime = (StartTime + S_TimeLimit * 1000 * 60);
+} else {
+	EndTime = (StartTime + C_DefaultTimeLimit * 1000 * 60);
+}
+***
+
+***Match_PlayLoop***
+***
+if(Players.count == 0) continue;
+
+// Manage events
+foreach (Event in PendingEvents) {
+	switch (Event.Type) {
+		case CSmModeEvent::EType::OnArmorEmpty: {
+			if (Event.Victim.IsInOffZone) {
+				// Offzone item active?
+				declare netwrite ItemBuffTimes for Event.Victim = Integer[Text];
+				if (ItemBuffTimes.existskey(Items::T_ItemOffzone) &&
+					 ItemBuffTimes[Items::T_ItemOffzone] >= Now) {
+					// Item effect lets player walk through offzone
+					Discard(Event);
+					continue;
+				}
+			}
+			Obstacle::RespawnPlayer(Event.Victim);
+			Discard(Event);
+		}
+		case CSmModeEvent::EType::OnHit: {
+			Discard(Event);
+		}
+		case CSmModeEvent::EType::OnPlayerRequestRespawn: {
+			Obstacle::RespawnPlayer(Event.Player, Event.GiveUp);
+			Discard(Event);
+		}
+		case CSmModeEvent::EType::OnPlayerTouchesObject: {
+			if (Event.Object == Null || Event.Player == Null) {
+				Discard(Event);
+				continue;
+			}
+
+			declare PickedUp = Items::PickupItems(Event);
+			if (PickedUp) {
+				PassOn(Event);
+			} else {
+				Discard(Event);
+			}
+		}
+		default: {
+			PassOn(Event);
+		}
+	}
+}
+
+foreach (Player in Players) {
+	switch (Player.SpawnStatus) {
+		// Spawn players
+		case CSmPlayer::ESpawnStatus::NotSpawned: {
+			if (!Player.RequestsSpectate) {
+				Obstacle::RespawnPlayer(Player);
+			}
+		}
+		// Handle checkpoints,etc
+		case CSmPlayer::ESpawnStatus::Spawned: {
+			if (Player.CapturedLandmark == Null || Player.Score == Null) continue;
+
+			// Manage item effects
+			declare netwrite ItemBuffTimes for Player = Integer[Text];
+			foreach (ItemName => BuffTime in ItemBuffTimes) {
+				if (BuffTime < Now) continue;
+				switch (ItemName) {
+					case Items::T_ItemAmmo: {
+						declare AmmoItemBuffDuration for Player = 0.;
+						if (AmmoItemBuffDuration <= 0.) continue;
+						declare AmmoItemBuffAmount for Player = 1.;
+						declare TickAmount = AmmoItemBuffAmount / (AmmoItemBuffDuration * 1000. / Period);
+						AddPlayerAmmo(Player, SM::GetWeapon(Player.CurWeapon), TickAmount);
+					}
+				}
+			}
+
+			Obstacle::HandleCapture(Player);
+		}
+	}
+}
+
+// Update settings at runtime
+if (PrevTimeLimit != S_TimeLimit) {
+	PrevTimeLimit = S_TimeLimit;
+	if (S_TimeLimit > 0) {
+		EndTime = StartTime + (S_TimeLimit * 60 * 1000);
+	} else {
+		EndTime = StartTime + (C_DefaultTimeLimit * 60 * 1000);
+	}
+}
+
+//
+if (PrevPvPWeapons != S_PvPWeapons) {
+	PrevPvPWeapons = S_PvPWeapons;
+	UsePvPWeapons = S_PvPWeapons;
+}
+
+// victory conditions
+if (Now > EndTime) {
+	Message::SendBigMessage(
+		//L16N [Melee] Message displayed when the time limit is reached.
+		_("Time limit reached"),
+		2000, 3, CUIConfig::EUISound::Silence, 0
+	);
+	MB_StopMatch();
+}
+
+if (G_LastUpdate + 500 < Now) {
+	G_LastUpdate = Now;
+	
+	Obstacle::UpdateLayerUtilities();
+	Obstacle::SetSettings(S_FullAmmoSpawn, S_FastRespawn, S_FastRespawnOldMap, S_LegacyRespawn);
+}
+***
+
+
+***Match_EndMap***
+***
+Items::Destroy();
+EndTime = -1;
+MB_Sleep(2000);
+SM::UnspawnAllPlayers();
+
+declare BestPlayerScore <=> Scores::GetBestPlayerMapPoints(Scores::C_Order_Descending);
+if (BestPlayerScore != Null) {
+	Scores::SetPlayerWinner(BestPlayerScore);
+} else {
+	Scores::ResetPlayerWinner();
+}
+***
+
+***MB_Private_BeforeCloseLadder***
+***
+declare Unranked = CSmScore[];
+
+declare WorstRun = -1;
+foreach (Score in Scores) {
+	declare RunBest for Score = 1;
+	if (RunBest > 0) {
+		Score.LadderRankSortValue = RunBest;
+
+		if(RunBest > WorstRun) WorstRun = RunBest;
+	}
+	else {
+		Unranked.add(Score);
+	}
+}
+
+foreach(Score in Unranked) {
+	Score.LadderRankSortValue = WorstRun + 1;
+}
+***
+
+***MB_Private_AfterCloseLadder***
+***
+DoNothing();
+***
+
+***Match_EndServer***
+***
+SpawnScreen::DestroyRules();
+SpawnScreen::DestroyMapInfo();
+
+Layers::Detach("Info");
+Layers::Detach("TimeDiff");
+Layers::Detach("Utils");
+UIManager.UILayerDestroyAll();
+***
+
+// ---------------------------------- //
+// Functions
+// ---------------------------------- //
+// ---------------------------------- //
+Void DoNothing(){}

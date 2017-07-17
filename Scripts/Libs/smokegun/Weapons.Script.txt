@@ -1,0 +1,71 @@
+/************************************************
+*	Obstacle Library								              *
+*	Author:		smokegun  						              *
+*												*
+*	Weapons related functions.			            	*
+************************************************/
+
+#Include "TextLib" as TextLib
+#Include "MathLib" as MathLib
+#Include "Libs/smokegun/Tools.Script.txt" as Tools
+#Include "Libs/Nadeo/CustomUI.Script.txt" as CustomUI
+#Include "Libs/Nadeo/ShootMania/Map.Script.txt" as Map
+#Include "Libs/Nadeo/ShootMania/SM.Script.txt" as SM
+#Include "Libs/Nadeo/Message.Script.txt" as Message
+
+/***************************************
+	CONSTANTS
+***************************************/
+
+#Const	Version		"2017-07-10"
+#Const	ScriptName	"Weapons.Script.txt"
+
+
+// Sets the weapon type
+Void ApplyWeaponType(CSmPlayer _Player, Integer _Type) {
+	if (_Player == Null) return;
+	declare Text UIMessage;
+	switch (_Type) {
+		case 1: {
+			// No ammunition gain
+			_Player.AmmoGain = 0.0;
+			SetPlayerAmmoMax(_Player, CSmMode::EWeapon::Laser, 0);
+			SetPlayerAmmoMax(_Player, CSmMode::EWeapon::Rocket, 0);
+			SetPlayerAmmoMax(_Player, CSmMode::EWeapon::Nucleus, 0);
+			SetPlayerAmmoMax(_Player, CSmMode::EWeapon::Arrow, 0);
+			UIMessage = _("No Ammunition!");
+		}
+		case 2: {
+			// Endless ammunition
+			_Player.AmmoGain = 10.0;
+			SetPlayerAmmoMax(_Player, CSmMode::EWeapon::Laser, 10);
+			SetPlayerAmmoMax(_Player, CSmMode::EWeapon::Rocket, 10);
+			SetPlayerAmmoMax(_Player, CSmMode::EWeapon::Nucleus, 10);
+			SetPlayerAmmoMax(_Player, CSmMode::EWeapon::Arrow, 10);
+			UIMessage = ("Endless Ammunition!");
+		}
+		default: {
+			// Default values
+			_Player.AmmoGain = 1.0;
+			SetPlayerAmmoMax(_Player, CSmMode::EWeapon::Laser, 1);
+			SetPlayerAmmoMax(_Player, CSmMode::EWeapon::Rocket, 4);
+			SetPlayerAmmoMax(_Player, CSmMode::EWeapon::Nucleus, 2);
+			SetPlayerAmmoMax(_Player, CSmMode::EWeapon::Arrow, 3);
+			UIMessage = ("Normal Ammunition!");
+		}
+	}
+	declare LastWeaponType for _Player = 0;
+	if (LastWeaponType != _Type) {
+		Message::SendStatusMessage(_Player, UIMessage, 3000, 1);
+		LastWeaponType = _Type;
+	}
+}
+
+// Fill up current player ammo
+Void FillUpPlayerAmmo(CSmPlayer _Player) {
+	if (_Player == Null) return;
+	SetPlayerAmmo(_Player, CSmMode::EWeapon::Rocket, 10);
+	SetPlayerAmmo(_Player, CSmMode::EWeapon::Laser, 10);
+	SetPlayerAmmo(_Player, CSmMode::EWeapon::Nucleus, 10);
+	SetPlayerAmmo(_Player, CSmMode::EWeapon::Arrow, 10);
+}
