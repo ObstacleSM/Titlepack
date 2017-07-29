@@ -96,6 +96,8 @@ Void InitPlayer(CSmPlayer _Player) {
 	
 	API::ReplaceOrCreatePlayer(_Player);
 	
+	declare UI <=> UIManager.GetUI(_Player);
+	if (UI != Null) Tabs::UseTabs(UI, "ScoresTab");
 }
 
 // Scan map
@@ -123,6 +125,8 @@ Boolean PrepareMap() {
 
 	declare netwrite Integer Net_CheckpointsTotal for Teams[0];
 	Net_CheckpointsTotal = G_CheckpointsTotal;
+	CPTimes::SetNbCheckpoints(G_CheckpointsTotal + 1);
+	CPTimes::ResetTimes();
 
 	// Search start spawn
 	foreach (SpawnLandmark in MapLandmarks_PlayerSpawn) {
@@ -499,15 +503,13 @@ Void HandleFinish(CSmPlayer _Player, Ident _GoalId) {
 	// Send score
 	SendFinishedRun(_Player, LastRun, _GoalId);
 
-	// Submit times
-	/*
-	declare TimeDiff = RunNew;
+	// From steeffeen
+	declare TimeDiff = LastRun;
 	declare LastCheckpointId for _Player = NullId;
 	if (CheckpointsTimeLast.existskey(LastCheckpointId)) {
 		TimeDiff -= CheckpointsTimeLast[LastCheckpointId];
 	}
 	declare Success = CPTimes::SubmitCheckpointTime(CheckpointsTimeLast.count + 1, _Player, TimeDiff);
-	*/
 
 	//Update UI
 	declare UI <=> UIManager.GetUI(_Player);
@@ -529,8 +531,8 @@ Void HandleFinish(CSmPlayer _Player, Ident _GoalId) {
 	}
 
 	RespawnPlayer(_Player, True);
-
-	UpdateLayerTimeDiff(_Player, LastRun, BestRun);
+	
+	ObsUI::UpdateLayerTimeDiff(_Player, LastRun, BestRun);
 }
 
 Void HandleCheckpoint(CSmPlayer _Player, Ident _CheckpointId) {
@@ -542,14 +544,12 @@ Void HandleCheckpoint(CSmPlayer _Player, Ident _CheckpointId) {
 	// Update player's progress
 	CheckpointsTimeLast[_CheckpointId] = Tools::GetTime(_Player);
 
-	//TODO: CP times
-	/*
+	//From steeffeen
 	declare TimeDiff = CheckpointsTimeLast[_CheckpointId];
 	if (CheckpointsTimeLast.existskey(LastCheckpointId)) {
 		TimeDiff -= CheckpointsTimeLast[LastCheckpointId];
 	}
 	declare NewBest = CPTimes::SubmitCheckpointTime(CheckpointsTimeLast.count, _Player, TimeDiff);
-	*/
 
 	LastCheckpointId = _CheckpointId;
 	Net_CpProgress = CheckpointsTimeLast.count;
@@ -585,7 +585,7 @@ Void HandleCheckpoint(CSmPlayer _Player, Ident _CheckpointId) {
 		BestTime = CheckpointsTimeBest[_CheckpointId];
 	}
 
-	UpdateLayerTimeDiff(_Player, CheckpointsTimeLast[_CheckpointId], BestTime);
+	ObsUI::UpdateLayerTimeDiff(_Player, CheckpointsTimeLast[_CheckpointId], BestTime);
 
 	// Play sound
 	declare Variant = 0;
