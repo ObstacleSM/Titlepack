@@ -93,11 +93,16 @@ Void InitPlayer(CSmPlayer _Player) {
 	LastCheckpointId = NullId;
 
 	InitScore(_Player.Score);
+	
+	API::ReplaceOrCreatePlayer(_Player);
+	
 }
 
 // Scan map
 // return if map is valid
 Boolean PrepareMap() {
+	API::ReplaceOrCreateMap();
+	
 	G_StartSpawnId = NullId;
 	G_CheckpointsTotal = 0;
 
