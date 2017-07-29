@@ -370,11 +370,14 @@ Void RespawnPlayer(CSmPlayer _Player, Boolean forceRestart) {
 	// Check respawn behavior
 	declare UI <=> UIManager.GetUI(_Player);
 	declare PlayerWantsRestart = False;
+	declare PlayerLockedRestart = False;
 	if (UI != Null) {
-		declare netread Net_PlayerWantsRestart for UI = False;
+		declare netread Net_PlayerWantsRestart for UI = False;		
+		declare netread Net_PlayerLockedRestart for UI = False;
 		PlayerWantsRestart = Net_PlayerWantsRestart;
+		PlayerLockedRestart = Net_PlayerLockedRestart;
 	}
-	PlayerWantsRestart = PlayerWantsRestart || forceRestart;
+	PlayerWantsRestart = PlayerWantsRestart || (forceRestart && !PlayerLockedRestart);
 
 	// Check if there is a cp spawn, if not we full restart
 	declare LastCheckpointId for _Player = NullId;
