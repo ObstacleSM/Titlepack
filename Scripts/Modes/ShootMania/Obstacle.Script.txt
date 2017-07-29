@@ -909,7 +909,7 @@ UIManager.UILayerDestroyAll();
 /*********************************************
 	FUNCTIONS
 *********************************************/
-
+Void DoNothing() {}
 // Check if the given player is free to spec anyone
 Boolean CanFreeSpec(CSmPlayer _Player) {
 	if (_Player == Null) return False;

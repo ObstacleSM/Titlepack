@@ -1,5 +1,5 @@
 /**
- *	Mode melee
+ *	Mode obstacle
  */
 
 #Extends "Modes/ShootMania/Base/ModeShootmania.Script.txt"
@@ -14,9 +14,14 @@
 #Include "TextLib" as TL
 #Include "MathLib" as ML
 #Include "Libs/Nadeo/Layers2.Script.txt" as Layers
+#Include "Libs/Nadeo/Env.Script.txt" as Env
+#Include "Libs/Nadeo/CustomUI.Script.txt" as CustomUI
 #Include "Libs/smokegun/ObstacleLib.Script.txt" as Obstacle
 #Include "Libs/smokegun/UI.Script.txt" as ObsUI
 #Include "Libs/smokegun/Items.Script.txt" as Items
+#Include "Libs/smokegun/ObstacleRecords.Script.txt" as API
+#Include "Libs/Nadeo/TabsServer.Script.txt" as Tabs
+#Include "Libs/steeffeen/CheckpointTimes.Script.txt" as CPTimes
 
 // ---------------------------------- //
 // Settings
@@ -27,16 +32,23 @@
 #Setting S_FastRespawn			True	as _("Fast respawn on the checkpoint")
 #Setting S_FastRespawnOldMap		True	as _("Fast respawn on old maps")
 #Setting S_LegacyRespawn	False as _("Enable old respawn")
+#Setting S_AllowJump	True as _("Enable checkpoint jumping")
 
 // ---------------------------------- //
 // Constants
 // ---------------------------------- //
-#Const C_HudModulePath "Obstacle/UI.Module.Gbx" ///< Path to the hud module
+#Const C_HudModulePath "Obstacle/testUI.Module.Gbx" ///< Path to the hud module
 
 #Const Description _("Genius.")
 #Const C_DefaultTimeLimit 10
 
-declare Integer G_LastUpdate;
+#Const	C_Module_Items				"ItemsModule"
+#Const	C_Module_ItemsInfo			"ItemsInfoModule"
+#Const	C_Module_Chrono				"Chrono"
+#Const	C_Module_TimeDiff			"TimeDiff"
+#Const	C_Module_CPProgress			"CPProgress"
+#Const	C_Module_RespawnBehavior	"RespawnBehavior"
+#Const	C_Module_SpectateCount		"SpectateCount"
 
 // ---------------------------------- //
 // Extends
@@ -45,6 +57,13 @@ declare Integer G_LastUpdate;
 ***
 Log::RegisterScript(ScriptName, Version);
 ***
+
+
+***MB_Private_LoadLibraries***
+***
+Env::Set(Env::Env_Development());
+***
+
 
 ***Match_Settings***
 ***
@@ -94,6 +113,18 @@ ModeInfo::SetStatusMessage(_("Run."));
 Hud_Load(C_HudModulePath);
 if (Hud != Null && Hud.ScoresTable != Null) {
 	Hud.ScoresTable.Scores_Sort(CModulePlaygroundScoresTable::EScoreSortOrder::SMPoints);
+	
+	// Tabs
+	Tabs::Load();
+	declare TabsLayer <=> Tabs::CreateTabPaneLayer(["ScoresTab" => "Rankings", "CPTimes" => "Race"], 13, -3, False);
+	TabsLayer.Type = CUILayer::EUILayerType::AltMenu;
+	UIManager.UIAll.UILayers.add(TabsLayer);
+	
+	// Checkpoint times
+	CPTimes::Load("CPTimes");
+	CPTimes::SetSize(<240., 100.>);
+	CPTimes::SetBackgroundImage("file://Media/Manialinks/Shootmania/Common/topsBg.dds", <242., 200.>, <0., 6.>);
+	CPTimes::Build();
 }
 ***
 
@@ -104,50 +135,35 @@ SpawnScreen::CreateScores("Score.Points");
 
 ***Match_InitServer***
 ***
-DoNothing();
+declare Integer G_LastUpdate;
+declare CHttpRequest[] ReqToRemove;
 ***
 
 ***Match_StartServer***
 ***
 G_LastUpdate = 0;
-
-Layers::Create("Info", ObsUI::CreateLayerInfo());
-Layers::Create("TimeDiff", ObsUI::CreateLayerTimeDiff());
-Layers::Create("Utils", ObsUI::CreateLayerUtilities());
-Layers::Create("Markers");
-Layers::SetType("Markers", CUILayer::EUILayerType::Markers);
-Layers::Create("Items", Items::CreateLayerItems());
-
-Layers::Attach("Info");
-Layers::Attach("TimeDiff");
-Layers::Attach("Utils");
-Layers::Attach("Markers");
-Layers::Attach("Items");
-
-ObsUI::StartUI();
+CreateUI();	
 Items::Init();
+API::Init();
 ***
 
 ***Match_InitMap***
 ***
 declare Integer PrevTimeLimit;
 declare Boolean PrevPvPWeapons;
-declare Ident[] SpawnsList;
-declare Ident LeaderId;
 ***
 
 ***Match_StartMap***
 ***
 PrevTimeLimit = S_TimeLimit;
 PrevPvPWeapons = S_PvPWeapons;
-SpawnsList = Ident[];
-LeaderId = NullId;
 
 // map is invalid
 if(!Obstacle::PrepareMap()) {
 	MB_StopMap();
 }
 
+// map specific ui
 UIManager.UIAll.MarkersXML = ObsUI::CreateHud3dMarkers();
 Layers::Get("Markers").ManialinkPage = ObsUI::CreateLayerMarkers();
 
@@ -172,6 +188,18 @@ if (S_TimeLimit > 0) {
 
 ***Match_PlayLoop***
 ***
+API::Loop();
+
+// victory conditions
+if (Now > EndTime) {
+	Message::SendBigMessage(
+		//L16N [Melee] Message displayed when the time limit is reached.
+		_("Time limit reached"),
+		2000, 3, CUIConfig::EUISound::Silence, 0
+	);
+	MB_StopMatch();
+}
+
 if(Players.count == 0) continue;
 
 // Manage events
@@ -199,15 +227,10 @@ foreach (Event in PendingEvents) {
 			Discard(Event);
 		}
 		case CSmModeEvent::EType::OnPlayerTouchesObject: {
-			if (Event.Object == Null || Event.Player == Null) {
-				Discard(Event);
-				continue;
-			}
-
-			declare PickedUp = Items::PickupItems(Event);
-			if (PickedUp) {
+			if (Event.Object != Null && Event.Player != Null && Items::PickupItems(Event)) {
 				PassOn(Event);
-			} else {
+			}
+			else {
 				Discard(Event);
 			}
 		}
@@ -234,6 +257,7 @@ foreach (Player in Players) {
 			foreach (ItemName => BuffTime in ItemBuffTimes) {
 				if (BuffTime < Now) continue;
 				switch (ItemName) {
+					// Progressively grant ammo
 					case Items::T_ItemAmmo: {
 						declare AmmoItemBuffDuration for Player = 0.;
 						if (AmmoItemBuffDuration <= 0.) continue;
@@ -249,6 +273,12 @@ foreach (Player in Players) {
 	}
 }
 
+// Process Jumps
+declare JumpRequests = CPTimes::PendingJumps();
+foreach (Player => CheckpointNumber in JumpRequests) {
+	Obstacle::JumpToCheckpoint(Player, CheckpointNumber);
+}
+
 // Update settings at runtime
 if (PrevTimeLimit != S_TimeLimit) {
 	PrevTimeLimit = S_TimeLimit;
@@ -258,28 +288,16 @@ if (PrevTimeLimit != S_TimeLimit) {
 		EndTime = StartTime + (C_DefaultTimeLimit * 60 * 1000);
 	}
 }
-
-//
 if (PrevPvPWeapons != S_PvPWeapons) {
 	PrevPvPWeapons = S_PvPWeapons;
 	UsePvPWeapons = S_PvPWeapons;
 }
 
-// victory conditions
-if (Now > EndTime) {
-	Message::SendBigMessage(
-		//L16N [Melee] Message displayed when the time limit is reached.
-		_("Time limit reached"),
-		2000, 3, CUIConfig::EUISound::Silence, 0
-	);
-	MB_StopMatch();
-}
-
 if (G_LastUpdate + 500 < Now) {
 	G_LastUpdate = Now;
 	
-	Obstacle::UpdateLayerUtilities();
-	Obstacle::SetSettings(S_FullAmmoSpawn, S_FastRespawn, S_FastRespawnOldMap, S_LegacyRespawn);
+	ObsUI::UpdateLayerUtilities();
+	Obstacle::SetSettings(S_FullAmmoSpawn, S_FastRespawn, S_FastRespawnOldMap, S_LegacyRespawn, S_AllowJump);
 }
 ***
 
@@ -305,11 +323,11 @@ declare Unranked = CSmScore[];
 
 declare WorstRun = -1;
 foreach (Score in Scores) {
-	declare RunBest for Score = 1;
-	if (RunBest > 0) {
-		Score.LadderRankSortValue = RunBest;
+	declare BestRun for Score = 1;
+	if (BestRun > 0) {
+		Score.LadderRankSortValue = BestRun;
 
-		if(RunBest > WorstRun) WorstRun = RunBest;
+		if(BestRun > WorstRun) WorstRun = BestRun;
 	}
 	else {
 		Unranked.add(Score);
@@ -334,6 +352,8 @@ SpawnScreen::DestroyMapInfo();
 Layers::Detach("Info");
 Layers::Detach("TimeDiff");
 Layers::Detach("Utils");
+Layers::Detach("Markers");
+Layers::Detach("Items");
 UIManager.UILayerDestroyAll();
 ***
 
@@ -342,3 +362,28 @@ UIManager.UILayerDestroyAll();
 // ---------------------------------- //
 // ---------------------------------- //
 Void DoNothing(){}
+
+Void CreateUI() {
+	Layers::Create("Info", ObsUI::CreateLayerInfo());
+	Layers::Create("TimeDiff", ObsUI::CreateLayerTimeDiff());
+	Layers::Create("Utils", ObsUI::CreateLayerUtilities());
+	Layers::Create("Markers");
+	Layers::SetType("Markers", CUILayer::EUILayerType::Markers);
+	Layers::Create("Items", Items::CreateLayerItems());
+	
+	Layers::Attach("Info");
+	Layers::Attach("TimeDiff");
+	Layers::Attach("Utils");
+	Layers::Attach("Markers");
+	Layers::Attach("Items");
+
+	CustomUI::Load();
+	CustomUI::Add(C_Module_Chrono, <50., -73.>, <40., 10.>);
+	CustomUI::Add(C_Module_TimeDiff, <0., 65.>, <60., 12.>);
+	CustomUI::Add(C_Module_CPProgress, <-47., -78.>, <40., 5.>);
+	CustomUI::Add(C_Module_RespawnBehavior, <-20., 88.>, <40., 4.>, "center", "right");
+	CustomUI::Add(C_Module_SpectateCount, <159., -63.>, <20., 8.>, "center", "right");
+	CustomUI::Add(C_Module_Items, <0., -65.>, <80., 40.>, "bottom", "center");
+	CustomUI::Add(C_Module_ItemsInfo, <0., 40.>, <110., 10.>);
+	CustomUI::Build();
+}

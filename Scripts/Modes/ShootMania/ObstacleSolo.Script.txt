@@ -186,7 +186,6 @@ return;
 /***************************************************
 	FUNCTIONS
 ***************************************************/
-
 Text GetTime(Integer _Objective) {
 	if (_Objective > 0) {
 		return TextLib::TimeToText(_Objective);
