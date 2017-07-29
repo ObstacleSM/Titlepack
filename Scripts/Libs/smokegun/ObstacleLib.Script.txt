@@ -40,17 +40,20 @@ declare	Boolean G_FullAmmoSpawn;
 declare	Boolean G_FastRespawn;
 declare	Boolean G_FastRespawnOldMap;
 declare Boolean G_LegacyRespawn;
+declare Boolean G_AllowJump;
 
 // TODO: handle settings better
 Void SetSettings(	Boolean _FullAmmoSpawn
 	, Boolean _FastRespawn
 	, Boolean _FastRespawnOldMap
 	, Boolean _LegacyRespawn
+	, Boolean _AllowJump
 ) {
 	G_FullAmmoSpawn = _FullAmmoSpawn;
 	G_FastRespawn = _FastRespawn;
 	G_FastRespawnOldMap = _FastRespawnOldMap;
 	G_LegacyRespawn = _LegacyRespawn;
+	G_AllowJump = _AllowJump;
 }
 
 // Declare player's score variables
@@ -403,69 +406,55 @@ Void RespawnPlayer(CSmPlayer _Player) {
 	RespawnPlayer(_Player, False);
 }
 
-/////////////////////////////////////////////////////////////////
-///////////////////// UI SYNC FUNCTIONS /////////////////////////
-/////////////////////////////////////////////////////////////////
-
-Void UpdateLayerUtilities() {
-	// Respawn stuff
-	foreach (Player in Players) {
-		declare netwrite Integer Net_NbSpectating for Player;
-		Net_NbSpectating = 0;
-
-		declare UI <=> UIManager.GetUI(Player);
-		if (UI == Null) continue;
-
-		// Publish respawn behavior
-		declare netread Net_PlayerWantsRestart for UI = False;
-		declare netwrite Net_ShowRespawnBehavior for Player = False;
-		Net_ShowRespawnBehavior = Net_PlayerWantsRestart;
-
-		declare SpeccedPlayers = Integer[Text];
-
-		// Spec counts
-		foreach (Player in AllPlayers) {
-			declare UI <=> UIManager.GetUI(Player);
-			if (UI == Null) continue;
-
-			declare netread Net_SpeccedTargetLogin for UI = "";
-			if (Net_SpeccedTargetLogin != "") {
-				if (!SpeccedPlayers.existskey(Net_SpeccedTargetLogin)) {
-					SpeccedPlayers[Net_SpeccedTargetLogin] = 1;
-				} else {
-					SpeccedPlayers[Net_SpeccedTargetLogin] += 1;
-				}
-			}
-		}
-
-		foreach (PlayerLogin => NbSpectating in SpeccedPlayers) {
-			declare Player <=> SM::GetPlayer(PlayerLogin);
-			if (Player == Null) continue;
-			declare netwrite Integer Net_NbSpectating for Player;
-			Net_NbSpectating = NbSpectating;
-		}
-	}
-}
-
-Void UpdateLayerTimeDiff(CSmPlayer _Player, Integer _Time1, Integer _Time2) {
+Void JumpToCheckpoint(CSmPlayer _Player, Integer _Target) {
+	if (_Player == Null || _Target < 0) return;
 	declare UI <=> UIManager.GetUI(_Player);
 	if (UI == Null) return;
-	declare netwrite Net_LayerTimeDiffUpdated for UI = 0;
-	declare netwrite Net_Time1 for UI = 0;
-	declare netwrite Net_Time2 for UI = 0;
-	declare netwrite Net_CheckpointRank for UI = 0;
-	declare netwrite Net_RespawnCount for UI = -1;
-	Net_LayerTimeDiffUpdated = Now;
-	Net_Time1 = _Time1;
-	Net_Time2 = _Time2;
-	Net_CheckpointRank = GetPlayerRank(_Player);
-}
 
+	if (!G_AllowJump) {
+		UI.SendChat("$f00Jumping is disabled!");
+		return;
+	}
+
+	declare Ident LastCheckpointId for _Player;
+
+	// Jump to checkpoint
+	declare CSmMapLandmark Target <=> Null;
+	foreach (GaugeLandmark in MapLandmarks_Gauge) {
+		if ("Checkpoint" != TextLib::SubText(GaugeLandmark.Tag, 0, 10)) continue;
+		if (GaugeLandmark.Order != _Target) continue;
+		Target <=> GaugeLandmark;
+		break;
+	}
+	if (Target == Null) {
+		declare PoleIndex = 0;
+		foreach (GaugeLandmark in MapLandmarks_Gauge) {
+			if ("Checkpoint" != TextLib::SubText(GaugeLandmark.Tag, 0, 10)) continue;
+			if (PoleIndex == _Target) {
+				Target <=> GaugeLandmark;
+				break;
+			}
+			PoleIndex += 1;
+		}
+	}
+	if (Target == Null) {
+		// Invalid pole
+		UI.SendChat("$f00Invalid Checkpoint Index '"^_Target^"'!");
+		return;
+	}
+	// Jump
+	UI.SendChat("$0f0Jumping to Checkpoint '"^_Target^"'!");
+	LastCheckpointId = Target.Id;
+	RespawnPlayer(_Player);
+
+	// Invalidate time
+	declare netwrite Boolean Net_UsedJump for _Player;
+	Net_UsedJump = True;
+}
 /////////////////////////////////////////////////////////////////
 ///////////////////// CHECKPOINTS LOGIC /////////////////////////
 /////////////////////////////////////////////////////////////////
 
-//TODO
 Void UsePortal(CSmPlayer _Player, Ident _PortalId) {
 	if (_Player == Null || !MapLandmarks_Gauge.existskey(_PortalId)) return;
 	declare SpawnId = Tools::GetClosestSpawn(_PortalId);
