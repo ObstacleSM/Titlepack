@@ -188,57 +188,15 @@ Void SendXmlRpcCallback(Text _CallbackName, CSmPlayer _Player, Integer _RunTime,
 
 Void SendFinishedRun(CSmPlayer _Player, Integer _LastRun, Ident _GoalId) {
 	SendXmlRpcCallback("OnFinish", _Player, _LastRun, _GoalId);
+	API::PlayerFinished(_Player);
 }
 
 /////////////////////////////////////////////////////////////////
 ///////////////////// RANKING FUNCTIONS /////////////////////////
 /////////////////////////////////////////////////////////////////
 
-// Get player's rank
-Integer GetPlayerRank(CSmPlayer _Player) {
-	declare Rank = 1;
-	declare LastCheckpointId for _Player = NullId;
-	declare BestRun for _Player.Score = -1;
-	declare CheckpointsTimeLast for _Player.Score = Integer[Ident];
-	declare Ranking = Integer[Ident];
-
-	// Player is finishing a run
-	if(CheckpointsTimeLast.count == 0) {
-
-		// Fill ranking with every player who has finished the map
-		foreach (Score in Scores) {
-			declare BestRun for Score = -1;
-			if (BestRun < 0) continue;
-			Ranking[Score.User.Id] = BestRun;
-		}
-
-	// Player has taken a checkpoint
-	} else {
-
-		// Fill ranking with every player who has best time at last checkpoint
-		foreach (Score in Scores) {
-			declare CheckpointsTimeBest for Score = Integer[Ident];
-			if (!CheckpointsTimeBest.existskey(LastCheckpointId)) continue;
-			Ranking[Score.User.Id] = CheckpointsTimeLast[LastCheckpointId];
-		}
-	}
-
-	// Rank players by time
-	Ranking = Ranking.sort();
-
-	// Get final rank
-	foreach (UserId => Time in Ranking) {
-		if (UserId == _Player.User.Id) break;
-		Rank += 1;
-	}
-
-	return Rank;
-}
-
 // ---------------------------------- //
 /** Update the ranking of the players
- *
- *	@return			The rank of the player
  */
 Void UpdateRanking() {
 	declare Finished = Integer[Ident];
