@@ -1,25 +1,28 @@
-/************************************************
-*	Obstacle Library								*
-*	Author:		smokegun						*
-*												*
-*	Obstacle functions.				*
-************************************************/
+/*********************************************
+* Obstacle Library                           *
+* Author:  smokegun                          *
+*                                            *
+* Obstacle functions.                        *
+*********************************************/
 
 #Include "TextLib" as TextLib
 #Include "MathLib" as MathLib
 #Include "Libs/smokegun/Tools.Script.txt" as Tools
 #Include "Libs/smokegun/Weapons.Script.txt" as Weapons
 #Include "Libs/smokegun/UI.Script.txt" as ObsUI
-#Include "Libs/Nadeo/CustomUI.Script.txt" as CustomUI
+#Include "Libs/smokegun/ObstacleRecords.Script.txt" as API
 #Include "Libs/Nadeo/Json2.Script.txt" as Json
 #Include "Libs/Nadeo/ShootMania/Map.Script.txt" as Map
 #Include "Libs/Nadeo/ShootMania/SM3.Script.txt" as SM
 #Include "Libs/Nadeo/ShootMania/Scores.Script.txt" as Scores
 #Include "Libs/Nadeo/Message.Script.txt" as Message
+#Include "Libs/Nadeo/Log.Script.txt" as Log
+#Include "Libs/Nadeo/TabsServer.Script.txt" as Tabs
+#Include "Libs/steeffeen/CheckpointTimes.Script.txt" as CPTimes
 
-/***************************************
+/*********************************************
 	CONSTANTS
-***************************************/
+*********************************************/
 
 #Const	Version		"2017-07-10"
 #Const	ScriptName	"ObstacleLib.Script.txt"
@@ -100,6 +103,7 @@ Boolean PrepareMap() {
 	foreach (GaugeLandmark in MapLandmarks_Gauge) {
 		GaugeLandmark.Gauge.ValueReal = 1.0;
 		if (("Checkpoint" == TextLib::SubText(GaugeLandmark.Tag, 0, 10))) {
+		if ("Checkpoint" == TextLib::SubText(GaugeLandmark.Tag, 0, 10)) {
 			if (GaugeLandmark.Order == 0 || !CheckpointOrders.exists(GaugeLandmark.Order)) {
 				G_CheckpointsTotal += 1;
 				CheckpointOrders.add(GaugeLandmark.Order);
@@ -159,7 +163,10 @@ Void UpdatePoleIds(CSmPlayer _Player) {
 	Net_PoleIds = String;
 }
 
-// compatibility purpose
+/////////////////////////////////////////////////////////////////
+///////////////////// XMLRPC CALLBACKS  /////////////////////////
+/////////////////////////////////////////////////////////////////
+
 Void SendXmlRpcCallback(Text _CallbackName, CSmPlayer _Player, Integer _RunTime, Ident _CheckpointId) {
 	if (_Player == Null || _Player.IsFakePlayer || _Player.Score == Null || _CallbackName == "" || _RunTime <= 0) return;
 
@@ -482,10 +489,10 @@ Void HandleFinish(CSmPlayer _Player, Ident _GoalId) {
 
 	// Update run
 	LastRun = Tools::GetTime(_Player);
-
+	
 	// Check if last run is  if last run is better
 	if (LastRun < BestRun || BestRun < 0) {
-		log(_Player.User.Login^" has finished ! "^TextLib::TimeToText(LastRun, True)^" (Previous best was : "^TextLib::TimeToText(BestRun, True)^")");
+		Log::Log(_Player.User.Login^" has finished ! "^TextLib::TimeToText(LastRun, True)^" (Previous best was : "^TextLib::TimeToText(BestRun, True)^")");
 		BestRun = LastRun;
 		CheckpointsTimeBest = CheckpointsTimeLast;
 
