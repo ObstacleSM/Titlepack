@@ -66,6 +66,12 @@
 			<author_medals_enabled>true</author_medals_enabled>
 			<skillpoints_enabled>true</skillpoints_enabled>
 		</score_context>
+		<campaign num="0">
+			<playlist name=""/>
+			<score_context></score_context>
+			<official_record_enabled>true</official_record_enabled>
+			<maps folder="Campaigns\"/>
+		</campaign>
 	</solo>
 	<network>
 		<mode name="Modes\ShootMania\ObstacleBeta.Script.txt"/>
