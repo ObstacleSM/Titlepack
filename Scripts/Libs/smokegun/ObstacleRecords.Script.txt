@@ -1,0 +1,188 @@
+/*********************************************
+* Obstacle Library                           *
+* Author:  smokegun                          *
+*                                            *
+* Obstacle functions.                        *
+*********************************************/
+
+#Include "TextLib" as TL
+#Include "Libs/Nadeo/Log.Script.txt" as Log
+#Include "Libs/Nadeo/Json2.Script.txt" as Json
+
+/*********************************************
+	CONSTANTS
+*********************************************/
+#Const	Version		"2017-07-28"
+#Const	ScriptName	"ObstacleRecords.Script.txt"
+
+#Const C_HostUrl "http://164.132.228.75:3000/api/"
+
+/*********************************************
+  GLOBALES
+*********************************************/
+
+// General globals
+declare Text G_Token;
+declare Text G_PostHeaders;
+declare Text G_TokenSuffix;
+declare Integer G_HostUrlLength;
+
+// Login
+declare Ident G_LoginRequestId;
+declare Boolean G_IsLoggedIn;
+declare Boolean G_IsLoggingIn;
+declare Integer G_LastLoginAttempt;
+
+// Requests
+declare Text[] G_ToPost_Url;
+declare Text[] G_ToPost_Data;
+declare Text[Ident] G_CurrRequest;
+
+
+
+/////////////////////////////////////////////////////////////////
+/////////////////////       TOOLS       /////////////////////////
+/////////////////////////////////////////////////////////////////
+
+Boolean Contains(Text _Text, Text _Input) {
+	return TL::Find(_Text, _Input, False, False);
+}
+
+Void Log(Text _Msg) {
+	Log::Log("[API] "^_Msg);
+}
+
+// Used to create a POST request
+Ident MakePost(Text _Url, Text _Data) {
+	declare request <=> Http.CreatePost(C_HostUrl^_Url, _Data, G_PostHeaders);
+	return request.Id;
+}
+
+Void SendPost(Text _Url, Text _Data) {
+	if(!G_IsLoggedIn) {
+		Log("Cant do req now "^_Url);
+		G_ToPost_Url.add(_Url);
+		G_ToPost_Data.add(_Data);
+	} else {
+		Log("Send req "^_Url);
+		G_CurrRequest[MakePost(_Url, _Data)] = _Data;
+	}
+}
+
+Void Login() {
+	G_LastLoginAttempt = Now;
+	declare payload = """
+	{
+		"username": "vincent",
+		"password": "vincent"
+	}""";
+	G_LoginRequestId = MakePost("Users/Login", payload);
+	G_IsLoggingIn = True;
+}
+
+// Init the API with a token
+Void Init() {
+	G_PostHeaders = """Content-Type: application/json
+Accept: application/json""";
+	G_HostUrlLength = TL::Length(C_HostUrl);
+	Login();
+}
+
+
+/////////////////////////////////////////////////////////////////
+/////////////////////  API FUNCTIONS    /////////////////////////
+/////////////////////////////////////////////////////////////////
+
+// Send map infos
+Void ReplaceOrCreateMap() {
+	declare payload = """
+	{
+		"name": "{{{Map.MapName}}}",
+		"maniaplanetMapId": "{{{Map.Id}}}",
+		"playerId": "{{{Map.AuthorLogin}}}"
+	}
+	""";
+	SendPost("Maps/replaceOrCreate", payload);
+}
+
+// Update player infos
+Void ReplaceOrCreatePlayer(CSmPlayer _Player) {
+	declare payload = """
+	{
+		"login": "{{{_Player.User.Login}}}",
+		"nickname": "{{{_Player.User.Name}}}"
+	}""";
+	SendPost("Players/replaceOrCreate", payload);
+}
+
+// Send records
+Void PlayerFinished(CSmPlayer _Player) {
+	declare LastRun for _Player.Score = -1;
+	declare RespawnCount for _Player.Score = 0;
+	declare payload = """
+	{
+		"time": {{{LastRun}}},
+		"respawnCount": {{{RespawnCount}}},
+		"playerId": "{{{_Player.User.Login}}}",
+		"mapId": "{{{Map.Id}}}"
+	}""";
+	SendPost("Records/player-finished", payload);
+}
+
+
+/////////////////////////////////////////////////////////////////
+/////////////////////      LOOP         /////////////////////////
+/////////////////////////////////////////////////////////////////
+
+Void Loop() {
+	if(G_IsLoggedIn) {
+		// Process requests
+		
+		// Send request in queue
+		if(G_ToPost_Url.count > 0) {
+			foreach(Idx => reqUrl in G_ToPost_Url) {
+				SendPost(reqUrl, G_ToPost_Data[Idx]);
+			}
+			G_ToPost_Url.clear();
+			G_ToPost_Data.clear();
+		}
+			
+		// Wait for each request's completion
+		foreach(reqId => data in G_CurrRequest) {
+			declare request <=> Http.Requests[reqId];
+			if(request.IsCompleted) {
+				Log("Done: ("^request.StatusCode^") "^request.Result);
+				
+				// If a request is unauthorized,
+				// queue request and try to reconnect later
+				if(request.StatusCode == 401) {
+					G_IsLoggedIn = False;
+					declare ApiUrl = TL::SubString(request.Url, G_HostUrlLength, TL::Length(request.Url) - G_HostUrlLength);
+					SendPost(ApiUrl, data);
+				}
+
+				// Destroy requests when they are done
+				G_CurrRequest.removekey(reqId);
+				Http.Destroy(request);
+			}
+		}
+	} else {
+		// Wait for login request to finish
+		if(G_IsLoggingIn) {
+			declare LoginRequest <=> Http.Requests[G_LoginRequestId];
+			if(LoginRequest.IsCompleted) {			
+				if(LoginRequest.StatusCode == 200) {
+					Log("Logged in: ("^LoginRequest.StatusCode^") "^LoginRequest.Result);
+					G_Token = TL::SubString(LoginRequest.Result, 7, 64);
+					G_IsLoggedIn = True;
+					G_PostHeaders = G_PostHeaders^"""
+Authorization: {{{G_Token}}}""";
+				}
+				G_IsLoggingIn = False;
+			}
+		// We're not logged in and not logging in either		
+		} else if(G_LastLoginAttempt + 1000 < Now) {
+			Login();
+		}
+	}
+}
