@@ -20,8 +20,8 @@
 
 #Const	T_ItemOffzone		"Obstacle\\OffzoneShield.Item.gbx"
 #Const	T_ItemAmmo			"Obstacle\\Ammo.Item.gbx"
-#Const	C_Module_Items				"Obstacle_ItemsModule"
-#Const	C_Module_ItemsInfo			"Obstacle_ItemsInfoModule"
+#Const	C_Module_Items				"ItemsModule"
+#Const	C_Module_ItemsInfo			"ItemsInfoModule"
 
 declare	Ident[Text]	G_ItemIdents;
 declare CSmObject[] G_AnchorsObjects;
@@ -127,12 +127,6 @@ Void Destroy() {
 	}
 	G_AnchorsObjects.clear();
 }
-
-Void AddUI() {
-	CustomUI::Add(C_Module_Items, <0., -65.>, <80., 40.>, "bottom", "center");
-	CustomUI::Add(C_Module_ItemsInfo, <0., 40.>, <110., 10.>);
-}
-
 
 Text CreateLayerItems() {
 	declare ItemCount = G_ItemIdents.count;

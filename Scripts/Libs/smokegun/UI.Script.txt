@@ -8,10 +8,10 @@
 #Include "TextLib" as TextLib
 #Include "MathLib" as MathLib
 #Include "Libs/smokegun/Tools.Script.txt" as Tools
-#Include "Libs/smokegun/Items.Script.txt" as Items
-#Include "Libs/Nadeo/CustomUI.Script.txt" as CustomUI
+#Include "Libs/Nadeo/ShootMania/SM3.Script.txt" as SM
 #Include "Libs/Nadeo/Color.Script.txt" as Color
 #Include "Libs/Nadeo/Message.Script.txt" as Message
+#Include "Libs/Nadeo/CustomUI.Script.txt" as CustomUI
 
 /***************************************
 	CONSTANTS
@@ -24,23 +24,12 @@
 #Const	C_Module_TimeDiff			"TimeDiff"
 #Const	C_Module_CPProgress			"CPProgress"
 #Const	C_Module_RespawnBehavior	"RespawnBehavior"
+#Const C_Module_RestartLock "RestartLock"
 #Const	C_Module_SpectateCount		"SpectateCount"
 #Const	C_PortalImageUrl	"file://Media/Images/Obstacle/Script/PortalGreen.png"
 
 declare Text		G_DefaultMarkers;			// Set of default markers
 declare Text		G_DefaultMarkerFrames;		// Set of default marker frames
-
-Void StartUI() {
-	CustomUI::Load();
-	CustomUI::Add(C_Module_Chrono, <50., -73.>, <40., 10.>);
-	CustomUI::Add(C_Module_TimeDiff, <0., 65.>, <60., 12.>);
-	CustomUI::Add(C_Module_CPProgress, <-47., -78.>, <40., 5.>);
-	CustomUI::Add(C_Module_RespawnBehavior, <-20., 88.>, <40., 4.>, "center", "right");
-	CustomUI::Add(C_Module_SpectateCount, <159., -63.>, <20., 8.>, "center", "right");
-	Items::AddUI();
-	CustomUI::Build();
-}
-
 
 // Parse 3char hex color to 6char hex color
 Text GetColorizeColor(Vec3 _Color) {
@@ -282,6 +271,7 @@ Text CreateLayerUtilities() {
 			declare Label_Jumped <=> (Page.GetFirstChild("Label_Jumped") as CMlLabel);
 			declare Label_CPProgress <=> (Page.GetFirstChild("Label_CPProgress") as CMlLabel);
 			declare Label_RespawnBehavior <=> (Page.GetFirstChild("Label_RespawnBehavior") as CMlLabel);
+			declare Label_RestartLock <=> (Page.GetFirstChild("Label_RestartLock") as CMlLabel);
 			Label_Jumped.Value = _("You used a Jump! Your Time is invalid.");
 
 			// CP count
@@ -289,8 +279,10 @@ Text CreateLayerUtilities() {
 
 			// Respawn behavior
 			declare netwrite Net_PlayerWantsRestart for UI = False;
+			declare netwrite Net_PlayerLockedRestart for UI = False;
 
 			Label_RespawnBehavior.Value = TextLib::Compose("$f00%1", _("Respawning deactivated!"));
+			Label_RestartLock.Value = TextLib::Compose("$f00%1", _("Restart is locked!"));
 
 			// Spec target
 			declare netwrite Net_SpeccedTargetLogin for UI = "";
@@ -320,6 +312,10 @@ Text CreateLayerUtilities() {
 								case "2686976": {
 									// F4 - Change respawn behavior
 									Net_PlayerWantsRestart = !Net_PlayerWantsRestart;
+								}
+								case "2752512": {
+									// F5 - Change respawn lock
+									Net_PlayerLockedRestart = !Net_PlayerLockedRestart;
 								}
 							}
 						}
@@ -356,6 +352,7 @@ Text CreateLayerUtilities() {
 				} else {
 					Label_RespawnBehavior.Visible = Net_PlayerWantsRestart;
 				}
+				Label_RestartLock.Visible = Net_PlayerLockedRestart;
 
 				// Spec target
 				if (LocalPlayer.Login != InputPlayer.Login) {
@@ -373,7 +370,10 @@ Text CreateLayerUtilities() {
 		<label id="Label_CPProgress" posn="-47 -78" sizen="40 5" textsize="1" translate="1" halign="center" valign="center2" hidden="1"/>
 	</frame>
 	<frame id="{{{C_Module_RespawnBehavior}}}" class="LibCustomUI_Module">
-		<label id="Label_RespawnBehavior" posn="-20 88" sizen="40 4" textsize="1" translate="1" halign="right" valign="center2" hidden="1"/>
+		<label id="Label_RespawnBehavior" posn="-30 88" sizen="40 8" textsize="2" translate="1" halign="right" valign="center2" hidden="1"/>
+	</frame>
+	<frame id="{{{C_Module_RestartLock}}}" class="LibCustomUI_Module">
+		<label id="Label_RestartLock" posn="60 88" sizen="40 8" textsize="2" translate="1" halign="right" valign="center2" hidden="1"/>
 	</frame>
 	<frame id="{{{C_Module_SpectateCount}}}" class="LibCustomUI_Module">
 		<frame id="Frame_SpectateCount" posn="159 -63">
@@ -518,4 +518,57 @@ Text CreateHud3dMarkers() {
 			manialinkframeid="Frame_Marker{{{GaugeLandmark.Id}}}"/>""";
 	}
 	return Markers^G_DefaultMarkers;
+}
+
+
+Void UpdateLayerUtilities() {
+	foreach (Player in Players) {
+		declare netwrite Integer Net_NbSpectating for Player;
+		Net_NbSpectating = 0;
+
+		declare UI <=> UIManager.GetUI(Player);
+		if (UI == Null) continue;
+
+		// Publish respawn behavior
+		declare netread Net_PlayerWantsRestart for UI = False;
+		declare netwrite Net_ShowRespawnBehavior for Player = False;
+		Net_ShowRespawnBehavior = Net_PlayerWantsRestart;
+
+		// Count spectators
+		declare SpeccedPlayers = Integer[Text];
+		foreach (Player in Spectators) {
+			declare UI <=> UIManager.GetUI(Player);
+			if (UI == Null) continue;
+
+			declare netread Net_SpeccedTargetLogin for UI = "";
+			if (Net_SpeccedTargetLogin != "") {
+				if (!SpeccedPlayers.existskey(Net_SpeccedTargetLogin)) {
+					SpeccedPlayers[Net_SpeccedTargetLogin] = 1;
+				} else {
+					SpeccedPlayers[Net_SpeccedTargetLogin] += 1;
+				}
+			}
+		}
+
+		foreach (PlayerLogin => NbSpectating in SpeccedPlayers) {
+			declare Player <=> SM::GetPlayer(PlayerLogin);
+			if (Player == Null) continue;
+			declare netwrite Integer Net_NbSpectating for Player;
+			Net_NbSpectating = NbSpectating;
+		}
+	}
+}
+
+Void UpdateLayerTimeDiff(CSmPlayer _Player, Integer _Time1, Integer _Time2) {
+	declare UI <=> UIManager.GetUI(_Player);
+	if (UI == Null) return;
+	declare netwrite Net_LayerTimeDiffUpdated for UI = 0;
+	declare netwrite Net_Time1 for UI = 0;
+	declare netwrite Net_Time2 for UI = 0;
+	declare netwrite Net_CheckpointRank for UI = 0;
+	declare netwrite Net_RespawnCount for UI = -1;
+	Net_LayerTimeDiffUpdated = Now;
+	Net_Time1 = _Time1;
+	Net_Time2 = _Time2;
+	Net_CheckpointRank = Tools::GetPlayerRank(_Player);
 }
