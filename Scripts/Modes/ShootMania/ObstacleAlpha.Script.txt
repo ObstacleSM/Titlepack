@@ -200,8 +200,6 @@ if (Now > EndTime) {
 	MB_StopMatch();
 }
 
-if(Players.count == 0) continue;
-
 // Manage events
 foreach (Event in PendingEvents) {
 	switch (Event.Type) {
