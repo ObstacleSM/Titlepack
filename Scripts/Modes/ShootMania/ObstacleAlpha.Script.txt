@@ -163,6 +163,8 @@ if(!Obstacle::PrepareMap()) {
 	MB_StopMap();
 }
 
+CPTimes::Synchro();
+
 // map specific ui
 UIManager.UIAll.MarkersXML = ObsUI::CreateHud3dMarkers();
 Layers::Get("Markers").ManialinkPage = ObsUI::CreateLayerMarkers();
