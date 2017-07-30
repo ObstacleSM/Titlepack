@@ -83,3 +83,45 @@ Integer GetTime(CPlayer _Player) {
 	declare netwrite Net_StartTime for _Player = 0;
 	return Now - Net_StartTime;
 }
+
+
+// Get player's rank
+Integer GetPlayerRank(CSmPlayer _Player) {
+	declare Rank = 1;
+	declare LastCheckpointId for _Player = NullId;
+	declare BestRun for _Player.Score = -1;
+	declare CheckpointsTimeLast for _Player.Score = Integer[Ident];
+	declare Ranking = Integer[Ident];
+
+	// Player is finishing a run
+	if(CheckpointsTimeLast.count == 0) {
+
+		// Fill ranking with every player who has finished the map
+		foreach (Score in Scores) {
+			declare BestRun for Score = -1;
+			if (BestRun < 0) continue;
+			Ranking[Score.User.Id] = BestRun;
+		}
+
+	// Player has taken a checkpoint
+	} else {
+
+		// Fill ranking with every player who has best time at last checkpoint
+		foreach (Score in Scores) {
+			declare CheckpointsTimeBest for Score = Integer[Ident];
+			if (!CheckpointsTimeBest.existskey(LastCheckpointId)) continue;
+			Ranking[Score.User.Id] = CheckpointsTimeLast[LastCheckpointId];
+		}
+	}
+
+	// Rank players by time
+	Ranking = Ranking.sort();
+
+	// Get final rank
+	foreach (UserId => Time in Ranking) {
+		if (UserId == _Player.User.Id) break;
+		Rank += 1;
+	}
+
+	return Rank;
+}
