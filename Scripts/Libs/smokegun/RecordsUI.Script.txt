@@ -1,0 +1,219 @@
+#Include "MathLib" as ML
+#Include "Libs/Nadeo/Log.Script.txt" as Log
+#Include "Libs/Nadeo/Layers2.Script.txt" as Layers
+#Include "Libs/smokegun/Record.Script.txt" as RecordUtils
+
+/*********************************************
+	CONSTANTS
+*********************************************/
+#Const	Version		"2017-07-28"
+#Const	ScriptName	"RecordsUI.Script.txt"
+
+declare CXmlNode[] G_Records;
+
+// Global settings
+declare Integer width;
+declare Integer lines;
+declare Integer line_height;
+declare Integer top_count;
+
+// This offset is used to draw records
+declare Integer offset;
+
+Text GetPlayerField(Integer _Index, Text _Field) {
+	if(_Index < 0 || _Index >= G_Records.count) return "Error wrong idx";
+	return RecordUtils::GetPlayerField(G_Records[_Index], _Field);
+}
+
+Text GetTime(Integer _Index) {
+	if(_Index >= G_Records.count) return "Error wrong idx";
+	return RecordUtils::GetTime(G_Records[_Index]);
+}
+
+Text Vec(Vec2 _Vector) {
+	return _Vector.X^" "^_Vector.Y;
+}
+
+Text CreateRecordManialink(Integer _RecordIdx, CSmPlayer _Player, Boolean _Empty) {
+	declare frame_position = <0., -8. - offset * line_height>;
+
+	declare line_color = "$FFF";
+	// Top 1
+	if(_RecordIdx == 0) {
+		line_color = "$CC0";
+	// Top2
+	} else if(_RecordIdx == 1) {
+		line_color = "$CCC";
+	// Top3
+	} else if(_RecordIdx == 2) {
+		line_color = "$963";
+	} else if(_Player.User.Login == GetPlayerField(_RecordIdx, "login")) {
+		line_color = "$9CF";
+	}
+
+	// Rank
+	declare rank = "";
+	declare rank_position = <width * -0.39, 0.>;
+	declare rank_size = <width * 0.1, line_height * 1.>;
+
+	if(!_Empty) {
+		rank = line_color^_RecordIdx + 1^".";
+	}
+
+	// Name
+	declare name_position = <width * -0.38, 0.>;
+	declare name_size = <width * 0.6, line_height * 1.>;
+	declare name = "";
+	if(_Empty) {
+		name = _Player.User.Name;
+	} else {
+		name = GetPlayerField(_RecordIdx, "nickname");
+	}
+
+	// Time
+	declare time_position = <width * 0.49, 0.>;
+	declare time_size = <width * 0.25, line_height * 1.>;
+	declare time = line_color^"--:--:---";
+	if(!_Empty) {
+		time = line_color^GetTime(_RecordIdx);
+	}
+
+
+	return """
+	<frame pos="{{{Vec(frame_position)}}}" z-index="4" halign="center" valign="center2">
+		<label pos="{{{Vec(rank_position)}}}" size="{{{Vec(rank_size)}}}" halign="right" valign="center2" text="{{{rank}}}" style="TextCardSmallScores2" textsize="1"/>
+		<label pos="{{{Vec(name_position)}}}" size="{{{Vec(name_size)}}}" halign="left" valign="center2" text="{{{name}}}" textemboss="1" textsize="1"/>
+		<label pos="{{{Vec(time_position)}}}" size="{{{Vec(time_size)}}}" halign="right" valign="center2" text="{{{time}}}" style="TextTitle2" textsize="1"/>
+	</frame>
+	""";
+}
+
+
+Text CreateRecordManialink(Integer _RecordIdx, CSmPlayer _Player) {
+	return CreateRecordManialink(_RecordIdx, _Player, False);
+}
+
+Text DisplayPlayersFromTo(Integer _Start, Integer _End, CSmPlayer _Player) {
+	declare Manialink = "";
+	// Check that both index are valid
+	if(_Start >= 0 && _Start < G_Records.count && _End > 0 && _End > _Start) {
+
+		// Need a substitute variable because params are readonly
+		declare End = _End;
+		if(End >= G_Records.count) {
+			End = G_Records.count - 1;
+		}
+
+		// Display player records
+		for(Index, _Start, End) {
+			if(offset > lines - 1) break;
+			Manialink ^= CreateRecordManialink(Index, _Player);
+			offset +=1;
+		}
+	} else {
+		Log::Log("Error when displaying records. Wrong index, StartIdx "^_Start^"| EndIdx"^_End);
+	}
+	return Manialink;
+}
+
+Text CreateRecordsManialink(CSmPlayer _Player) {
+	declare Manialink = "";
+
+	// Find player record
+	declare CurrentPlayerRecordId = -1;
+	foreach(Idx => Record in G_Records) {
+		if(GetPlayerField(Idx, "login") == _Player.User.Login) {
+			CurrentPlayerRecordId = Idx;
+			break;
+		}
+	}
+
+	offset = 0;
+
+	// Display top X players
+	Manialink ^= DisplayPlayersFromTo(0, top_count - 1, _Player);
+
+	// The player has no record
+	if(CurrentPlayerRecordId < 0) {
+		lines -= 1;
+		// Display records from the end
+		if(G_Records.count > lines) {
+			Manialink ^= DisplayPlayersFromTo(G_Records.count - (lines - top_count), G_Records.count, _Player);
+		// Display all records
+		} else {
+			Manialink ^= DisplayPlayersFromTo(top_count, G_Records.count, _Player);
+		}
+		// Display empty line for the player
+		Manialink ^= CreateRecordManialink(-1, _Player, True);
+
+	// The player has record
+	} else {
+		if(CurrentPlayerRecordId < lines) {
+			// Display all records
+			Manialink ^= DisplayPlayersFromTo(top_count, G_Records.count, _Player);
+		} else {
+
+			// Display only records around the player
+			declare lines_to_fill = lines - top_count;
+			declare upper_half = ML::FloorInteger(lines_to_fill/2.);
+			declare records_below = G_Records.count - CurrentPlayerRecordId - 1;
+
+			// There is a gap between the last record and the widget
+			// So display more records to fill the gap
+			if(records_below < upper_half) {
+				upper_half += upper_half - records_below;
+			}
+
+			Manialink ^= DisplayPlayersFromTo(CurrentPlayerRecordId + 1 - upper_half, G_Records.count, _Player);
+		}
+	}
+
+	return Manialink;
+}
+
+Text CreateManialink(CSmPlayer _Player) {
+	declare id = "obstacle_records";
+	declare position = <-139., 75.>;
+	width = 40;
+	lines = 15;
+	line_height = 4;
+	top_count = 3;
+
+	if(top_count > lines) {
+		top_count = lines - 1;
+	}
+
+	declare is_left = position.X < 0;
+
+	// Background
+	declare bg_size = <width * 1.2, 7. + lines * line_height>;
+
+	// Title
+		declare RecordsUpdateCount for _Player = 0;
+	declare title = "Records";
+	declare title_position = <0., line_height * -0.72>;
+	declare title_size = <0., width * 1.>;
+
+	// Top Count background
+	declare top_bg_size = <width * 1.2, top_count * line_height + 1.>;
+
+	return """
+<manialink id="{{{id}}}" version="3" name="{{{id}}}">
+  <frame pos="{{{Vec(position)}}}" halign="center" valign="center2">
+    <quad size="{{{Vec(bg_size)}}}" halign="center" valign="top" action="LocalRecords.ShowRecordsList" style="Bgs1InRace" substyle="BgList"/>
+    <label pos="{{{Vec(title_position)}}}" z-index="3" size="{{{Vec(title_size)}}}" halign="center" valign="center2" text="{{{title}}}" translate="1" style="TextTitle1" textsize="1"/>
+    <quad pos="0 -5.5" size="{{{Vec(top_bg_size)}}}" halign="center" valign="top" style="Bgs1InRace" substyle="BgCardList"/>
+		{{{CreateRecordsManialink(_Player)}}}
+  </frame>
+</manialink>
+	""";
+}
+
+Void Refresh(CXmlNode[] _Records) {
+	G_Records = _Records;
+	foreach(Player in AllPlayers) {
+		Layers::Detach("Records", Player);
+		Layers::Update("Records", CreateManialink(Player));
+		Layers::Attach("Records", Player);
+	}
+}

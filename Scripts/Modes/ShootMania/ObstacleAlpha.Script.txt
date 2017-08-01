@@ -359,6 +359,7 @@ Layers::Detach("TimeDiff");
 Layers::Detach("Utils");
 Layers::Detach("Markers");
 Layers::Detach("Items");
+Layers::Detach("Records");
 UIManager.UILayerDestroyAll();
 ***
 
@@ -375,6 +376,7 @@ Void CreateUI() {
 	Layers::Create("Markers");
 	Layers::SetType("Markers", CUILayer::EUILayerType::Markers);
 	Layers::Create("Items", Items::CreateLayerItems());
+	Layers::Create("Records");
 	
 	Layers::Attach("Info");
 	Layers::Attach("TimeDiff");
