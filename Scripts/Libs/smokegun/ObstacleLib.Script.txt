@@ -287,19 +287,15 @@ Void CpRestart(	CSmPlayer _Player
 	declare RespawnCount for _Player.Score = 0;
 	RespawnCount += 1;
 
-	// Check if the map support fast respawn
-	// Above version 2 : yes
-	// Below version 2 : only if S_FastRespawnOldMap is True
+	// Check if the last checkpoint is actually a checkpoint
 	declare CanFastRespawn = True;
-	if (Map::GetMapTypeVersion() >= 2 && MapLandmarks_Gauge.existskey(_LastCheckpointId)) {
+	if (MapLandmarks_Gauge.existskey(_LastCheckpointId)) {
 		declare metadata DefaultTag for MapLandmarks_Gauge[_LastCheckpointId] = "";
 		if (DefaultTag != "Checkpoint" ||
 			(!G_LegacyRespawn && MapLandmarks_Gauge[_LastCheckpointId].Tag == "Portal")
 		) {
 			CanFastRespawn = False;
 		}
-	} else if (Map::GetMapTypeVersion() < 2 && !G_FastRespawnOldMap) {
-		CanFastRespawn = False;
 	}
 
 	// Use fast respawn on checkpoint
