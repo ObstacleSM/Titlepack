@@ -116,7 +116,7 @@ if (Hud != Null && Hud.ScoresTable != Null) {
 	
 	// Tabs
 	Tabs::Load();
-	declare TabsLayer <=> Tabs::CreateTabPaneLayer(["ScoresTab" => "Rankings", "CPTimes" => "Race"], 13, -3, False);
+	declare TabsLayer <=> Tabs::CreateTabPaneLayer(["ScoresTab" => "Rankings", "CPTimes" => "Race"], 13, -50, False);
 	TabsLayer.Type = CUILayer::EUILayerType::AltMenu;
 	UIManager.UIAll.UILayers.add(TabsLayer);
 	

@@ -67,7 +67,7 @@ Void Load(Text _TabName) {
 	// Initialize values
 	G_CPTimes_Title = _("Best Checkpoint Times");
 	G_CPTimes_Size = <230., 100.>;
-	G_CPTimes_Position = <0., 0.>;
+	G_CPTimes_Position = <0., 10.>;
 
 	declare Integer[Integer] Net_Steff_LibTimes_BestCPTimes for Teams[0];
 	declare Text[Integer] Net_Steff_LibTimes_BestCPNames for Teams[0];
@@ -254,7 +254,7 @@ Void Build() {
 			}
 		}
 		--></script>
-		<frame id="Frame_Times" pos="{{{Tools::GetPosn(G_CPTimes_Position)}}}">
+		<frame id="Frame_Times" posn="{{{Tools::GetPosn(G_CPTimes_Position)}}}">
 			<label posn="0 {{{G_CPTimes_Size.Y * 0.36}}}" textprefix="$o$s" text="{{{TextLib::MLEncode(G_CPTimes_Title)}}}" textsize="4" translate="1"
 				halign="center" valign="center2"/>
 			<quad id="Quad_Prev" posn="-6 -54 5" sizen="7 7" style="Icons64x64_1" scriptevents="1" hidden="1" halign="center" valign="center2"/>
