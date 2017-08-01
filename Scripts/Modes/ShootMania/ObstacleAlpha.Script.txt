@@ -190,6 +190,11 @@ if (S_TimeLimit > 0) {
 
 ***Match_PlayLoop***
 ***
+// Initalize player who joins as spectator
+foreach(Player in Spectators) {
+	Obstacle::InitPlayer(Player);
+}
+
 API::Loop();
 
 // victory conditions
