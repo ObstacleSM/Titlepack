@@ -67,7 +67,7 @@ Void Load(Text _TabName) {
 	// Initialize values
 	G_CPTimes_Title = _("Best Checkpoint Times");
 	G_CPTimes_Size = <230., 100.>;
-	G_CPTimes_Position = <0., 10.>;
+	G_CPTimes_Position = <0., 0.>;
 
 	declare Integer[Integer] Net_Steff_LibTimes_BestCPTimes for Teams[0];
 	declare Text[Integer] Net_Steff_LibTimes_BestCPNames for Teams[0];

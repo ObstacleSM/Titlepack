@@ -18,6 +18,7 @@
 #Include "Libs/Nadeo/CustomUI.Script.txt" as CustomUI
 #Include "Libs/smokegun/ObstacleLib.Script.txt" as Obstacle
 #Include "Libs/smokegun/UI.Script.txt" as ObsUI
+#Include "Libs/smokegun/RecordsUI.Script.txt" as RecordsUI
 #Include "Libs/smokegun/Items.Script.txt" as Items
 #Include "Libs/smokegun/ObstacleRecords.Script.txt" as API
 #Include "Libs/Nadeo/TabsServer.Script.txt" as Tabs
@@ -41,14 +42,6 @@
 
 #Const Description _("Genius.")
 #Const C_DefaultTimeLimit 10
-
-#Const	C_Module_Items				"ItemsModule"
-#Const	C_Module_ItemsInfo			"ItemsInfoModule"
-#Const	C_Module_Chrono				"Chrono"
-#Const	C_Module_TimeDiff			"TimeDiff"
-#Const	C_Module_CPProgress			"CPProgress"
-#Const	C_Module_RespawnBehavior	"RespawnBehavior"
-#Const	C_Module_SpectateCount		"SpectateCount"
 
 // ---------------------------------- //
 // Extends
@@ -171,11 +164,6 @@ Layers::Get("Markers").ManialinkPage = ObsUI::CreateLayerMarkers();
 
 Items::Place();
 
-if (Hud != Null && Hud.ScoresTable != Null) {
-	//L16N [Melee] Message displayed in the scores table footer informing the players about the current points limit to reach in order to win.
-	Hud.ScoresTable.SetFooterText(TL::Compose("%1 "^TL::TimeToText(S_TimeLimit * 60 * 1000), _("Time limit : ")));
-}
-
 foreach(Player in AllPlayers) {
 	Obstacle::InitPlayer(Player);
 }
@@ -185,6 +173,11 @@ if (S_TimeLimit > 0) {
 	EndTime = (StartTime + S_TimeLimit * 1000 * 60);
 } else {
 	EndTime = (StartTime + C_DefaultTimeLimit * 1000 * 60);
+}
+
+if (Hud != Null && Hud.ScoresTable != Null) {
+	//L16N [Melee] Message displayed in the scores table footer informing the players about the current points limit to reach in order to win.
+	Hud.ScoresTable.SetFooterText(TL::Compose("%1 "^TL::TimeToText(S_TimeLimit * 60 * 1000), _("Time limit : ")));
 }
 ***
 
@@ -292,6 +285,10 @@ if (PrevTimeLimit != S_TimeLimit) {
 	} else {
 		EndTime = StartTime + (C_DefaultTimeLimit * 60 * 1000);
 	}
+	if (Hud != Null && Hud.ScoresTable != Null) {
+	//L16N [Melee] Message displayed in the scores table footer informing the players about the current points limit to reach in order to win.
+		Hud.ScoresTable.SetFooterText(TL::Compose("%1 "^TL::TimeToText(S_TimeLimit * 60 * 1000), _("Time limit : ")));
+	}
 }
 if (PrevPvPWeapons != S_PvPWeapons) {
 	PrevPvPWeapons = S_PvPWeapons;
@@ -376,21 +373,26 @@ Void CreateUI() {
 	Layers::Create("Markers");
 	Layers::SetType("Markers", CUILayer::EUILayerType::Markers);
 	Layers::Create("Items", Items::CreateLayerItems());
-	Layers::Create("Records");
+	Layers::Create("Records", RecordsUI::CreateManialink());
 	
 	Layers::Attach("Info");
 	Layers::Attach("TimeDiff");
 	Layers::Attach("Utils");
 	Layers::Attach("Markers");
 	Layers::Attach("Items");
+	Layers::Attach("Records");
 
 	CustomUI::Load();
-	CustomUI::Add(C_Module_Chrono, <50., -73.>, <40., 10.>);
-	CustomUI::Add(C_Module_TimeDiff, <0., 65.>, <60., 12.>);
-	CustomUI::Add(C_Module_CPProgress, <-47., -78.>, <40., 5.>);
-	CustomUI::Add(C_Module_RespawnBehavior, <-20., 88.>, <40., 4.>, "center", "right");
-	CustomUI::Add(C_Module_SpectateCount, <159., -63.>, <20., 8.>, "center", "right");
-	CustomUI::Add(C_Module_Items, <0., -65.>, <80., 40.>, "bottom", "center");
-	CustomUI::Add(C_Module_ItemsInfo, <0., 40.>, <110., 10.>);
+	//posn="-80 88" sizen="40 8"
+	CustomUI::Add("CustomUI_Info", <-100., 88.>, <40., 8.>);
+	CustomUI::Add("obstacle_records", <-139., 40.>, <42., 80.>);
+	CustomUI::Add(ObsUI::C_Module_Chrono, <50., -73.>, <40., 10.>);
+	CustomUI::Add(ObsUI::C_Module_TimeDiff, <0., 65.>, <60., 12.>);
+	CustomUI::Add(ObsUI::C_Module_CPProgress, <-47., -78.>, <40., 5.>);
+	CustomUI::Add(ObsUI::C_Module_RespawnBehavior, <-50., 88.>, <50., 8.>);
+	CustomUI::Add(ObsUI::C_Module_RestartLock, <45., 88.>, <50., 8.>);
+	CustomUI::Add(ObsUI::C_Module_SpectateCount, <150., -63.>, <20., 8.>);
+	CustomUI::Add(Items::C_Module_Items, <0., -65.>, <80., 40.>);
+	CustomUI::Add(Items::C_Module_ItemsInfo, <0., 40.>, <110., 10.>);
 	CustomUI::Build();
 }
