@@ -33,7 +33,7 @@ declare Integer G_HostUrlLength;
 declare Ident G_LoginRequestId;
 declare Boolean G_IsLoggedIn;
 declare Boolean G_IsLoggingIn;
-declare Integer G_LastLoginAttempt;
+declare Integer G_LastRequestAttempt;
 
 // Requests
 declare Text[] G_ToPost_Url;
@@ -43,7 +43,6 @@ declare Text[Ident] G_CurrRequest;
 // Records
 declare CXmlNode[] G_Records;
 declare Ident G_GetRequestId;
-declare Integer G_LastGetReq;
 
 
 
@@ -65,12 +64,13 @@ CXmlNode[] GetRecords() {
 
 // Used to create a POST request
 Ident MakePost(Text _Url, Text _Data) {
+	G_LastRequestAttempt = Now;
 	declare request <=> Http.CreatePost(C_HostUrl^_Url, _Data, G_PostHeaders);
 	return request.Id;
 }
 
 Void SendPost(Text _Url, Text _Data) {
-	if(!G_IsLoggedIn) {
+	if(!G_IsLoggedIn || G_LastRequestAttempt + 500 > Now) {
 		Log("Cant do req now "^_Url);
 		G_ToPost_Url.add(_Url);
 		G_ToPost_Data.add(_Data);
@@ -99,7 +99,6 @@ Void ParseRecords(Text _RecordsXmlAsString) {
 }
 
 Void Login() {
-	G_LastLoginAttempt = Now;
 	declare payload = """
 	{
 		"username": "vincent",
@@ -204,8 +203,8 @@ Void Loop() {
 		// Get records		
 		if(G_GetRequestId != NullId &&
 		Http.Requests.existskey(G_GetRequestId) &&
-		Http.Requests[G_GetRequestId].IsCompleted &&
-		G_LastGetReq + 1000 < Now) {
+		Http.Requests[G_GetRequestId].IsCompleted &&		
+		G_LastRequestAttempt + 1000 < Now) {
 			declare GetRequest <=> Http.Requests[G_GetRequestId];
 		
 			if(GetRequest.StatusCode == 200) {
@@ -228,7 +227,7 @@ Authorization: {{{G_Token}}}""";
 				G_IsLoggingIn = False;
 			}
 		// We're not logged in and not logging in either		
-		} else if(G_LastLoginAttempt + 1000 < Now) {
+		} else if(G_LastRequestAttempt + 1000 < Now) {
 			Login();
 		}
 	}
