@@ -6,6 +6,7 @@
 *********************************************/
 
 #Include "TextLib" as TL
+#Include "Libs/smokegun/RecordsUI.Script.txt" as RecordsUI
 #Include "Libs/Nadeo/Log.Script.txt" as Log
 #Include "Libs/Nadeo/Json2.Script.txt" as Json
 
@@ -15,7 +16,7 @@
 #Const	Version		"2017-07-28"
 #Const	ScriptName	"ObstacleRecords.Script.txt"
 
-#Const C_HostUrl "http://164.132.228.75:3000/api/"
+#Const C_HostUrl "http://localhost:3000/api/"
 
 /*********************************************
   GLOBALES
@@ -24,6 +25,7 @@
 // General globals
 declare Text G_Token;
 declare Text G_PostHeaders;
+declare Text G_GetHeaders;
 declare Text G_TokenSuffix;
 declare Integer G_HostUrlLength;
 
@@ -38,6 +40,11 @@ declare Text[] G_ToPost_Url;
 declare Text[] G_ToPost_Data;
 declare Text[Ident] G_CurrRequest;
 
+// Records
+declare CXmlNode[] G_Records;
+declare Ident G_GetRequestId;
+declare Integer G_LastGetReq;
+
 
 
 /////////////////////////////////////////////////////////////////
@@ -50,6 +57,10 @@ Boolean Contains(Text _Text, Text _Input) {
 
 Void Log(Text _Msg) {
 	Log::Log("[API] "^_Msg);
+}
+
+CXmlNode[] GetRecords() {
+	return G_Records;
 }
 
 // Used to create a POST request
@@ -69,6 +80,24 @@ Void SendPost(Text _Url, Text _Data) {
 	}
 }
 
+Void SendGetRecords() {
+	if(G_GetRequestId == NullId ||
+		!Http.Requests.existskey(G_GetRequestId) ||
+		Http.Requests[G_GetRequestId].IsCompleted) {
+		declare request <=> Http.CreateGet(C_HostUrl^"Records/with-player?mapId="^Map.Id, False, G_GetHeaders);
+		G_GetRequestId = request.Id;
+	}
+}
+
+Void ParseRecords(Text _RecordsXmlAsString) {
+	declare CXmlNode[] records;
+	foreach(Record in Xml.Create(_RecordsXmlAsString).Root.Children) {
+		records.add(Record);
+	}
+	G_Records = records;
+	RecordsUI::Refresh(G_Records);
+}
+
 Void Login() {
 	G_LastLoginAttempt = Now;
 	declare payload = """
@@ -84,6 +113,7 @@ Void Login() {
 Void Init() {
 	G_PostHeaders = """Content-Type: application/json
 Accept: application/json""";
+	G_GetHeaders = """Accept: application/xml""";
 	G_HostUrlLength = TL::Length(C_HostUrl);
 	Login();
 }
@@ -160,11 +190,28 @@ Void Loop() {
 					declare ApiUrl = TL::SubString(request.Url, G_HostUrlLength, TL::Length(request.Url) - G_HostUrlLength);
 					SendPost(ApiUrl, data);
 				}
+				
+				if(G_IsLoggedIn) {
+					SendGetRecords();
+				}
 
 				// Destroy requests when they are done
 				G_CurrRequest.removekey(reqId);
 				Http.Destroy(request);
 			}
+		}
+		
+		// Get records		
+		if(G_GetRequestId != NullId &&
+		Http.Requests.existskey(G_GetRequestId) &&
+		Http.Requests[G_GetRequestId].IsCompleted &&
+		G_LastGetReq + 1000 < Now) {
+			declare GetRequest <=> Http.Requests[G_GetRequestId];
+		
+			if(GetRequest.StatusCode == 200) {
+				ParseRecords(GetRequest.Result);
+			}
+			Http.Destroy(GetRequest);
 		}
 	} else {
 		// Wait for login request to finish
