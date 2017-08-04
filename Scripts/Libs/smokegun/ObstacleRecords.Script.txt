@@ -65,6 +65,11 @@ CXmlNode[] GetRecords() {
 // Used to create a POST request
 Ident MakePost(Text _Url, Text _Data) {
 	G_LastRequestAttempt = Now;
+	
+	if(Http.Requests.count >= Http.SlotsAvailable) {
+		return NullId;
+	}
+	
 	declare request <=> Http.CreatePost(C_HostUrl^_Url, _Data, G_PostHeaders);
 	return request.Id;
 }
@@ -101,6 +106,11 @@ Void ParseRecords(Text _RecordsXmlAsString) {
 }
 
 Void Login() {
+	// Destroy previous login request
+	if(G_LoginRequestId != NullId) {
+		Http.Destroy(Http.Requests[G_LoginRequestId]);
+	}
+			
 	declare payload = """
 	{
 		"username": "vincent",
@@ -205,8 +215,7 @@ Void Loop() {
 		// Get records		
 		if(G_GetRequestId != NullId &&
 		Http.Requests.existskey(G_GetRequestId) &&
-		Http.Requests[G_GetRequestId].IsCompleted &&		
-		G_LastRequestAttempt + 1000 < Now) {
+		Http.Requests[G_GetRequestId].IsCompleted) {
 			declare GetRequest <=> Http.Requests[G_GetRequestId];
 		
 			if(GetRequest.StatusCode == 200) {
