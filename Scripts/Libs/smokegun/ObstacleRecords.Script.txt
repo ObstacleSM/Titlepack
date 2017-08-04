@@ -100,9 +100,9 @@ Void ParseRecords(Text _RecordsXmlAsString) {
 	foreach(Record in XmlRecords.Root.Children) {
 		records.add(Record);
 	}
-	Xml.Destroy(XmlRecords);
 	G_Records = records;
 	RecordsUI::Refresh(G_Records);
+	Xml.Destroy(XmlRecords);
 }
 
 Void Login() {
