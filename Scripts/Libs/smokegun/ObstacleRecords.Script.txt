@@ -91,9 +91,11 @@ Void SendGetRecords() {
 
 Void ParseRecords(Text _RecordsXmlAsString) {
 	declare CXmlNode[] records;
-	foreach(Record in Xml.Create(_RecordsXmlAsString).Root.Children) {
+	declare XmlRecords = Xml.Create(_RecordsXmlAsString);
+	foreach(Record in XmlRecords.Root.Children) {
 		records.add(Record);
 	}
+	Xml.Destroy(XmlRecords);
 	G_Records = records;
 	RecordsUI::Refresh(G_Records);
 }
