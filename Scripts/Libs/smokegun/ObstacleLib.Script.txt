@@ -486,7 +486,10 @@ Void HandleFinish(CSmPlayer _Player, Ident _GoalId) {
 
 	// Update run
 	LastRun = Tools::GetTime(_Player);
-	
+
+	// Update time diff before updating best run
+	ObsUI::UpdateLayerTimeDiff(_Player, LastRun, BestRun);
+
 	// Check if last run is  if last run is better
 	if (LastRun < BestRun || BestRun < 0) {
 		Log::Log(_Player.User.Login^" has finished ! "^TextLib::TimeToText(LastRun, True)^" (Previous best was : "^TextLib::TimeToText(BestRun, True)^")");
