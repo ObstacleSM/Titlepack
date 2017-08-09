@@ -129,12 +129,12 @@ Void UpdateManialink(CSmPlayer _Player) {
 		// for the current player
 						
 		// Display records from the end
-		if(G_Records.count > lines) {
-			DisplayPlayersFromTo(G_Records.count - (lines - top_count), G_Records.count - 2, _Player);
+		if(G_Records.count >= lines) {
+			DisplayPlayersFromTo(G_Records.count - (lines - 1 - top_count), G_Records.count - 1, _Player);
 			
 		// Display all records
 		} else {
-			DisplayPlayersFromTo(top_count, G_Records.count - 2, _Player);
+			DisplayPlayersFromTo(top_count, G_Records.count - 1, _Player);
 		}
 		
 		// Add an empty line for the player
