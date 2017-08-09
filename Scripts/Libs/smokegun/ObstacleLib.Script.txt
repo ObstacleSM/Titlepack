@@ -223,7 +223,7 @@ Void UpdateRanking() {
 	declare Unfinished = CSmPlayer[];
 
 	// Split finished and unfinished players
-	foreach (Player in Players) {
+	foreach (Player in AllPlayers) {
 		declare BestRun for Player.Score = -1;
 		if (BestRun > 0) Finished[Player.Id] = BestRun;
 		else Unfinished.add(Player);
