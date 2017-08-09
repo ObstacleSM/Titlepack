@@ -255,20 +255,16 @@ Text CreateManialink() {
 			// Foreach records
 			foreach(Idx => Control in Frame_Records.Controls) {
 				if(Idx >=0 && Idx < RecordRanks.count) {
-					foreach(Label in (Control as CMlFrame).Controls) {
-						declare RecordLabel <=> (Label as CMlLabel);
-						switch(Label.ControlId) {
-							case "rank": {
-								RecordLabel.SetText(RecordRanks[Idx]);
-							}
-							case "name": {
-								RecordLabel.SetText(RecordNames[Idx]);						
-							}
-							case "time": {
-								RecordLabel.SetText(RecordTimes[Idx]);						
-							}
-						}
-					}
+					declare frame <=> (Control as CMlFrame);
+					declare rankLabel <=> (frame.GetFirstChild("rank") as CMlLabel);
+					declare nameLabel <=> (frame.GetFirstChild("name") as CMlLabel);
+					declare timeLabel <=> (frame.GetFirstChild("time") as CMlLabel);
+
+					rankLabel.SetText(RecordRanks[Idx]);
+					nameLabel.SetText(RecordNames[Idx]);
+					timeLabel.SetText(RecordTimes[Idx]);
+					
+					Control.Visible = True;
 				}	else {
 					Control.Visible = False;
 				}				
