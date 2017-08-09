@@ -291,8 +291,8 @@ Void CpRestart(	CSmPlayer _Player
 	declare CanFastRespawn = True;
 	if (MapLandmarks_Gauge.existskey(_LastCheckpointId)) {
 		declare metadata DefaultTag for MapLandmarks_Gauge[_LastCheckpointId] = "";
-		if (DefaultTag != "Checkpoint" ||
-			(!G_LegacyRespawn && MapLandmarks_Gauge[_LastCheckpointId].Tag == "Portal")
+		if (DefaultTag != "Checkpoint" && DefaultTag != "" ||
+				(!G_LegacyRespawn && (MapLandmarks_Gauge[_LastCheckpointId].Tag == "Portal" || MapLandmarks_Gauge[_LastCheckpointId].Tag == "CheckpointType3"))
 		) {
 			CanFastRespawn = False;
 		}
