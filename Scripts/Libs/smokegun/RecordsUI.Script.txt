@@ -278,7 +278,7 @@ Text CreateManialink() {
 
 Void Refresh(CXmlNode[] _Records) {
 	G_Records = _Records;
-	foreach(Player in AllPlayers) {
+	foreach(Player in Players) {
 		UpdateManialink(Player);
 		
 		// Update UI
