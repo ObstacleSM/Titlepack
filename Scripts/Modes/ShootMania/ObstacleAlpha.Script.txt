@@ -31,7 +31,6 @@
 #Setting S_PvPWeapons			False	as _("Enable PvP Weapons")
 #Setting S_FullAmmoSpawn			True	as _("Spawning with full Ammunition")
 #Setting S_FastRespawn			True	as _("Fast respawn on the checkpoint")
-#Setting S_FastRespawnOldMap		True	as _("Fast respawn on old maps")
 #Setting S_LegacyRespawn	False as _("Enable old respawn")
 #Setting S_AllowJump	True as _("Enable checkpoint jumping")
 
@@ -299,7 +298,7 @@ if (G_LastUpdate + 500 < Now) {
 	G_LastUpdate = Now;
 	
 	ObsUI::UpdateLayerUtilities();
-	Obstacle::SetSettings(S_FullAmmoSpawn, S_FastRespawn, S_FastRespawnOldMap, S_LegacyRespawn, S_AllowJump);
+	Obstacle::SetSettings(S_FullAmmoSpawn, S_FastRespawn, S_LegacyRespawn, S_AllowJump);
 }
 ***
 

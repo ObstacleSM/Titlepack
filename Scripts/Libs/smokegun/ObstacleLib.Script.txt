@@ -38,20 +38,17 @@ declare Integer G_CheckpointsTotal;
 // Settings
 declare	Boolean G_FullAmmoSpawn;
 declare	Boolean G_FastRespawn;
-declare	Boolean G_FastRespawnOldMap;
 declare Boolean G_LegacyRespawn;
 declare Boolean G_AllowJump;
 
 // TODO: handle settings better
 Void SetSettings(	Boolean _FullAmmoSpawn
 	, Boolean _FastRespawn
-	, Boolean _FastRespawnOldMap
 	, Boolean _LegacyRespawn
 	, Boolean _AllowJump
 ) {
 	G_FullAmmoSpawn = _FullAmmoSpawn;
 	G_FastRespawn = _FastRespawn;
-	G_FastRespawnOldMap = _FastRespawnOldMap;
 	G_LegacyRespawn = _LegacyRespawn;
 	G_AllowJump = _AllowJump;
 }
@@ -80,7 +77,7 @@ Void InitPlayer(CSmPlayer _Player) {
 
 	declare netwrite Boolean Net_Initialized for _Player = False;
 	if(Net_Initialized) return;
-	
+
 	declare netwrite Integer Net_StartTime for _Player;
 	declare netwrite Integer Net_CpProgress for _Player;
 	declare netwrite Boolean Net_UsedJump for _Player;
@@ -95,9 +92,9 @@ Void InitPlayer(CSmPlayer _Player) {
 	LastCheckpointId = NullId;
 
 	InitScore(_Player.Score);
-	
+
 	API::ReplaceOrCreatePlayer(_Player);
-	
+
 	declare UI <=> UIManager.GetUI(_Player);
 	if (UI != Null) Tabs::UseTabs(UI, "ScoresTab");
 }
@@ -106,7 +103,7 @@ Void InitPlayer(CSmPlayer _Player) {
 // return if map is valid
 Boolean PrepareMap() {
 	API::ReplaceOrCreateMap();
-	
+
 	G_StartSpawnId = NullId;
 	G_CheckpointsTotal = 0;
 
@@ -143,7 +140,7 @@ Boolean PrepareMap() {
 		UIManager.UIAll.SendChat("$f00ERROR: No Start Spawn on this Map!");
 		return False;
 	}
-	
+
 	return True;
 }
 
@@ -372,7 +369,7 @@ Void RespawnPlayer(CSmPlayer _Player, Boolean forceRestart) {
 	declare PlayerWantsRestart = False;
 	declare PlayerLockedRestart = False;
 	if (UI != Null) {
-		declare netread Net_PlayerWantsRestart for UI = False;		
+		declare netread Net_PlayerWantsRestart for UI = False;
 		declare netread Net_PlayerLockedRestart for UI = False;
 		PlayerWantsRestart = Net_PlayerWantsRestart;
 		PlayerLockedRestart = Net_PlayerLockedRestart;
@@ -532,8 +529,6 @@ Void HandleFinish(CSmPlayer _Player, Ident _GoalId) {
 	}
 
 	RespawnPlayer(_Player, True);
-	
-	ObsUI::UpdateLayerTimeDiff(_Player, LastRun, BestRun);
 }
 
 Void HandleCheckpoint(CSmPlayer _Player, Ident _CheckpointId) {
