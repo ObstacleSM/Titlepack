@@ -523,6 +523,9 @@ Text CreateHud3dMarkers() {
 	return Markers^G_DefaultMarkers;
 }
 
+Void ResetMarkers() {
+	G_DefaultMarkers = "";
+}
 
 Void UpdateLayerUtilities() {
 	foreach (Player in Players) {

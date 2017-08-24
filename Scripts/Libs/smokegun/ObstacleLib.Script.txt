@@ -106,6 +106,7 @@ Boolean PrepareMap() {
 
 	G_StartSpawnId = NullId;
 	G_CheckpointsTotal = 0;
+	ObsUI::ResetMarkers();
 
 	// Count checkpoints
 	declare CheckpointOrders = Integer[];
