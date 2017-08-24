@@ -239,7 +239,9 @@ Void UpdateRanking() {
 	Finished = 	Finished.sort();
 	declare rank = 0;
 	foreach (Id => Time in Finished) {
-		Scores::SetPlayerMapPoints(Players[Id].Score, G_CheckpointsTotal + Finished.count - rank);
+		if(Players.existskey(Id)) {
+			Scores::SetPlayerMapPoints(Players[Id].Score, G_CheckpointsTotal + Finished.count - rank);
+		}
 		rank = rank + 1;
 	}
 }

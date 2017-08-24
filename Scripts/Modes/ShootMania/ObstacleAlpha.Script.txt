@@ -203,7 +203,7 @@ if (Now > EndTime) {
 foreach (Event in PendingEvents) {
 	switch (Event.Type) {
 		case CSmModeEvent::EType::OnArmorEmpty: {
-			if (Event.Victim.IsInOffZone) {
+			if (Event.Victim != Null && Event.Victim.IsInOffZone) {
 				// Offzone item active?
 				declare netwrite ItemBuffTimes for Event.Victim = Integer[Text];
 				if (ItemBuffTimes.existskey(Items::T_ItemOffzone) &&
