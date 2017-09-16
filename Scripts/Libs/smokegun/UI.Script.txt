@@ -20,16 +20,23 @@
 #Const	Version		"2017-07-10"
 #Const	ScriptName	"UI.Script.txt"
 
+#Const	C_Module_NextMapVoting		"Obstacle_NextMapVoting"
 #Const	C_Module_Chrono				"Chrono"
 #Const	C_Module_TimeDiff			"TimeDiff"
 #Const	C_Module_CPProgress			"CPProgress"
 #Const	C_Module_RespawnBehavior	"RespawnBehavior"
-#Const C_Module_RestartLock "RestartLock"
+#Const  C_Module_RestartLock "RestartLock"
 #Const	C_Module_SpectateCount		"SpectateCount"
 #Const	C_PortalImageUrl	"file://Media/Images/Obstacle/Script/PortalGreen.png"
 
 declare Text		G_DefaultMarkers;			// Set of default markers
 declare Text		G_DefaultMarkerFrames;		// Set of default marker frames
+declare Real G_NextMapVotingRatio; // Setting
+
+
+Void SetNextMapVotingRatio(Real newValue) {
+	G_NextMapVotingRatio = newValue;
+}
 
 // Parse 3char hex color to 6char hex color
 Text GetColorizeColor(Vec3 _Color) {
@@ -262,12 +269,15 @@ Text CreateLayerUtilities() {
 	<script><!--
 		#Include "TextLib" as TextLib
 
+		#Const	C_UseNextMapVoting	{{{(G_NextMapVotingRatio > 0.0 && G_NextMapVotingRatio <= 1.0)}}}
+		
 		main() {
 			wait(InputPlayer != Null && UI != Null && Page != Null);
 
 			declare Frame_SpectateCount <=> (Page.GetFirstChild("Frame_SpectateCount") as CMlFrame);
 			declare Label_SpectateCount <=> (Frame_SpectateCount.GetFirstChild("Label_SpectateCount") as CMlLabel);
 
+			declare Label_NextMapVoting <=> (Page.GetFirstChild("Label_NextMapVoting") as CMlLabel);
 			declare Label_Jumped <=> (Page.GetFirstChild("Label_Jumped") as CMlLabel);
 			declare Label_CPProgress <=> (Page.GetFirstChild("Label_CPProgress") as CMlLabel);
 			declare Label_RespawnBehavior <=> (Page.GetFirstChild("Label_RespawnBehavior") as CMlLabel);
@@ -283,6 +293,17 @@ Text CreateLayerUtilities() {
 
 			Label_RespawnBehavior.Value = TextLib::Compose("$f00%1", _("Respawning deactivated!"));
 			Label_RestartLock.Value = TextLib::Compose("$f00%1", _("Restart is locked!"));
+
+			// Next map voting
+			// Values: 1 - Next, 0 - Stay
+			declare netwrite Net_NextMapVote for UI = 0;
+
+			declare netread Net_NextMapVotingReset for UI = 0;
+			declare LastNextMapVotingReset = -1;
+			
+			declare netread Net_PlayersVotingNext for Teams[0] = 0;
+			declare netread Net_PlayersTotal for Teams[0] = 0;
+			declare netread Net_PlayersVotingRemaining for Teams[0] = 0;
 
 			// Spec target
 			declare netwrite Net_SpeccedTargetLogin for UI = "";
@@ -300,15 +321,30 @@ Text CreateLayerUtilities() {
 
 
 				// Spec count
-					declare netread Net_NbSpectating for LocalPlayer = 0;
-					Label_SpectateCount.Value = TextLib::ToText(Net_NbSpectating);
+				declare netread Net_NbSpectating for LocalPlayer = 0;
+				Label_SpectateCount.Value = TextLib::ToText(Net_NbSpectating);
 
+				// Check for next map voting reset
+				if (Net_NextMapVotingReset != LastNextMapVotingReset) {
+					Net_NextMapVote = 0;
+					LastNextMapVotingReset = Net_NextMapVotingReset;
+				}
 
 				// Process events
 				foreach (Event in PendingEvents) {
 					switch (Event.Type) {
 						case CMlEvent::Type::KeyPress: {
 							switch (Event.CharPressed) {
+								case "2621440": {
+									// F3 - Change next map vote
+									if (C_UseNextMapVoting) {
+										if (Net_NextMapVote == 1) {
+											Net_NextMapVote = 0;
+										} else {
+											Net_NextMapVote = 1;
+										}
+									}
+								}
 								case "2686976": {
 									// F4 - Change respawn behavior
 									Net_PlayerWantsRestart = !Net_PlayerWantsRestart;
@@ -360,6 +396,29 @@ Text CreateLayerUtilities() {
 				} else {
 					Net_SpeccedTargetLogin = "";
 				}
+				
+				// Next map voting label
+				if (C_UseNextMapVoting) {
+					Label_NextMapVoting.Visible = True;
+					declare Text Color;
+					declare Text VotingText;
+					if (Net_NextMapVote == 1) {
+						Color = "$0C0";
+						VotingText = _("Press F3 for keeping the map");
+					} else {
+						Color = "$080";
+						VotingText = _("Press F3 to vote for the next map");
+					}
+
+					declare Remaining = Net_PlayersVotingNext^"/"^Net_PlayersTotal;
+					if (Net_PlayersVotingRemaining > 0) {
+						Remaining ^= " (-"^Net_PlayersVotingRemaining^")";
+					}
+
+					Label_NextMapVoting.Value = TextLib::Compose("%1%2: %3", Color, VotingText, Remaining);
+				} else {
+					Label_NextMapVoting.Visible = False;
+				}
 
 				{{{CustomUI::InjectMLLoop()}}}
 			}
@@ -377,6 +436,9 @@ Text CreateLayerUtilities() {
 	</frame>
 	<frame id="{{{C_Module_RestartLock}}}" class="LibCustomUI_Module">
 		<label id="Label_RestartLock" posn="60 88" sizen="40 8" textsize="2" translate="1" halign="right" valign="center2" hidden="1"/>
+	</frame>
+		<frame id="{{{C_Module_NextMapVoting}}}" class="LibCustomUI_Module">
+		<label id="Label_NextMapVoting" posn="-30 75" sizen="60 4" textsize="1" translate="1" halign="left" valign="center2" hidden="1"/>
 	</frame>
 	<frame id="{{{C_Module_SpectateCount}}}" class="LibCustomUI_Module">
 		<frame id="Frame_SpectateCount" posn="159 -63">
@@ -528,7 +590,10 @@ Void ResetMarkers() {
 }
 
 Void UpdateLayerUtilities() {
+	declare VotingsNb = 0;
+	
 	foreach (Player in Players) {
+		// Reset spectator count
 		declare netwrite Integer Net_NbSpectating for Player;
 		Net_NbSpectating = 0;
 
@@ -540,28 +605,58 @@ Void UpdateLayerUtilities() {
 		declare netwrite Net_ShowRespawnBehavior for Player = False;
 		Net_ShowRespawnBehavior = Net_PlayerWantsRestart;
 
-		// Count spectators
-		declare SpeccedPlayers = Integer[Text];
-		foreach (Player in Spectators) {
-			declare UI <=> UIManager.GetUI(Player);
-			if (UI == Null) continue;
+		// Collect current voting
+		declare netread Net_NextMapVote for UI = 0;
+		if (Net_NextMapVote == 1) {
+			VotingsNb += 1;
+		}
+	}
+	
+	// Count spectators
+	declare SpeccedPlayers = Integer[Text];
+	foreach (Player in Spectators) {
+		declare UI <=> UIManager.GetUI(Player);
+		if (UI == Null) continue;
 
-			declare netread Net_SpeccedTargetLogin for UI = "";
-			if (Net_SpeccedTargetLogin != "") {
-				if (!SpeccedPlayers.existskey(Net_SpeccedTargetLogin)) {
-					SpeccedPlayers[Net_SpeccedTargetLogin] = 1;
-				} else {
-					SpeccedPlayers[Net_SpeccedTargetLogin] += 1;
-				}
+		declare netread Net_SpeccedTargetLogin for UI = "";
+		if (Net_SpeccedTargetLogin != "") {
+			if (!SpeccedPlayers.existskey(Net_SpeccedTargetLogin)) {
+				SpeccedPlayers[Net_SpeccedTargetLogin] = 1;
+			} else {
+				SpeccedPlayers[Net_SpeccedTargetLogin] += 1;
 			}
 		}
-
-		foreach (PlayerLogin => NbSpectating in SpeccedPlayers) {
-			declare Player <=> SM::GetPlayer(PlayerLogin);
-			if (Player == Null) continue;
+	}
+	
+	// Update voting values
+	declare Remaining = MathLib::CeilingInteger(Players.count * G_NextMapVotingRatio) - VotingsNb;
+	declare netwrite Integer Net_PlayersTotal for Teams[0];
+	declare netwrite Integer Net_PlayersVotingNext for Teams[0];
+	declare netwrite Integer Net_PlayersVotingRemaining for Teams[0];
+	Net_PlayersTotal = Players.count;
+	Net_PlayersVotingNext = VotingsNb;
+	Net_PlayersVotingRemaining = Remaining;
+	
+	foreach (Player in Players) {		
+		declare UI <=> UIManager.GetUI(Player);
+		if (UI == Null) continue;
+		
+		// Update spectator count if needed
+		if(SpeccedPlayers.existskey(Player.Login)) {
 			declare netwrite Integer Net_NbSpectating for Player;
-			Net_NbSpectating = NbSpectating;
+			Net_NbSpectating = SpeccedPlayers[Player.Login];
 		}
+	}
+
+	// End map?
+	if (Players.count > 0 &&
+		  VotingsNb > 0 && 
+			Remaining <= 0 &&
+			StartTime + 15000 < Now &&
+			EndTime - 15000 > Now
+	) {
+		Message::SendStatusMessage(_("Voting has forced an End of the current Map."), 5000, 1);
+		EndTime = Now + 15000;
 	}
 }
 

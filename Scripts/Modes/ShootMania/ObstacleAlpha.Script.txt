@@ -33,6 +33,7 @@
 #Setting S_FastRespawn			True	as _("Fast respawn on the checkpoint")
 #Setting S_LegacyRespawn	False as _("Enable old respawn")
 #Setting S_AllowJump	True as _("Enable checkpoint jumping")
+#Setting S_NextMapVotingRatio	0.7		as "<hidden>"
 
 // ---------------------------------- //
 // Constants
@@ -128,12 +129,12 @@ SpawnScreen::CreateScores("Score.Points");
 ***Match_InitServer***
 ***
 declare Integer G_LastUpdate;
-declare CHttpRequest[] ReqToRemove;
 ***
 
 ***Match_StartServer***
 ***
 G_LastUpdate = 0;
+ObsUI::SetNextMapVotingRatio(S_NextMapVotingRatio);
 Items::Init();
 CreateUI();	
 API::Init();
@@ -386,6 +387,7 @@ Void CreateUI() {
 	CustomUI::Add("CustomUI_Info", <-100., 88.>, <40., 8.>);
 	CustomUI::Add("obstacle_records", <-139., 40.>, <42., 80.>);
 	CustomUI::Add(ObsUI::C_Module_Chrono, <50., -73.>, <40., 10.>);
+	CustomUI::Add(ObsUI::C_Module_NextMapVoting, <0., 75.>, <60., 4.>);
 	CustomUI::Add(ObsUI::C_Module_TimeDiff, <0., 65.>, <60., 12.>);
 	CustomUI::Add(ObsUI::C_Module_CPProgress, <-47., -78.>, <40., 5.>);
 	CustomUI::Add(ObsUI::C_Module_RespawnBehavior, <-50., 88.>, <50., 8.>);
