@@ -138,9 +138,9 @@ Accept: application/json""";
 Void ReplaceOrCreateMap() {
 	declare payload = """
 	{
-		"name": "{{{Map.MapName}}}",
-		"maniaplanetMapId": "{{{Map.Id}}}",
-		"playerId": "{{{Map.AuthorLogin}}}"
+		"name": {{{Json::GetText(Map.MapName)}}},
+		"maniaplanetMapId": {{{Json::GetText(""^Map.Id)}}},
+		"playerId": {{{Json::GetText(Map.AuthorLogin)}}}
 	}
 	""";
 	SendPost("Maps/replaceOrCreate", payload);
@@ -150,8 +150,8 @@ Void ReplaceOrCreateMap() {
 Void ReplaceOrCreatePlayer(CSmPlayer _Player) {
 	declare payload = """
 	{
-		"login": "{{{_Player.User.Login}}}",
-		"nickname": "{{{_Player.User.Name}}}"
+		"login": {{{Json::GetText(_Player.User.Login)}}},
+		"nickname": {{{Json::GetText(_Player.User.Name)}}}
 	}""";
 	SendPost("Players/replaceOrCreate", payload);
 }
@@ -163,9 +163,9 @@ Void PlayerFinished(CSmPlayer _Player) {
 	declare payload = """
 	{
 		"time": {{{LastRun}}},
-		"respawnCount": {{{RespawnCount}}},
-		"playerId": "{{{_Player.User.Login}}}",
-		"mapId": "{{{Map.Id}}}"
+		"respawnCount": {{{Json::GetInteger(RespawnCount)}}},
+		"playerId": {{{Json::GetText(_Player.User.Login)}}},
+		"mapId": {{{Json::GetText(""^Map.Id)}}}
 	}""";
 	SendPost("Records/player-finished", payload);
 }
