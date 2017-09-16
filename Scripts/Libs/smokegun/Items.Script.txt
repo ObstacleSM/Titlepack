@@ -165,7 +165,12 @@ Text CreateLayerItems() {
 					foreach (ItemName => BuffTime in ItemBuffTimes) {
 						declare Frame <=> (Page.GetFirstChild("Frame_ItemGauge"^Index) as CMlFrame);
 						if (Frame == Null) continue;
-						if (BuffTime < ArenaNow) continue;
+						if (BuffTime < ArenaNow) {
+							if(Label_Info.Visible) {
+								Label_Info.Visible = False;
+							}
+							continue;
+						}
 
 						declare Gauge_Item <=> (Frame.GetFirstChild("Gauge_Item") as CMlGauge);
 						declare Label_Time <=> (Frame.GetFirstChild("Label_Time") as CMlLabel);
@@ -206,14 +211,8 @@ Text CreateLayerItems() {
 						Label_Item.Value = ItemParts[0];
 
 						if (LocalPlayer != InputPlayer || Label_Info.Visible) continue;
-
-						declare Obstacle_ItemInfoShown for LocalUser = Integer[Text];
-						if (!Obstacle_ItemInfoShown.existskey(ItemName) || Obstacle_ItemInfoShown[ItemName] < 5) {
-							if (!Obstacle_ItemInfoShown.existskey(ItemName)) Obstacle_ItemInfoShown[ItemName] = 0;
-							Obstacle_ItemInfoShown[ItemName] += 1;
-							Last_LabelInfoShown = Now;
-							Label_Info.Value = TextLib::Compose(_("You picked up the %1 Item!"), ItemParts[0]);
-						}
+						Label_Info.Value = TextLib::Compose(_("You picked up the %1 Item!"), ItemParts[0]);
+						Label_Info.Visible = True;
 					}
 				}
 				for (ExtraIndex, Index, C_ItemCount) {
@@ -221,7 +220,7 @@ Text CreateLayerItems() {
 					if (Frame == Null) continue;
 					Frame.Visible = False;
 				}
-				Label_Info.Visible = (Last_LabelInfoShown + 7500 > Now);
+				
 
 				{{{CustomUI::InjectMLLoop()}}}
 			}
