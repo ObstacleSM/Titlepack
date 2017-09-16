@@ -134,8 +134,8 @@ declare CHttpRequest[] ReqToRemove;
 ***Match_StartServer***
 ***
 G_LastUpdate = 0;
-CreateUI();	
 Items::Init();
+CreateUI();	
 API::Init();
 ***
 
