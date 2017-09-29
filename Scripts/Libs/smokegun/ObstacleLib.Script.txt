@@ -625,7 +625,7 @@ Void HandleCapture(CSmPlayer _Player) {
 				_Player.CapturedLandmark.Order == CheckpointsTimeLast.count + 1)
 			) {
 				HandleCheckpoint(_Player, _Player.CapturedLandmark.Id);
-			}	else if (_Player.CapturedLandmark.Order > CheckpointsTimeLast.count){
+			}	else if (_Player.CapturedLandmark.Order != CheckpointsTimeLast.count){
 				MessageToShow = _("Wrong checkpoint !");
 			}
 		}
