@@ -110,8 +110,10 @@ Boolean PrepareMap() {
 
 	// Count checkpoints
 	declare CheckpointOrders = Integer[];
-	foreach (GaugeLandmark in MapLandmarks_Gauge) {
-		GaugeLandmark.Gauge.ValueReal = 1.0;
+	foreach (GaugeLandmark in MapLandmarks) {
+		if(GaugeLandmark.Gauge != Null) {
+			GaugeLandmark.Gauge.ValueReal = 1.0;
+		}
 		if ("Checkpoint" == TextLib::SubText(GaugeLandmark.Tag, 0, 10)) {
 			if (GaugeLandmark.Order == 0 || !CheckpointOrders.exists(GaugeLandmark.Order)) {
 				G_CheckpointsTotal += 1;
@@ -402,8 +404,6 @@ Void RespawnPlayer(CSmPlayer _Player, Boolean forceRestart) {
 	declare netwrite ItemBuffTimes for _Player = Integer[Text];
 	ItemBuffTimes.clear();
 
-	// Are both necessary ?
-	SetPlayerReloadAllWeapons(_Player, G_FullAmmoSpawn);
 	if (G_FullAmmoSpawn) {
 		Weapons::FillUpPlayerAmmo(_Player);
 	}
@@ -599,7 +599,6 @@ Void HandleCapture(CSmPlayer _Player) {
 	declare CheckpointsTimeLast for _Player.Score = Integer[Ident];
 	declare LastStatusMessage for _Player = Now;
 	declare MessageToShow = "";
-
 	switch (_Player.CapturedLandmark.Tag) {
 		case "Goal": {
 			declare netwrite Net_UsedJump for _Player = False;

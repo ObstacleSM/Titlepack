@@ -63,7 +63,7 @@ Void ApplyWeaponType(CSmPlayer _Player, Integer _Type) {
 
 // Fill up current player ammo
 Void FillUpPlayerAmmo(CSmPlayer _Player) {
-	if (_Player == Null) return;
+	if (_Player == Null || _Player.SpawnStatus != CSmPlayer::ESpawnStatus::Spawned ) return;
 	SetPlayerAmmo(_Player, CSmMode::EWeapon::Rocket, 10);
 	SetPlayerAmmo(_Player, CSmMode::EWeapon::Laser, 10);
 	SetPlayerAmmo(_Player, CSmMode::EWeapon::Nucleus, 10);
