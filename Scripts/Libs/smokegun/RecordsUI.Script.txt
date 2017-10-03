@@ -192,7 +192,7 @@ Text BlankRecords() {
 
 Text CreateManialink() {
 	declare id = "obstacle_records";
-	declare position = <-139., 75.>;
+	declare position = <139., 75.>;
 	width = 40;
 	lines = 15;
 	line_height = 4;

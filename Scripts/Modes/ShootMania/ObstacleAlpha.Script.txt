@@ -383,7 +383,7 @@ Void CreateUI() {
 
 	CustomUI::Load();
 	CustomUI::Add("CustomUI_Info", <-100., 88.>, <40., 8.>);
-	CustomUI::Add("obstacle_records", <-139., 40.>, <42., 80.>);
+	CustomUI::Add("obstacle_records", <139., 40.>, <42., 80.>);
 	CustomUI::Add(ObsUI::C_Module_Chrono, <50., -73.>, <40., 10.>);
 	CustomUI::Add(ObsUI::C_Module_NextMapVoting, <0., 75.>, <60., 4.>);
 	CustomUI::Add(ObsUI::C_Module_TimeDiff, <0., 65.>, <60., 12.>);
