@@ -1,5 +1,4 @@
-*.Gbx
-*.dds
-*.loc
-*.zip
-*.webm
+Blocks/
+Items/
+Maps/
+Skins/
