@@ -151,17 +151,17 @@ Void UpdatePoleIds(CSmPlayer _Player) {
 
 	declare CheckpointsTimeLast for _Player.Score = Integer[Ident];
 	declare netwrite Text Net_PoleIds for _Player;
+	declare netwrite Integer Net_CpProgress for _Player;
 
 	declare PoleIds = Ident[];
 	foreach (GaugeLandmark in MapLandmarks_Gauge) {
 		if (GaugeLandmark.Tag == "No-Function") continue;
-		if (CheckpointsTimeLast.existskey(GaugeLandmark.Id)) continue;
-		if (GaugeLandmark.Tag == "Goal" && CheckpointsTimeLast.count < G_CheckpointsTotal) continue;
+		if (GaugeLandmark.Tag == "Goal" && Net_CpProgress < G_CheckpointsTotal) continue;
 		if (GaugeLandmark.Tag == "Portal") {
 			declare SpawnId = Tools::GetClosestSpawn(GaugeLandmark.Id);
 			if (MapLandmarks_PlayerSpawn.existskey(SpawnId)) PoleIds.add(SpawnId);
 		}
-		if (GaugeLandmark.Order > 0 && GaugeLandmark.Order != CheckpointsTimeLast.count + 1) continue;
+		if (GaugeLandmark.Order > 0 && GaugeLandmark.Order != Net_CpProgress + 1) continue;
 		PoleIds.add(GaugeLandmark.Id);
 	}
 
@@ -252,15 +252,21 @@ Void UpdateRanking() {
 
 Void UpdatePlayerBestTime(CSmPlayer _Player) {
 	if(Hud == Null || Hud.ScoresTable == Null) return;
+	declare netwrite Net_CpProgress for _Player = 0;
+	declare netwrite Net_UsedJump for _Player = False;
 	declare LastBestTime for _Player = "";
 	declare BestRun for _Player.Score = 0;
-	declare CheckpointsTimeLast for _Player.Score = Integer[Ident];
+//	declare CheckpointsTimeLast for _Player.Score = Integer[Ident];
 	declare newBestTime = "--:--.--";
 
 	if(BestRun > 0) {
 		newBestTime = TextLib::TimeToText(BestRun, True);
-	} else if(CheckpointsTimeLast.count > 0){
-		newBestTime = "CP"^CheckpointsTimeLast.count;
+	} else if(Net_CpProgress > 0){
+		newBestTime = "CP"^Net_CpProgress;
+		
+		if(Net_UsedJump) {
+			newBestTime = "$f33"^newBestTime^"$z";
+		}
 	}
 	if(LastBestTime != newBestTime) {
 		Hud.ScoresTable.SetColumnValue (_Player.Score, "BestTime", newBestTime);
@@ -283,10 +289,13 @@ Void CpRestart(	CSmPlayer _Player
 	, Integer _Delay
 	, Ident _LastCheckpointId
 	, Ident _CPSpawnId
+	, Boolean _IncrementCount
 ){
-	declare RespawnCount for _Player.Score = 0;
-	RespawnCount += 1;
-
+	if(_IncrementCount) {
+		declare RespawnCount for _Player.Score = 0;
+		RespawnCount += 1;
+	}
+	
 	// Check if the last checkpoint is actually a checkpoint
 	declare CanFastRespawn = True;
 	if (MapLandmarks_Gauge.existskey(_LastCheckpointId)) {
@@ -313,6 +322,14 @@ Void CpRestart(	CSmPlayer _Player
 
 	// XmlRpc callback
 	XmlRpc.SendCallback("OnRespawn", _Player.User.Login);
+}
+
+Void CpRestart(	CSmPlayer _Player
+	, Integer _Delay
+	, Ident _LastCheckpointId
+	, Ident _CPSpawnId
+){
+	CpRestart(_Player, _Delay, _LastCheckpointId, _CPSpawnId, True);
 }
 
 Void FullRestart(CSmPlayer _Player, Integer _Delay){
@@ -411,6 +428,24 @@ Void RespawnPlayer(CSmPlayer _Player, Boolean forceRestart) {
 Void RespawnPlayer(CSmPlayer _Player) {
 	RespawnPlayer(_Player, False);
 }
+/////////////////////////////////////////////////////////////////
+///////////////////// CHECKPOINTS LOGIC /////////////////////////
+/////////////////////////////////////////////////////////////////
+
+Void UsePortal(CSmPlayer _Player, Ident _PortalId) {
+	if (_Player == Null || !MapLandmarks_Gauge.existskey(_PortalId)) return;
+	declare SpawnId = Tools::GetClosestSpawn(_PortalId);
+	if (!MapLandmarks_PlayerSpawn.existskey(SpawnId)) return;
+
+	// Portal exit found - Port player
+	SM::Spawn(_Player, 0, MapLandmarks_PlayerSpawn[SpawnId].PlayerSpawn);
+
+	// Send message
+	declare LastStatusMessage for _Player = 0;
+	if (LastStatusMessage + 2500 >= Now) return;
+	LastStatusMessage = Now;
+	Message::SendBigMessage(_Player, _("Portal!"), 2500, 0);
+}
 
 Void JumpToCheckpoint(CSmPlayer _Player, Integer _Target) {
 	if (_Player == Null || _Target < 0) return;
@@ -421,8 +456,6 @@ Void JumpToCheckpoint(CSmPlayer _Player, Integer _Target) {
 		UI.SendChat("$f00Jumping is disabled!");
 		return;
 	}
-
-	declare Ident LastCheckpointId for _Player;
 
 	// Jump to checkpoint
 	declare CSmMapLandmark Target <=> Null;
@@ -449,31 +482,19 @@ Void JumpToCheckpoint(CSmPlayer _Player, Integer _Target) {
 		return;
 	}
 	// Jump
-	UI.SendChat("$0f0Jumping to Checkpoint '"^_Target^"'!");
-	LastCheckpointId = Target.Id;
-	RespawnPlayer(_Player);
-
-	// Invalidate time
 	declare netwrite Boolean Net_UsedJump for _Player;
 	Net_UsedJump = True;
-}
-/////////////////////////////////////////////////////////////////
-///////////////////// CHECKPOINTS LOGIC /////////////////////////
-/////////////////////////////////////////////////////////////////
-
-Void UsePortal(CSmPlayer _Player, Ident _PortalId) {
-	if (_Player == Null || !MapLandmarks_Gauge.existskey(_PortalId)) return;
-	declare SpawnId = Tools::GetClosestSpawn(_PortalId);
-	if (!MapLandmarks_PlayerSpawn.existskey(SpawnId)) return;
-
-	// Portal exit found - Port player
-	SM::Spawn(_Player, 0, MapLandmarks_PlayerSpawn[SpawnId].PlayerSpawn);
-
-	// Send message
-	declare LastStatusMessage for _Player = 0;
-	if (LastStatusMessage + 2500 >= Now) return;
-	LastStatusMessage = Now;
-	Message::SendBigMessage(_Player, _("Portal!"), 2500, 0);
+	
+	UI.SendChat("$0f0Jumping to Checkpoint '"^_Target^"'!");
+	
+	declare LastCheckpointId for _Player = NullId;
+	LastCheckpointId = Target.Id;
+	
+	CpRestart(_Player, 3500, LastCheckpointId, Tools::GetClosestSpawn(LastCheckpointId), False);
+	
+	if (G_FullAmmoSpawn) {
+		Weapons::FillUpPlayerAmmo(_Player);
+	}
 }
 
 Void HandleFinish(CSmPlayer _Player, Ident _GoalId) {
@@ -537,6 +558,7 @@ Void HandleCheckpoint(CSmPlayer _Player, Ident _CheckpointId) {
 	declare CheckpointsTimeLast for _Player.Score = Integer[Ident];
 	declare CheckpointsTimeBest for _Player.Score = Integer[Ident];
 	declare LastCheckpointId for _Player = NullId;
+	declare Checkpoint <=> MapLandmarks_Gauge[_CheckpointId];
 
 	// Update player's progress
 	CheckpointsTimeLast[_CheckpointId] = Tools::GetTime(_Player);
@@ -546,13 +568,13 @@ Void HandleCheckpoint(CSmPlayer _Player, Ident _CheckpointId) {
 	if (CheckpointsTimeLast.existskey(LastCheckpointId)) {
 		TimeDiff -= CheckpointsTimeLast[LastCheckpointId];
 	}
-	declare NewBest = CPTimes::SubmitCheckpointTime(CheckpointsTimeLast.count, _Player, TimeDiff);
+	declare NewBest = CPTimes::SubmitCheckpointTime(Net_CpProgress, _Player, TimeDiff);
 
 	LastCheckpointId = _CheckpointId;
-	Net_CpProgress = CheckpointsTimeLast.count;
+	Net_CpProgress = Checkpoint.Order;
 
 	// Apply special checkpoints effect
-	declare CheckpointName = MapLandmarks_Gauge[_CheckpointId].Tag;
+	declare CheckpointName = Checkpoint.Tag;
 	// special checkpoint
 	if (TextLib::Length(CheckpointName) > 10) {
 		declare CheckPointType = TextLib::ToInteger(TextLib::SubString(CheckpointName, 14, 1));
@@ -570,7 +592,7 @@ Void HandleCheckpoint(CSmPlayer _Player, Ident _CheckpointId) {
 	}
 
 	// UPDATE UI
-	// Update missing checkpoints
+	// Update markers
   UpdatePoleIds(_Player);
 
 	UpdatePlayerBestTime(_Player);
@@ -594,15 +616,15 @@ Void HandleCheckpoint(CSmPlayer _Player, Ident _CheckpointId) {
 }
 
 Void HandleCapture(CSmPlayer _Player) {
-	declare CheckpointsTimeLast for _Player.Score = Integer[Ident];
+	declare netwrite Integer Net_CpProgress for _Player;
+	declare netwrite Net_UsedJump for _Player = False;
 	declare LastStatusMessage for _Player = Now;
 	declare MessageToShow = "";
 	switch (_Player.CapturedLandmark.Tag) {
 		case "Goal": {
-			declare netwrite Net_UsedJump for _Player = False;
 			if (Net_UsedJump) {
 				MessageToShow =  _("You used a Jump! Your Time is invalid.");
-			} else if (G_CheckpointsTotal == CheckpointsTimeLast.count) {
+			} else if (G_CheckpointsTotal == Net_CpProgress) {
 				HandleFinish(_Player, _Player.CapturedLandmark.Id);
 			} else {
 				MessageToShow = _("Missing checkpoint(s)!");
@@ -615,15 +637,23 @@ Void HandleCapture(CSmPlayer _Player) {
 			UsePortal(_Player, _Player.CapturedLandmark.Id);
 		}
 		default: {
-			// Check that this is a valid checkpoint
-			if (Tools::IsCheckpoint(_Player.CapturedLandmark) &&
-				!CheckpointsTimeLast.existskey(_Player.CapturedLandmark.Id) &&
-				(_Player.CapturedLandmark.Order == 0 ||
-				_Player.CapturedLandmark.Order == CheckpointsTimeLast.count + 1)
-			) {
-				HandleCheckpoint(_Player, _Player.CapturedLandmark.Id);
-			}	else if (_Player.CapturedLandmark.Order != CheckpointsTimeLast.count){
-				MessageToShow = _("Wrong checkpoint !");
+			if(Net_UsedJump) {
+				if(_Player.CapturedLandmark.Order != Net_CpProgress) {
+					HandleCheckpoint(_Player, _Player.CapturedLandmark.Id);
+				}
+			} else {
+				log("Order: "^_Player.CapturedLandmark.Order);
+				log("Progress: "^Net_CpProgress);
+				// Check that this is a valid checkpoint
+				if (Tools::IsCheckpoint(_Player.CapturedLandmark) &&
+					(_Player.CapturedLandmark.Order == 0 ||
+					_Player.CapturedLandmark.Order == Net_CpProgress + 1)
+				) {
+					HandleCheckpoint(_Player, _Player.CapturedLandmark.Id);
+				}	else if (_Player.CapturedLandmark.Order != Net_CpProgress + 1
+									&& _Player.CapturedLandmark.Order != Net_CpProgress){
+					MessageToShow = _("Wrong checkpoint !");
+				}
 			}
 		}
 	}
