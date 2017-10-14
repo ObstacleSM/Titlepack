@@ -162,6 +162,9 @@ Text CreateLayerItems() {
 				declare Index = 1;
 				declare netread ItemBuffTimes for LocalPlayer = Integer[Text];
 				if (LocalPlayer.SpawnStatus == CSmPlayer::ESpawnStatus::Spawned) {
+					if(ItemBuffTimes.count == 0) {
+						Label_Info.Visible = False;
+					}
 					foreach (ItemName => BuffTime in ItemBuffTimes) {
 						declare Frame <=> (Page.GetFirstChild("Frame_ItemGauge"^Index) as CMlFrame);
 						if (Frame == Null) continue;
