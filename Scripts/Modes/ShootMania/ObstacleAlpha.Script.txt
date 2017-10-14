@@ -5,7 +5,7 @@
 #Extends "Modes/ShootMania/Base/ModeShootmania.Script.txt"
 
 #Const CompatibleMapTypes		"ObstacleArena,ObstacleTitleArena,TimeAttackArena"
-#Const	Version							"2017-07-10"
+#Const	Version							"1.1"
 #Const	ScriptName					"Modes/ShootMania/ObstacleAlpha.Script.txt"
 
 // ---------------------------------- //
@@ -27,7 +27,7 @@
 // ---------------------------------- //
 // Settings
 // ---------------------------------- //
-#Setting S_TimeLimit 10 as _("Time limit") ///< Time limit on a map
+#Setting S_TimeLimit 30 as _("Time limit") ///< Time limit on a map
 #Setting S_PvPWeapons			False	as _("Enable PvP Weapons")
 #Setting S_FullAmmoSpawn			True	as _("Spawning with full Ammunition")
 #Setting S_FastRespawn			True	as _("Fast respawn on the checkpoint")
@@ -41,8 +41,8 @@
 // ---------------------------------- //
 #Const C_HudModulePath "Obstacle/testUI.Module.Gbx" ///< Path to the hud module
 
-#Const Description _("Genius.")
-#Const C_DefaultTimeLimit 10
+#Const Description _("Finish map as fast as possible !")
+#Const C_DefaultTimeLimit 30
 
 // ---------------------------------- //
 // Extends
@@ -52,12 +52,12 @@
 Log::RegisterScript(ScriptName, Version);
 ***
 
-
+/*
 ***MB_Private_LoadLibraries***
 ***
 Env::Set(Env::Env_Development());
 ***
-
+*/
 
 ***Match_Settings***
 ***
