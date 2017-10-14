@@ -75,9 +75,7 @@ Void InitScore(CSmScore _Score) {
 Void InitPlayer(CSmPlayer _Player) {
 	if (_Player == Null) return;
 
-	declare netwrite Boolean Net_Initialized for _Player = False;
-	if(Net_Initialized) return;
-
+	declare netwrite Boolean Net_Initialized for _Player = False;	
 	declare netwrite Integer Net_StartTime for _Player;
 	declare netwrite Integer Net_CpProgress for _Player;
 	declare netwrite Boolean Net_UsedJump for _Player;
