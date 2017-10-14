@@ -47,7 +47,7 @@ Void UpdateNetVars(Integer _RecordIdx, CSmPlayer _Player, Boolean _Empty) {
 	} else if(_RecordIdx == 2) {
 		line_color = "$963";
 	} else if(_Player.User.Login == GetPlayerField(_RecordIdx, "login")) {
-		line_color = "$9CF";
+		line_color = "$0CF";
 	}
 
 	// Rank

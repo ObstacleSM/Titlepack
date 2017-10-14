@@ -221,13 +221,13 @@ Text CreateLayerTimeDiff() {
 					}
 
 					if (Diff < 0) {
-						DiffString = "$s$00f" ^ TextLib::TimeToText(Diff, True);
+						DiffString = "$s$33f" ^ TextLib::TimeToText(Diff, True);
 					} else {
 						if (Diff == 0) {
-							DiffString = "$s$0f0 (00:00.00)";
+							DiffString = "$s$3f3 (00:00.00)";
 						} else {
 							if (Diff > 0) {
-								DiffString = "$s$f00+" ^ TextLib::TimeToText(Diff, True);
+								DiffString = "$s$f33+" ^ TextLib::TimeToText(Diff, True);
 							}
 						}
 					}
