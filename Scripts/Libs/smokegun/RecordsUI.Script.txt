@@ -20,6 +20,7 @@ declare Integer top_count;
 
 declare Text G_BlankRecord;
 
+
 Text GetPlayerField(Integer _Index, Text _Field) {
 	if(_Index < 0 || _Index >= G_Records.count) return "Error wrong idx";
 	return RecordUtils::GetPlayerField(G_Records[_Index], _Field);
@@ -190,7 +191,7 @@ Text BlankRecords() {
 	return Manialink;
 }
 
-Text CreateManialink() {
+Text CreateManialink(Text _Title) {
 	declare id = "obstacle_records";
 	declare position = <139., 75.>;
 	width = 40;
@@ -207,8 +208,6 @@ Text CreateManialink() {
 	// Background
 	declare bg_size = <width * 1.2, 7. + lines * line_height>;
 
-	// Title
-	declare title = "Records";
 	declare title_position = <0., line_height * -0.72>;
 	declare title_size = <0., width * 1.>;
 
@@ -220,7 +219,7 @@ Text CreateManialink() {
 	<frame id="{{{id}}}" class="LibCustomUI_Module">
 	  <frame id="Frame_Background" pos="{{{Vec(position)}}}" halign="center" valign="center2">
 	    <quad size="{{{Vec(bg_size)}}}" halign="center" valign="top" action="LocalRecords.ShowRecordsList" style="Bgs1InRace" substyle="BgList"/>
-	    <label pos="{{{Vec(title_position)}}}" z-index="3" size="{{{Vec(title_size)}}}" halign="center" valign="center2" text="{{{title}}}" translate="1" style="TextTitle1" textsize="1"/>
+	    <label pos="{{{Vec(title_position)}}}" z-index="3" size="{{{Vec(title_size)}}}" halign="center" valign="center2" text="{{{_Title}}}" translate="1" style="TextTitle1" textsize="1"/>
 	    <quad pos="0 -5.5" size="{{{Vec(top_bg_size)}}}" halign="center" valign="top" style="Bgs1InRace" substyle="BgCardList"/>		
 	  </frame>
 		<frame id="Frame_Records" pos="{{{Vec(position)}}}" z-index="1">

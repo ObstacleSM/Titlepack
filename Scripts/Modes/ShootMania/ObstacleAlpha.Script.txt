@@ -34,6 +34,7 @@
 #Setting S_LegacyRespawn	False as _("Enable old respawn")
 #Setting S_AllowJump	True as _("Enable checkpoint jumping")
 #Setting S_NextMapVotingRatio	0.7		as "<hidden>"
+#Setting S_RecordsWidgetTitle "Records" as "Records widget title"
 
 // ---------------------------------- //
 // Constants
@@ -144,12 +145,14 @@ API::Init();
 ***
 declare Integer PrevTimeLimit;
 declare Boolean PrevPvPWeapons;
+declare Text PrevRecordsWidgetTitle;
 ***
 
 ***Match_StartMap***
 ***
 PrevTimeLimit = S_TimeLimit;
 PrevPvPWeapons = S_PvPWeapons;
+PrevRecordsWidgetTitle = S_RecordsWidgetTitle;
 
 // map is invalid
 if(!Obstacle::PrepareMap()) {
@@ -298,6 +301,10 @@ if (PrevPvPWeapons != S_PvPWeapons) {
 if (G_LastUpdate + 500 < Now) {
 	G_LastUpdate = Now;
 	
+	if(PrevRecordsWidgetTitle != S_RecordsWidgetTitle) {
+		PrevRecordsWidgetTitle = S_RecordsWidgetTitle;
+		Layers::Update("Records", RecordsUI::CreateManialink(S_RecordsWidgetTitle));
+	}
 	ObsUI::UpdateLayerUtilities();
 	Obstacle::SetSettings(S_FullAmmoSpawn, S_FastRespawn, S_LegacyRespawn, S_AllowJump);
 }
@@ -372,7 +379,7 @@ Void CreateUI() {
 	Layers::Create("Markers");
 	Layers::SetType("Markers", CUILayer::EUILayerType::Markers);
 	Layers::Create("Items", Items::CreateLayerItems());
-	Layers::Create("Records", RecordsUI::CreateManialink());
+	Layers::Create("Records", RecordsUI::CreateManialink(S_RecordsWidgetTitle));
 	
 	Layers::Attach("Info");
 	Layers::Attach("TimeDiff");
