@@ -642,8 +642,6 @@ Void HandleCapture(CSmPlayer _Player) {
 					HandleCheckpoint(_Player, _Player.CapturedLandmark.Id);
 				}
 			} else {
-				log("Order: "^_Player.CapturedLandmark.Order);
-				log("Progress: "^Net_CpProgress);
 				// Check that this is a valid checkpoint
 				if (Tools::IsCheckpoint(_Player.CapturedLandmark) &&
 					(_Player.CapturedLandmark.Order == 0 ||
