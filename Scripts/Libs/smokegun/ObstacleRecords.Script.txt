@@ -176,19 +176,23 @@ Void Loop() {
 		// Process requests
 		
 		// Send request in queue
-		if(G_ToPost_Url.count > 0) {
-			foreach(Idx => reqUrl in G_ToPost_Url) {
-				SendPost(reqUrl, G_ToPost_Data[Idx]);
+		if(G_ToPost_Url.count > 0 && G_LastRequestAttempt + 500 < Now) {
+			if(G_ToPost_Url.count != G_ToPost_Data.count) {
+				Log::Error("G_ToPost_Url and G_ToPost_Data have different sizes!");
 			}
-			G_ToPost_Url.clear();
-			G_ToPost_Data.clear();
+			
+			// Should directly post the first request
+			SendPost(G_ToPost_Url[0], G_ToPost_Data[0]);
+			
+			G_ToPost_Url.removekey(0);
+			G_ToPost_Data.removekey(0);
 		}
 			
 		// Wait for each request's completion
 		foreach(reqId => data in G_CurrRequest) {
 			declare request <=> Http.Requests[reqId];
 			if(request.IsCompleted) {
-				Log("Done: ("^request.StatusCode^") "^request.Result);
+				Log::Log("Done: ("^request.StatusCode^") "^request.Result);
 				
 				// If a request is unauthorized,
 				// queue request and try to reconnect later
