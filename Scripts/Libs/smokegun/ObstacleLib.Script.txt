@@ -109,7 +109,7 @@ Boolean PrepareMap() {
 
 	// Count checkpoints
 	declare CheckpointOrders = Integer[];
-	foreach (GaugeLandmark in MapLandmarks) {
+	foreach (GaugeLandmark in MapLandmarks_Gauge) {
 		if(GaugeLandmark.Gauge != Null) {
 			GaugeLandmark.Gauge.ValueReal = 1.0;
 		}
