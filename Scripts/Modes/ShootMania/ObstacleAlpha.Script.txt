@@ -168,6 +168,8 @@ Layers::Get("Markers").ManialinkPage = ObsUI::CreateLayerMarkers();
 Items::Place();
 
 foreach(Player in AllPlayers) {
+	declare netwrite Boolean Net_Initialized for Player = False;
+	Net_Initialized = False;
 	Obstacle::InitPlayer(Player);
 }
 
@@ -315,6 +317,7 @@ if (G_LastUpdate + 500 < Now) {
 ***
 Items::Destroy();
 EndTime = -1;
+
 SM::UnspawnAllPlayers();
 
 declare BestPlayerScore <=> Scores::GetBestPlayerMapPoints(Scores::C_Order_Descending);
