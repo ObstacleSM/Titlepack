@@ -449,7 +449,7 @@ Void UsePortal(CSmPlayer _Player, Ident _PortalId) {
 }
 
 Void JumpToCheckpoint(CSmPlayer _Player, Integer _Target) {
-	if (_Player == Null || _Target < 0) return;
+	if (_Player == Null || _Target < 0 || _Player.SpawnStatus != CSmPlayer::ESpawnStatus::Spawned) return;
 	declare UI <=> UIManager.GetUI(_Player);
 	if (UI == Null) return;
 
@@ -556,24 +556,29 @@ Void HandleFinish(CSmPlayer _Player, Ident _GoalId) {
 
 Void HandleCheckpoint(CSmPlayer _Player, Ident _CheckpointId) {
 	declare netwrite Integer Net_CpProgress for _Player;
+	declare netwrite Boolean Net_UsedJump for _Player;
 	declare CheckpointsTimeLast for _Player.Score = Integer[Ident];
 	declare CheckpointsTimeBest for _Player.Score = Integer[Ident];
 	declare LastCheckpointId for _Player = NullId;
 	declare Checkpoint <=> MapLandmarks_Gauge[_CheckpointId];
-
-	// Update player's progress
-	CheckpointsTimeLast[_CheckpointId] = Tools::GetTime(_Player);
-
-	//From steeffeen
-	declare TimeDiff = CheckpointsTimeLast[_CheckpointId];
-	if (CheckpointsTimeLast.existskey(LastCheckpointId)) {
-		TimeDiff -= CheckpointsTimeLast[LastCheckpointId];
+	
+	if(!Net_UsedJump) {
+		// Update player's progress
+		CheckpointsTimeLast[_CheckpointId] = Tools::GetTime(_Player);
+		Net_CpProgress = CheckpointsTimeLast.count;
+	
+		//From steeffeen
+		declare TimeDiff = CheckpointsTimeLast[_CheckpointId];
+		if (CheckpointsTimeLast.existskey(LastCheckpointId)) {
+			TimeDiff -= CheckpointsTimeLast[LastCheckpointId];
+		}
+		declare NewBest = CPTimes::SubmitCheckpointTime(Net_CpProgress, _Player, TimeDiff);
+	} else {
+		Net_CpProgress = Checkpoint.Order;
 	}
-	declare NewBest = CPTimes::SubmitCheckpointTime(Net_CpProgress, _Player, TimeDiff);
-
+	
 	LastCheckpointId = _CheckpointId;
-	Net_CpProgress = Checkpoint.Order;
-
+	
 	// Apply special checkpoints effect
 	declare CheckpointName = Checkpoint.Tag;
 	// special checkpoint
@@ -587,7 +592,6 @@ Void HandleCheckpoint(CSmPlayer _Player, Ident _CheckpointId) {
 				Weapons::ApplyWeaponType(_Player, CheckPointType);
 			}
 		}
-	// regular checkpoint
 	} else {
 		Weapons::ApplyWeaponType(_Player, 0);
 	}
@@ -599,17 +603,17 @@ Void HandleCheckpoint(CSmPlayer _Player, Ident _CheckpointId) {
 	UpdatePlayerBestTime(_Player);
 	declare UI <=> UIManager.GetUI(_Player);
 	if (_Player.Score == Null) return;
-
-	declare BestTime = -1;
-	if (CheckpointsTimeBest.existskey(_CheckpointId)) {
-		BestTime = CheckpointsTimeBest[_CheckpointId];
-	}
-
-	ObsUI::UpdateLayerTimeDiff(_Player, CheckpointsTimeLast[_CheckpointId], BestTime);
-
-	// Play sound
 	declare Variant = 0;
-	if(CheckpointsTimeLast[_CheckpointId] > BestTime) Variant = 1;
+
+	if(!Net_UsedJump) {
+		declare BestTime = -1;
+		if (CheckpointsTimeBest.existskey(_CheckpointId)) {
+			BestTime = CheckpointsTimeBest[_CheckpointId];
+		}
+	
+		ObsUI::UpdateLayerTimeDiff(_Player, CheckpointsTimeLast[_CheckpointId], BestTime);
+		if(CheckpointsTimeLast[_CheckpointId] > BestTime) Variant = 1;
+	}	
 
 	UI.SendNotice("",
 			CUIConfig::ENoticeLevel::PlayerInfo, _Player.User, CUIConfig::EAvatarVariant::Default,
@@ -619,8 +623,11 @@ Void HandleCheckpoint(CSmPlayer _Player, Ident _CheckpointId) {
 Void HandleCapture(CSmPlayer _Player) {
 	declare netwrite Integer Net_CpProgress for _Player;
 	declare netwrite Net_UsedJump for _Player = False;
-	declare LastStatusMessage for _Player = Now;
+	declare LastStatusMessage for _Player = Now;	
+	declare CheckpointsTimeLast for _Player.Score = Integer[Ident];
+	
 	declare MessageToShow = "";
+	
 	switch (_Player.CapturedLandmark.Tag) {
 		case "Goal": {
 			if (Net_UsedJump) {
@@ -645,12 +652,16 @@ Void HandleCapture(CSmPlayer _Player) {
 			} else {
 				// Check that this is a valid checkpoint
 				if (Tools::IsCheckpoint(_Player.CapturedLandmark) &&
-					(_Player.CapturedLandmark.Order == 0 ||
+					(_Player.CapturedLandmark.Order == 0 && !CheckpointsTimeLast.existskey(_Player.CapturedLandmark.Id)||
 					_Player.CapturedLandmark.Order == Net_CpProgress + 1)
 				) {
 					HandleCheckpoint(_Player, _Player.CapturedLandmark.Id);
-				}	else if (_Player.CapturedLandmark.Order != Net_CpProgress + 1
-									&& _Player.CapturedLandmark.Order != Net_CpProgress){
+				}	else if ((_Player.CapturedLandmark.Order != 0 &&
+										_Player.CapturedLandmark.Order != Net_CpProgress + 1 &&
+									 _Player.CapturedLandmark.Order != Net_CpProgress) ||
+									 (_Player.CapturedLandmark.Order == 0 && 
+									  !CheckpointsTimeLast.existskey(_Player.CapturedLandmark.Id))
+									){
 					MessageToShow = _("Wrong checkpoint !");
 				}
 			}
