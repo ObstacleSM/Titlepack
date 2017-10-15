@@ -54,10 +54,6 @@ Boolean Contains(Text _Text, Text _Input) {
 	return TL::Find(_Text, _Input, False, False);
 }
 
-Void Log(Text _Msg) {
-	Log::Log("[API] "^_Msg);
-}
-
 CXmlNode[] GetRecords() {
 	return G_Records;
 }
@@ -76,11 +72,11 @@ Ident MakePost(Text _Url, Text _Data) {
 
 Void SendPost(Text _Url, Text _Data) {
 	if(!G_IsLoggedIn || G_LastRequestAttempt + 500 > Now) {
-		Log("Cant do req now "^_Url);
+		Log::Log("Cant do req now "^_Url);
 		G_ToPost_Url.add(_Url);
 		G_ToPost_Data.add(_Data);
 	} else {
-		Log("Send req "^_Url);
+		Log::Log("Send req "^_Url);
 		G_CurrRequest[MakePost(_Url, _Data)] = _Data;
 	}
 }
@@ -229,7 +225,7 @@ Void Loop() {
 			declare LoginRequest <=> Http.Requests[G_LoginRequestId];
 			if(LoginRequest.IsCompleted) {			
 				if(LoginRequest.StatusCode == 200) {
-					Log("Logged in: ("^LoginRequest.StatusCode^") "^LoginRequest.Result);
+					Log::Log("Logged in: ("^LoginRequest.StatusCode^") "^LoginRequest.Result);
 					G_Token = TL::SubString(LoginRequest.Result, 7, 64);
 					G_IsLoggedIn = True;
 					G_PostHeaders = G_PostHeaders^"""
