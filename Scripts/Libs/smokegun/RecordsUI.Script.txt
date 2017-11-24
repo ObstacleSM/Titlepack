@@ -2,7 +2,6 @@
 #Include "Libs/Nadeo/Log.Script.txt" as Log
 #Include "Libs/Nadeo/Layers2.Script.txt" as Layers
 #Include "Libs/Nadeo/CustomUI.Script.txt" as CustomUI
-#Include "Libs/smokegun/Record.Script.txt" as RecordUtils
 
 /*********************************************
 	CONSTANTS
@@ -10,7 +9,7 @@
 #Const	Version		"2017-07-28"
 #Const	ScriptName	"RecordsUI.Script.txt"
 
-declare CXmlNode[] G_Records;
+declare Text[][] G_Records;
 
 // Global settings
 declare Integer width;
@@ -20,15 +19,19 @@ declare Integer top_count;
 
 declare Text G_BlankRecord;
 
-
-Text GetPlayerField(Integer _Index, Text _Field) {
+Text GetPlayerLogin(Integer _Index) {
 	if(_Index < 0 || _Index >= G_Records.count) return "Error wrong idx";
-	return RecordUtils::GetPlayerField(G_Records[_Index], _Field);
+	return G_Records[_Index][0];
+}
+
+Text GetPlayerNickname(Integer _Index) {
+	if(_Index < 0 || _Index >= G_Records.count) return "Error wrong idx";
+	return G_Records[_Index][1];
 }
 
 Text GetTime(Integer _Index) {
-	if(_Index >= G_Records.count) return "Error wrong idx";
-	return RecordUtils::GetTime(G_Records[_Index]);
+	if(_Index < 0 || _Index >= G_Records.count) return "Error wrong idx";
+	return G_Records[_Index][2];
 }
 
 Text Vec(Vec2 _Vector) {
@@ -46,7 +49,7 @@ Void UpdateNetVars(Integer _RecordIdx, CSmPlayer _Player, Boolean _Empty) {
 	// Top3
 	} else if(_RecordIdx == 2) {
 		line_color = "$963";
-	} else if(_Player.User.Login == GetPlayerField(_RecordIdx, "login")) {
+	} else if(_Player.User.Login == GetPlayerLogin(_RecordIdx)) {
 		line_color = "$0CF";
 	}
 
@@ -61,7 +64,7 @@ Void UpdateNetVars(Integer _RecordIdx, CSmPlayer _Player, Boolean _Empty) {
 	if(_Empty) {
 		name = _Player.User.Name;
 	} else {
-		name = GetPlayerField(_RecordIdx, "nickname");
+		name = GetPlayerNickname(_RecordIdx);
 	}
 
 	// Time
@@ -108,7 +111,7 @@ Void UpdateManialink(CSmPlayer _Player) {
 	// Find player record
 	declare CurrentPlayerRecordId = -1;
 	foreach(Idx => Record in G_Records) {
-		if(GetPlayerField(Idx, "login") == _Player.User.Login) {
+		if(GetPlayerLogin(Idx) == _Player.User.Login) {
 			CurrentPlayerRecordId = Idx;
 			break;
 		}
@@ -274,9 +277,9 @@ Text CreateManialink(Text _Title) {
 	""";
 }
 
-Void Refresh(CXmlNode[] _Records) {
+Void Refresh(Text[][] _Records) {
 	G_Records = _Records;
-	foreach(Player in Players) {
+	foreach(Player in AllPlayers) {
 		UpdateManialink(Player);
 		
 		// Update UI
