@@ -22,7 +22,9 @@
 #Include "Libs/smokegun/Items.Script.txt" as Items
 #Include "Libs/smokegun/ObstacleRecords.Script.txt" as API
 #Include "Libs/Nadeo/TabsServer.Script.txt" as Tabs
+#Include "Libs/Nadeo/Spectators.Script.txt" as Spectators
 #Include "Libs/steeffeen/CheckpointTimes.Script.txt" as CPTimes
+
 
 // ---------------------------------- //
 // Settings
@@ -31,10 +33,12 @@
 #Setting S_PvPWeapons			False	as _("Enable PvP Weapons")
 #Setting S_FullAmmoSpawn			True	as _("Spawning with full Ammunition")
 #Setting S_FastRespawn			True	as _("Fast respawn on the checkpoint")
-#Setting S_LegacyRespawn	False as _("Enable old respawn")
 #Setting S_AllowJump	True as _("Enable checkpoint jumping")
+#Setting S_RecordsWidgetTitle "Records" as _("Records widget title")
+#Setting S_LegacyRespawn	False as _("LEGACY: Enable old respawn")
+#Setting S_RecordsPerTick	100 as _("EXPERIMENTAL: Records per tick")
+#Setting S_RecordsTickDelay	100 as _("EXPERIMENTAL: Records tick delay (ms)")
 #Setting S_NextMapVotingRatio	0.7		as "<hidden>"
-#Setting S_RecordsWidgetTitle "Records" as "Records widget title"
 
 // ---------------------------------- //
 // Constants
@@ -52,12 +56,11 @@
 Log::RegisterScript(ScriptName, Version);
 ***
 
-/*
 ***MB_Private_LoadLibraries***
 ***
 Env::Set(Env::Env_Development());
+
 ***
-*/
 
 ***Match_Settings***
 ***
@@ -134,11 +137,12 @@ declare Integer G_LastUpdate;
 
 ***Match_StartServer***
 ***
+Spectators::ForceCamera(Spectators::Camera_FirstPerson());
 G_LastUpdate = 0;
 ObsUI::SetNextMapVotingRatio(S_NextMapVotingRatio);
 Items::Init();
 CreateUI();	
-API::Init();
+API::Init(S_RecordsPerTick, S_RecordsTickDelay);
 ***
 
 ***Match_InitMap***
@@ -160,6 +164,7 @@ if(!Obstacle::PrepareMap()) {
 }
 
 CPTimes::Synchro();
+API::StartMap(S_RecordsPerTick, S_RecordsTickDelay);
 
 // map specific ui
 UIManager.UIAll.MarkersXML = ObsUI::CreateHud3dMarkers();
