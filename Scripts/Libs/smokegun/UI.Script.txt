@@ -76,25 +76,30 @@ Vec3 UpscaleColor(Vec3 _Color) {
 	return Color;
 }
 
-Void PrepareMarkers(CSmMapLandmark _GaugeLandmark, Ident _SpawnId) {
-	if (!MapLandmarks_PlayerSpawn.existskey(_SpawnId)) return;
-	declare SpawnLandmark <=> MapLandmarks_PlayerSpawn[_SpawnId];
+Void PrepareMarkers(CSmMapLandmark _Portal) {	
+	declare SpawnId = Tools::GetClosestSpawn(_Portal.Id);
+	if (!MapLandmarks_PlayerSpawn.existskey(SpawnId))
+		return;
+	
+	declare Spawn <=> MapLandmarks_PlayerSpawn[SpawnId];
+	
 	declare Color	= UpscaleColor(Color::GetNewColor());
 	declare Color1	= GetColorizeColor(Color);
 	declare Color2	= GetColorizeColor(DarkenColor(Color, 0.9));
+	
 	G_DefaultMarkers ^= """
-<marker box="0 1 0" visibility="WhenVisible" manialinkframeid="Frame_Portal_{{{_GaugeLandmark.Id}}}"
-	pos="{{{Tools::GetPosn(_GaugeLandmark.Position + <0., 1., 0.>)}}}"/>
-<marker box="0 0.5 0" visibility="WhenVisible" manialinkframeid="Frame_Portal__{{{_GaugeLandmark.Id}}}"
-	pos="{{{Tools::GetPosn(SpawnLandmark.Position + <2. /*+ SpawnLandmark.DirFront.X*/, /*2. * SpawnLandmark.DirFront.Y +*/ 3., 0./*2. * SpawnLandmark.DirFront.Z*/>)}}}"/>""";
+<marker box="0 1 0" visibility="WhenVisible" manialinkframeid="Frame_Portal_{{{_Portal.Id}}}"
+	pos="{{{Tools::GetPosn(_Portal.Position + <0., 1., 0.>)}}}"/>
+<marker box="0 0.5 0" visibility="WhenVisible" manialinkframeid="Frame_Portal__{{{_Portal.Id}}}"
+	pos="{{{Tools::GetPosn(Spawn.Position + <2. , 3., 0.>)}}}"/>""";
 
 		G_DefaultMarkerFrames ^= """
-<frame id="Frame_Portal_{{{_GaugeLandmark.Id}}}" hidden="1">
+<frame id="Frame_Portal_{{{_Portal.Id}}}" hidden="1">
 	<frame id="Content" hidden="1">
 		<quad sizen="5.5 9" colorize="{{{Color1}}}" halign="center" valign="center2" image="{{{C_PortalImageUrl}}}"/>
 	</frame>
 </frame>
-<frame id="Frame_Portal__{{{_GaugeLandmark.Id}}}" hidden="1">
+<frame id="Frame_Portal__{{{_Portal.Id}}}" hidden="1">
 	<frame id="Content" hidden="1">
 		<quad sizen="5.5 9" colorize="{{{Color2}}}" halign="center" valign="center2" image="{{{C_PortalImageUrl}}}"/>
 	</frame>
