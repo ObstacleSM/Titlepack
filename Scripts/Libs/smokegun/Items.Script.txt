@@ -1,8 +1,8 @@
 /************************************************
 *	Obstacle Library								              *
 *	Author:		smokegun  						              *
-*												*
-*	Items related functions.			            	*
+*												                        *
+*	Items related functions.			                *
 ************************************************/
 
 #Include "TextLib" as TL
@@ -15,7 +15,7 @@
 	CONSTANTS
 ***************************************/
 
-#Const	Version		"2017-07-10"
+#Const	Version		"2017-11-25"
 #Const	ScriptName	"Items.Script.txt"
 
 #Const	T_ItemOffzone		"Obstacle\\OffzoneShield.Item.gbx"
@@ -35,90 +35,81 @@ Void Init() {
 
 Void Place() {
 	foreach (AnchorLandmark in MapLandmarks_ObjectAnchor) {
-		switch (AnchorLandmark.ObjectAnchor.ItemName) {
+	
+		declare ObjectName = AnchorLandmark.ObjectAnchor.ItemName;
+		declare Object <=> ObjectCreate(G_ItemIdents[ObjectName]);
+		if (Object == Null) continue;
+		
+		G_AnchorsObjects.add(Object);
+		Object.SetAnchor(AnchorLandmark.ObjectAnchor);		
+		declare Ident AnchorLandmarkId for Object;
+		AnchorLandmarkId = AnchorLandmark.Id;		
+		declare Text ItemName for Object;
+		ItemName = ObjectName;
+		
+		switch (ObjectName) {
+		
 			case T_ItemOffzone: {
-				declare Object <=> ObjectCreate(G_ItemIdents[T_ItemOffzone]);
-				if(Object != Null) {
-					G_AnchorsObjects.add(Object);
-					Object.SetAnchor(AnchorLandmark.ObjectAnchor);
 					declare metadata Meta_BuffDuration for AnchorLandmark = 5.;
-					declare Text ItemName for Object;
 					declare Real Duration for Object;
-					declare Ident AnchorLandmarkId for Object;
-					ItemName = T_ItemOffzone;
 					Duration = Meta_BuffDuration;
-					AnchorLandmarkId = AnchorLandmark.Id;
-				}
 			}
+			
 			case T_ItemAmmo: {
-				declare Object <=> ObjectCreate(G_ItemIdents[T_ItemAmmo]);
-				if(Object != Null) {
-					G_AnchorsObjects.add(Object);
-					Object.SetAnchor(AnchorLandmark.ObjectAnchor);
 					declare metadata Meta_GrantAmmoDuration for AnchorLandmark = 0.;
 					declare metadata Meta_GrantAmmoAmount for AnchorLandmark = 1.;
-					declare Text ItemName for Object;
 					declare Real Duration for Object;
 					declare Real Amount for Object;
-					declare Ident AnchorLandmarkId for Object;
-					ItemName = T_ItemAmmo;
 					Duration = Meta_GrantAmmoDuration;
 					Amount = Meta_GrantAmmoAmount;
-					AnchorLandmarkId = AnchorLandmark.Id;
-				}
 			}
+			
 		}
+		
 		if (Objects.count > 100) break;
 	}
 }
 
 Boolean PickupItems(CSmModeEvent _Event) {
 	declare ItemName for _Event.Object = "";
-	switch (ItemName) {
-		case T_ItemOffzone: {
-			// Offzone pickup
-			declare netwrite ItemBuffTimes for _Event.Player = Integer[Text];
-			declare Duration for _Event.Object = 5.;
-			if (!ItemBuffTimes.existskey(T_ItemOffzone) || ItemBuffTimes[T_ItemOffzone] < Now) {
-				ItemBuffTimes[T_ItemOffzone] = Now + ML::NearestInteger(Duration * 1000.);
-				return True;
-			}
-		}
-		case T_ItemAmmo: {
-			// Ammo item
-			declare netwrite ItemBuffTimes for _Event.Player = Integer[Text];
-			if (!ItemBuffTimes.existskey(T_ItemAmmo) || ItemBuffTimes[T_ItemAmmo] < Now) {
-				declare Duration for _Event.Object = 0.;
-				declare Amount for _Event.Object = 1.;
-				
-				// Set buff
-				ItemBuffTimes[T_ItemAmmo] = Now + ML::NearestInteger(Duration * 1000.);
-				
-				// Used if duration > 0
-				declare Real AmmoItemBuffDuration for _Event.Player;
-				declare Real AmmoItemBuffAmount for _Event.Player;				
-				AmmoItemBuffDuration = Duration;
-				AmmoItemBuffAmount = Amount;
-				
-				// Instant grant
-				if (Duration <= 0.) {
-					// if amount is greater than what we can add
-					// set ammo to max
-					if(ML::CeilingInteger(Amount) +_Event.Player.CurAmmoUnit > _Event.Player.CurAmmoMax) {
-						SetPlayerAmmo(_Event.Player, SM::GetWeapon(_Event.Player.CurWeapon),
-							_Event.Player.CurAmmoMax
-						);
-					// else add it
-					} else {
-						AddPlayerAmmo(_Event.Player, SM::GetWeapon(_Event.Player.CurWeapon), Amount);
-					}
-				}
-				return True;
-			}
-		}
+	declare netwrite ItemBuffTimes for _Event.Player = Integer[Text];
+	
+	if (ItemBuffTimes.existskey(ItemName) && ItemBuffTimes[ItemName] >= Now) {
+		return False;
 	}
 	
-	return False;
+	switch (ItemName) {
+	
+		case T_ItemOffzone: {
+			declare Duration for _Event.Object = 5.;
+			
+			ItemBuffTimes[ItemName] = Now + ML::NearestInteger(Duration * 1000.);
+		}
+		
+		case T_ItemAmmo: {
+			declare Duration for _Event.Object = 0.;
+			declare Amount for _Event.Object = 1.;
+			
+			ItemBuffTimes[T_ItemAmmo] = Now + ML::NearestInteger(Duration * 1000.);
+			
+			declare Real AmmoItemBuffDuration for _Event.Player;
+			declare Real AmmoItemBuffAmount for _Event.Player;				
+			AmmoItemBuffDuration = Duration;
+			AmmoItemBuffAmount = Amount;
+			
+			// Instant grant
+			if (Duration <= 0.) {
+				if(ML::CeilingInteger(Amount) +_Event.Player.CurAmmoUnit > _Event.Player.CurAmmoMax) {
+					SetPlayerAmmo(_Event.Player, SM::GetWeapon(_Event.Player.CurWeapon), _Event.Player.CurAmmoMax);
+				} else {
+					AddPlayerAmmo(_Event.Player, SM::GetWeapon(_Event.Player.CurWeapon), Amount);
+				}				
+			}
+		}
+		
+	}
+	
+	return True;
 }
 
 Void Destroy() {
