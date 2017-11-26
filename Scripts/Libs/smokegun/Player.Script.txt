@@ -1,0 +1,194 @@
+/************************************************
+*	Obstacle Library								               *
+*	Author:		smokegun  						               *
+*                                               *
+*	Getters and setters for players               *
+************************************************/
+
+#Include "TextLib" as TextLib
+#Include "MathLib" as MathLib
+
+/*********************************************
+	CONSTANTS
+*********************************************/
+
+#Const	Version		"2017-11-25"
+#Const	ScriptName	"Player.Script.txt"
+
+/*********************************************
+	FUNCTIONS
+*********************************************/
+
+Boolean isInitialized(CSmPlayer _Player) {
+  declare Boolean isInitialized for _Player = False;
+  return isInitialized;
+}
+
+Boolean setInitialized(CSmPlayer _Player, Boolean _Value) {
+  declare Boolean isInitialized for _Player = False;
+  isInitialized = _Value;
+  return isInitialized;
+}
+
+Integer getStartTime(CSmPlayer _Player) {
+	declare netwrite Integer Net_StartTime for _Player;
+  return Net_StartTime;
+}
+
+Integer setStartTime(CSmPlayer _Player, Integer _Value) {
+	declare netwrite Integer Net_StartTime for _Player;
+  Net_StartTime = _Value;
+  return Net_StartTime;
+}
+
+Integer getCpProgress(CSmPlayer _Player) {
+	declare netwrite Integer Net_CpProgress for _Player;
+  return Net_CpProgress;
+}
+
+Integer setCpProgress(CSmPlayer _Player, Integer _Value) {
+	declare netwrite Integer Net_CpProgress for _Player;
+  Net_CpProgress = _Value;
+  return Net_CpProgress;
+}
+
+Boolean usedJump(CSmPlayer _Player) {
+  declare netwrite Boolean Net_UsedJump for _Player = False;
+  return Net_UsedJump;
+}
+
+Boolean setUsedJump(CSmPlayer _Player, Boolean _Value) {
+  declare netwrite Boolean Net_UsedJump for _Player = False;
+  Net_UsedJump = _Value;
+  return Net_UsedJump;
+}
+
+Ident getLastCheckpoint(CSmPlayer _Player) {
+  declare Ident LastCheckpointId for _Player;
+  return LastCheckpointId;
+}
+
+Ident setLastCheckpoint(CSmPlayer _Player, Ident _Value) {
+  declare Ident LastCheckpointId for _Player;
+	LastCheckpointId = _Value;
+  return LastCheckpointId;
+}
+
+Integer[Text] getBuffTimes(CSmPlayer _Player) {
+	declare netwrite ItemBuffTimes for _Player = Integer[Text];	
+  return ItemBuffTimes;
+}
+
+Integer[Text] clearBuffTimes(CSmPlayer _Player) {
+	declare netwrite ItemBuffTimes for _Player = Integer[Text];	
+	ItemBuffTimes.clear();
+  return ItemBuffTimes;
+}
+
+Integer getBestRun(CSmPlayer _Player) {
+	declare Integer BestRun for _Player.Score;
+	return BestRun;
+}
+
+Integer setBestRun(CSmPlayer _Player, Integer _Value) {
+	declare Integer BestRun for _Player.Score;
+	BestRun = _Value;
+	return BestRun;
+}
+
+Integer getLastRun(CSmPlayer _Player) {
+	declare Integer LastRun for _Player.Score;
+	return LastRun;
+}
+
+Integer setLastRun(CSmPlayer _Player, Integer _Value) {
+	declare Integer LastRun for _Player.Score;
+	LastRun = _Value;
+	return LastRun;
+}
+
+Integer getRespawnCount(CSmPlayer _Player) {
+	declare Integer RespawnCount for _Player.Score;
+	return RespawnCount;
+}
+
+Integer setRespawnCount(CSmPlayer _Player, Integer _Value) {
+	declare Integer RespawnCount for _Player.Score;
+	RespawnCount = _Value;
+	return RespawnCount;
+}
+
+Integer incrementRespawnCount(CSmPlayer _Player) {
+	declare Integer RespawnCount for _Player.Score;
+	RespawnCount += 1;
+	return RespawnCount;
+}
+
+Integer[Ident] getBestCPTimes(CSmPlayer _Player) {
+	declare Integer[Ident] CheckpointsTimeBest for _Player.Score;
+	return CheckpointsTimeBest;
+}
+
+Integer[Ident] clearBestCPTimes(CSmPlayer _Player) {
+	declare Integer[Ident] CheckpointsTimeBest for _Player.Score;
+  CheckpointsTimeBest.clear();
+	return CheckpointsTimeBest;
+}
+
+Integer[Ident] getLastCPTimes(CSmPlayer _Player) {
+	declare Integer[Ident] CheckpointsTimeLast for _Player.Score;
+	return CheckpointsTimeLast;
+}
+
+Integer[Ident] clearLastCPTimes(CSmPlayer _Player) {
+	declare Integer[Ident] CheckpointsTimeLast for _Player.Score;
+  CheckpointsTimeLast.clear();
+	return CheckpointsTimeLast;
+}
+
+Integer[Text] getItemBuff(CSmPlayer _Player) {
+	declare Integer[Text] ItemBuffTimes for _Player;
+	return ItemBuffTimes;
+}
+
+Integer[Text] clearItemBuff(CSmPlayer _Player) {
+	declare Integer[Text] ItemBuffTimes for _Player;
+  ItemBuffTimes.clear();
+	return ItemBuffTimes;
+}
+
+// Declare player's variable
+Void InitPlayer(CSmPlayer _Player) {
+	if (_Player == Null || isInitialized(_Player)) return;
+	
+  setInitialized(_Player, True);
+  setStartTime(_Player, 0);
+  setCpProgress(_Player, 0);
+  setUsedJump(_Player, False);
+	setLastCheckpoint(_Player, NullId);
+	clearBuffTimes(_Player);
+	
+	setBestRun(_Player, -1);
+	setLastRun(_Player, -1);
+	setRespawnCount(_Player, 0);
+	clearBestCPTimes(_Player);
+	clearLastCPTimes(_Player);
+	
+	_Player.Score.RoundPoints = 0;
+	_Player.Score.Points = 0;
+}
+
+Boolean wantsRestart(CSmPlayer _Player) {
+	declare UI <=> UIManager.GetUI(_Player);
+	declare restart = False;
+	if (UI != Null) {
+		declare netread Net_PlayerWantsRestart for UI = False;
+		declare netread Net_PlayerLockedRestart for UI = False;
+		restart = Net_PlayerWantsRestart && !Net_PlayerLockedRestart;
+	}
+	return restart;
+}
+
+Integer getTime(CSmPlayer _Player) {
+	return Now - getStartTime(_Player);
+}
