@@ -107,7 +107,7 @@ if (Hud != Null && Hud.ScoresTable != Null) {
 	Hud.ScoresTable.Scores_Sort(CModulePlaygroundScoresTable::EScoreSortOrder::SMPoints);
 	
 	Tabs::Load();
-	declare TabsLayer <=> Tabs::CreateTabPaneLayer(["ScoresTab" => "Rankings", "CPTimes" => "Race"], 13, -50, False);
+	declare TabsLayer <=> Tabs::CreateTabPaneLayer(["ScoresTab" => "Rankings", "CPTimes" => "Race", "RecordsList" => "Rankings"], 13, -50, False);
 	TabsLayer.Type = CUILayer::EUILayerType::AltMenu;
 	UIManager.UIAll.UILayers.add(TabsLayer);
 	
@@ -188,6 +188,25 @@ API::Loop();
 if (Now > EndTime) {
 	Message::SendBigMessage(_("Time limit reached"),	2000, 3, CUIConfig::EUISound::Silence, 0);
 	MB_StopMatch();
+}
+
+foreach(Event in UIManager.PendingEvents) {
+	if(Event.Type == CUIConfigEvent::EType::OnLayerCustomEvent) {
+		switch(Event.CustomEventType) {
+			case "RecordsList_Prev_Page": {
+				RecordsUI::ChangePage(Event.UI, -1);
+				
+				declare netwrite Net_RecordsUpdated for Event.UI = 0;
+				Net_RecordsUpdated = Now;
+			}
+			case "RecordsList_Next_Page": {
+				RecordsUI::ChangePage(Event.UI, 1);
+				
+				declare netwrite Net_RecordsUpdated for Event.UI = 0;
+				Net_RecordsUpdated = Now;
+			}
+		}
+	}
 }
 
 foreach (Event in PendingEvents) {

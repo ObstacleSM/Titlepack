@@ -10,49 +10,53 @@
 #Const	ScriptName	"RecordsUI.Script.txt"
 
 declare Text[][] G_Records;
+declare Integer G_PageNb;
 
-// Global settings
-declare Integer width;
-declare Integer lines;
-declare Integer line_height;
-declare Integer top_count;
-
-declare Text G_BlankRecord;
-
-Text GetPlayerLogin(Integer _Index) {
+Text Private_GetPlayerLogin(Integer _Index) {
 	if(_Index < 0 || _Index >= G_Records.count) return "Error wrong idx";
 	return G_Records[_Index][0];
 }
 
-Text GetPlayerNickname(Integer _Index) {
+Text Private_GetPlayerNickname(Integer _Index) {
 	if(_Index < 0 || _Index >= G_Records.count) return "Error wrong idx";
 	return G_Records[_Index][1];
 }
 
-Text GetTime(Integer _Index) {
+Text Private_GetTime(Integer _Index) {
 	if(_Index < 0 || _Index >= G_Records.count) return "Error wrong idx";
 	return G_Records[_Index][2];
 }
 
-Text Vec(Vec2 _Vector) {
+Text Private_GetRs(Integer _Index) {
+	if(_Index < 0 || _Index >= G_Records.count) return "Error wrong idx";
+	return G_Records[_Index][3];
+}
+
+Text Private_GetTry(Integer _Index) {
+	if(_Index < 0 || _Index >= G_Records.count) return "Error wrong idx";
+	return G_Records[_Index][4];
+}
+
+Text Private_GetTimeago(Integer _Index) {
+	if(_Index < 0 || _Index >= G_Records.count) return "Error wrong idx";
+	return G_Records[_Index][5];
+}
+
+Text Private_Vec(Vec2 _Vector) {
 	return _Vector.X^" "^_Vector.Y;
 }
 
 Void UpdateNetVars(Integer _RecordIdx, CSmPlayer _Player, Boolean _Empty) {
 	declare line_color = "$FFF";
-	// Top 1
+	
 	if(_RecordIdx == 0) {
 		line_color = "$CC0";
-	// Top2
 	} else if(_RecordIdx == 1) {
 		line_color = "$CCC";
-	// Top3
 	} else if(_RecordIdx == 2) {
 		line_color = "$963";
-	} else if(_Player.User.Login == GetPlayerLogin(_RecordIdx)) {
-		line_color = "$0CF";
 	}
-
+	
 	// Rank
 	declare rank = "";
 	if(!_Empty) {
@@ -64,21 +68,17 @@ Void UpdateNetVars(Integer _RecordIdx, CSmPlayer _Player, Boolean _Empty) {
 	if(_Empty) {
 		name = _Player.User.Name;
 	} else {
-		name = GetPlayerNickname(_RecordIdx);
+		name = Private_GetPlayerNickname(_RecordIdx);
 	}
 
 	// Time
 	declare time = line_color^"--:--:---";
 	if(!_Empty) {
-		time = line_color^GetTime(_RecordIdx);
+		time = line_color^Private_GetTime(_RecordIdx);
 	}
 	
-	declare netwrite RecordRanks for _Player = Text[];
-	declare netwrite RecordNames for _Player = Text[];
-	declare netwrite RecordTimes for _Player = Text[];
-	RecordRanks.add(rank);
-	RecordNames.add(name);
-	RecordTimes.add(time);
+	declare netwrite SmallRecords for _Player = Text[][];
+	SmallRecords.add([rank, name, time]);
 }
 
 
@@ -96,10 +96,10 @@ Void DisplayPlayersFromTo(Integer _Start, Integer _End, CSmPlayer _Player) {
 			End = G_Records.count - 1;
 		}
 				
-		declare netwrite RecordRanks for _Player = Text[];
+		declare netwrite SmallRecords for _Player = Text[][];
 		// Display player records
 		for(Index, _Start, End) {
-			if(RecordRanks.count > lines - 1) break;
+			if(SmallRecords.count >= 15) break;
 			UpdateNetVars(Index, _Player);
 		}
 	} else {
@@ -107,24 +107,50 @@ Void DisplayPlayersFromTo(Integer _Start, Integer _End, CSmPlayer _Player) {
 	}
 }
 
+Void ChangePage(CUIConfig _UI, Integer dir) {
+	if(dir > 0 && G_Records.count > (G_PageNb+1) * 10) {
+		G_PageNb =  G_PageNb + 1;
+	} else if (dir < 0 && G_PageNb > 0) {
+		G_PageNb = G_PageNb - 1;
+	}
+	
+	declare netwrite RecordsList for _UI = Text[][];
+	RecordsList.clear();
+	
+	for(Idx, G_PageNb * 10, G_PageNb * 10 + 9) {
+		if(Idx >= G_Records.count) {
+			break;
+		}
+		RecordsList.add(
+			[ Idx+1^""
+			, Private_GetPlayerNickname(Idx)
+			, Private_GetTime(Idx)
+			, Private_GetTry(Idx)
+			, Private_GetRs(Idx)
+			, Private_GetTimeago(Idx)
+		  ]
+		);
+	}
+	
+	declare netwrite Net_RecordsUpdated for _UI = 0;
+	Net_RecordsUpdated = Now;
+}
+
 Void UpdateManialink(CSmPlayer _Player) {
 	// Find player record
 	declare CurrentPlayerRecordId = -1;
 	foreach(Idx => Record in G_Records) {
-		if(GetPlayerLogin(Idx) == _Player.User.Login) {
+		if(Private_GetPlayerLogin(Idx) == _Player.User.Login) {
 			CurrentPlayerRecordId = Idx;
 			break;
 		}
 	}
-	declare netwrite RecordRanks for _Player = Text[];
-	declare netwrite RecordNames for _Player = Text[];
-	declare netwrite RecordTimes for _Player = Text[];
-	RecordRanks.clear();
-	RecordNames.clear();
-	RecordTimes.clear();
+	
+	declare netwrite SmallRecords for _Player = Text[][];
+	SmallRecords.clear();
 
 	// Display top X players
-	DisplayPlayersFromTo(0, top_count - 1, _Player);
+	DisplayPlayersFromTo(0, 2, _Player);
 
 	// The player has no record
 	if(CurrentPlayerRecordId < 0) {
@@ -132,12 +158,12 @@ Void UpdateManialink(CSmPlayer _Player) {
 		// for the current player
 						
 		// Display records from the end
-		if(G_Records.count >= lines) {
-			DisplayPlayersFromTo(G_Records.count - (lines - 1 - top_count), G_Records.count - 1, _Player);
+		if(G_Records.count >= 15) {
+			DisplayPlayersFromTo(G_Records.count - 11, G_Records.count - 1, _Player);
 			
 		// Display all records
 		} else {
-			DisplayPlayersFromTo(top_count, G_Records.count - 1, _Player);
+			DisplayPlayersFromTo(3, G_Records.count - 1, _Player);
 		}
 		
 		// Add an empty line for the player
@@ -145,14 +171,13 @@ Void UpdateManialink(CSmPlayer _Player) {
 
 	// The player has record
 	} else {
-		if(CurrentPlayerRecordId < lines) {
+		if(CurrentPlayerRecordId < 15) {
 			// Display all records
-			DisplayPlayersFromTo(top_count, G_Records.count, _Player);
+			DisplayPlayersFromTo(3, G_Records.count, _Player);
 		} else {
 
 			// Display only records around the player
-			declare lines_to_fill = lines - top_count;
-			declare upper_half = ML::FloorInteger(lines_to_fill/2.);
+			declare upper_half = 6;
 			declare records_below = G_Records.count - CurrentPlayerRecordId - 1;
 
 			// There is a gap between the last record and the widget
@@ -164,111 +189,201 @@ Void UpdateManialink(CSmPlayer _Player) {
 			DisplayPlayersFromTo(CurrentPlayerRecordId + 1 - upper_half, G_Records.count, _Player);
 		}
 	}
-}
-
-// Generate nb_lines blank records ready to be filled
-Text BlankRecords() {
-	declare Manialink = "";
-	if(G_BlankRecord == "") {
-		declare rank_position = <width * -0.39, 0.>;
-		declare rank_size = <width * 0.1, line_height * 1.>;
-		declare name_position = <width * -0.38, 0.>;
-		declare name_size = <width * 0.6, line_height * 1.>;
-		declare time_position = <width * 0.49, 0.>;
-		declare time_size = <width * 0.25, line_height * 1.>;
-		G_BlankRecord = """
-			<label id="rank" pos="{{{Vec(rank_position)}}}" size="{{{Vec(rank_size)}}}" halign="right" valign="center2" style="TextCardSmallScores2" textsize="1"/>
-			<label id="name" pos="{{{Vec(name_position)}}}" size="{{{Vec(name_size)}}}" halign="left" valign="center2" textemboss="1" textsize="1"/>
-			<label id="time" pos="{{{Vec(time_position)}}}" size="{{{Vec(time_size)}}}" halign="right" valign="center2" style="TextTitle2" textsize="1"/>
-		""";
-	}
 	
-	for(Idx, 0, lines - 1) {
-		declare frame_position = <0., -8. - Idx * line_height>;
-		Manialink ^= """		
-			<frame id="record{{{Idx}}}" pos="{{{Vec(frame_position)}}}" z-index="4" halign="center" valign="center2">
-				{{{G_BlankRecord}}}
-			</frame>
-		""";
-	}
-	return Manialink;
+		// Update UI
+	declare UI <=> UIManager.GetUI(_Player);
+	if (UI == Null) return;
+		
+	ChangePage(UI, 0);
+	
+	declare netwrite Net_RecordsUpdated for UI = 0;
+	Net_RecordsUpdated = Now;
 }
 
 Text CreateManialink(Text _Title) {
-	declare id = "obstacle_records";
-	declare position = <139., 75.>;
-	width = 40;
-	lines = 15;
-	line_height = 4;
-	top_count = 3;
-
-	if(top_count > lines) {
-		top_count = lines - 1;
-	}
-
-	declare is_left = position.X < 0;
-
-	// Background
-	declare bg_size = <width * 1.2, 7. + lines * line_height>;
-
-	declare title_position = <0., line_height * -0.72>;
-	declare title_size = <0., width * 1.>;
-
-	// Top Count background
-	declare top_bg_size = <width * 1.2, top_count * line_height + 1.>;
-
 	return """
 <manialink version="3">
-	<frame id="{{{id}}}" class="LibCustomUI_Module">
-	  <frame id="Frame_Background" pos="{{{Vec(position)}}}" halign="center" valign="center2">
-	    <quad size="{{{Vec(bg_size)}}}" halign="center" valign="top" action="LocalRecords.ShowRecordsList" style="Bgs1InRace" substyle="BgList"/>
-	    <label pos="{{{Vec(title_position)}}}" z-index="3" size="{{{Vec(title_size)}}}" halign="center" valign="center2" text="{{{_Title}}}" translate="1" style="TextTitle1" textsize="1"/>
-	    <quad pos="0 -5.5" size="{{{Vec(top_bg_size)}}}" halign="center" valign="top" style="Bgs1InRace" substyle="BgCardList"/>		
-	  </frame>
-		<frame id="Frame_Records" pos="{{{Vec(position)}}}" z-index="1">
-			{{{BlankRecords()}}}
-		</frame>	
+<frame id="Frame_Small_Records" class="LibCustomUI_Module" pos="139 75">
+	<frame id="Frame_Background"halign="center" valign="center2">
+		<quad z-index="-1" size="44 67" style="BgRaceScore2" substyle="BgCardPlayer" halign="center" valign="top"/>
+		<label pos="0 -1" size="40 5" text="{{{_Title}}}" style="TextTitle3" textsize="3" halign="center" textfont="RajdhaniMono" maxline="1" valign="top"/>
 	</frame>
+	<frame id="Frame_Records" pos="0 -8" z-index="1">
+		<frameinstance modelid="small_record" pos="0 0" id="record0"/>
+		<frameinstance modelid="small_record" pos="0 -4" id="record1"/>
+		<frameinstance modelid="small_record" pos="0 -8" id="record2"/>
+		<frameinstance modelid="small_record" pos="0 -12" id="record3"/>
+		<frameinstance modelid="small_record" pos="0 -16" id="record4"/>
+		<frameinstance modelid="small_record" pos="0 -20" id="record5"/>
+		<frameinstance modelid="small_record" pos="0 -24" id="record6"/>
+		<frameinstance modelid="small_record" pos="0 -28" id="record7"/>
+		<frameinstance modelid="small_record" pos="0 -32" id="record8"/>
+		<frameinstance modelid="small_record" pos="0 -36" id="record9"/>
+		<frameinstance modelid="small_record" pos="0 -40" id="record10"/>
+		<frameinstance modelid="small_record" pos="0 -44" id="record11"/>
+		<frameinstance modelid="small_record" pos="0 -48" id="record12"/>
+		<frameinstance modelid="small_record" pos="0 -52" id="record13"/>
+		<frameinstance modelid="small_record" pos="0 -56" id="record14"/>
+	</frame>
+	<framemodel id="small_record">
+		<label id="rank" pos="-20 0" size="6 4" halign="left" valign="center2" style="TextCardSmallScores2" textsize="1" text="1."/>
+		<label id="name" pos="-14 0" size="20 4" halign="left" valign="center2" textsize="1" text="pseudo"/>
+		<label id="time" pos="20 0" size="14 4" halign="right" valign="center2" style="TextTitle2" textsize="1" text="00:00:01"/>
+	</framemodel>
+</frame>
 
+<frame id="Frame_Records_Panel" hidden="1">
+	<frame id="Frame_Background">
+		<quad pos="0 0" z-index="-1" size="150 70" bgcolor="FFFA" halign="center" valign="center" style="BgsPlayerCard" substyle="BgCard"/>
+		<quad pos="74 34" z-index="0" size="5 5" bgcolor="FFFA" style="Icons128x32_1" substyle="Close" halign="right" valign="top" scriptevents="1" id="records_close_button"/>
+		<label pos="0 30" z-index="0" size="30 10" text="Records" textfont="RajdhaniMono" textsize="6" halign="center" valign="center2" textcolor="FFFFFFFF" maxline="1"/>
+		<quad pos="0 -35" z-index="0" size="5 5" style="Icons64x64_1" substyle="ArrowNext" valign="bottom" scriptevents="1" halign="left" id="records_next_button"/>
+		<quad pos="0 -35" z-index="0" size="5 5" style="Icons64x64_1" substyle="ArrowPrev" valign="bottom" scriptevents="1" halign="right" id="records_prev_button"/>
+		<quad z-index="0" size="150 10" bgcolor="FFFFFF1C"  halign="center" pos="0 20" style="Bgs1" substyle="BgGradTop" opacity="0.3" valign="top"/>
+		<quad z-index="0" size="150 10" bgcolor="FFFFFF1C"  halign="center" pos="0 -30" style="Bgs1" substyle="BgGradBottom" opacity="0.3" valign="bottom"/>
+	</frame>
+	<frame pos="0 22" z-index="2" id="Frame_Records">
+		<frame id="Frame_Records_Heading">
+			<label pos="-68 0" size="10 5" text="Rank" valign="center2" textsize="1" maxline="1" halign="center"/>
+			<label pos="-36 0" size="50 5" text="Name" valign="center2" halign="center" textsize="1"/>
+			<label pos="-4 0" size="10 5" text="Try" valign="center2" halign="center" textsize="1" maxline="1"/>
+			<label pos="6 0" size="10 5" text="RS" valign="center2" halign="center" textsize="1" maxline="1"/>
+			<label pos="21 0" z-index="0" size="20 5" text="Time" valign="center2" halign="center" textsize="1" maxline="1"/>
+			<label pos="41 0" size="20 5" text="Date" valign="center2" halign="center" textsize="1"/>
+		</frame>
+		<frameinstance modelid="record" pos="0 -5"  id="record0"/>
+		<frameinstance modelid="record" pos="0 -10" id="record1"/>
+		<frameinstance modelid="record" pos="0 -15" id="record2"/>
+		<frameinstance modelid="record" pos="0 -20" id="record3"/>
+		<frameinstance modelid="record" pos="0 -25" id="record4"/>
+		<frameinstance modelid="record" pos="0 -30" id="record5"/>
+		<frameinstance modelid="record" pos="0 -35" id="record6"/>
+		<frameinstance modelid="record" pos="0 -40" id="record7"/>
+		<frameinstance modelid="record" pos="0 -45" id="record8"/>
+		<frameinstance modelid="record" pos="0 -50" id="record9"/>
+	</frame>
+	<framemodel id="record">
+		<label pos="-64 0" size="10 5" id="rank" text="123456." valign="center2" halign="right" maxline="1" textsize="1"/>
+		<label pos="-36 0" size="50 5" id="name" text="ObsPresidente" valign="center2" halign="center" textsize="1"/>
+		<label pos="-4 0" size="10 5" id="try" text="-1" valign="center2" halign="center" textsize="1" maxline="1"/>
+		<label pos="5 0" size="10 5" id="rs" text="-1" valign="center2" halign="center" textsize="1" maxline="1"/>
+		<label pos="21 0" size="20 5" id="time" text="00:00:01" valign="center2" halign="center" textsize="1" maxline="1"/>
+		<label pos="41 0" size="20 5" id="date" text="Last year when" valign="center2" halign="center" textsize="1"/>
+	</framemodel>
+</frame>
 <script><!--
+		Void UpdateFrameTab(CUIConfig UI, CMlPage Page, Text TabKey, Text FrameTabId)
+		{
+			declare netread Boolean _TabsLib_UseTabs for UI;
+			if (! _TabsLib_UseTabs) return;
+			
+			declare Boolean _TabsLib_ScoresLayerIsVisible 	for UI;
+			declare Boolean _TabsLib_AltLayerIsVisible 		for UI;
+			declare Text 	_TabsLib_CurrentTab 			for UI;
+			declare netread Text _TabsLib_ScoresTableTab 	for UI;
+			
+			declare Boolean ShowCurrentTab = _TabsLib_AltLayerIsVisible && (_TabsLib_CurrentTab == TabKey);
+			
+			if(TabKey == _TabsLib_ScoresTableTab) 
+			{
+				// log("_TabsLib_ScoresTableTab: "^_TabsLib_ScoresTableTab);
+				ShowCurrentTab = _TabsLib_ScoresLayerIsVisible || 
+					(_TabsLib_AltLayerIsVisible && (_TabsLib_CurrentTab == _TabsLib_ScoresTableTab));
+			}
+		
+			declare MainFrame <=> (Page.GetFirstChild(FrameTabId) as CMlFrame);
+			if(MainFrame == Null) return;
+			
+			if(ShowCurrentTab) {
+				MainFrame.Show();
+			}
+			else {
+				MainFrame.Hide();
+			}
+		}
+
 	main() {
-		declare netread Net_RecordsUpdated for UI = 0;			
 		declare LastUpdate = 0;
-		declare Frame_Records <=> (Page.GetFirstChild("Frame_Records") as CMlFrame);
+		
+		// Records widget on the right
+		declare Frame_Small_Records <=> (Page.GetFirstChild("Frame_Small_Records") as CMlFrame);
+		declare Small_Records <=> (Frame_Small_Records.GetFirstChild("Frame_Records") as CMlFrame);
+		
+		// Records list
+		declare Frame_Records_Panel <=> (Page.GetFirstChild("Frame_Records_Panel") as CMlFrame);
+		declare Records_Panel <=> (Frame_Records_Panel.GetFirstChild("Frame_Records") as CMlFrame);
 		
 		{{{CustomUI::InjectMLInit()}}}
 		
 		while (True) {
 			yield;
 			
+			foreach(Event in PendingEvents) {
+				if(Event.Type == CMlScriptEvent::Type::MouseClick) {
+					switch(Event.ControlId) {					
+						case "records_prev_button": {
+							SendCustomEvent("RecordsList_Prev_Page", [""]);
+						}						
+						case "records_next_button": {
+							SendCustomEvent("RecordsList_Next_Page", [""]);
+						}						
+					}
+				}
+			}
+			
+			UpdateFrameTab(UI, Page, "RecordsList", "Frame_Records_Panel");
+			
 			{{{CustomUI::InjectMLLoop()}}}
-			if(Net_RecordsUpdated <= LastUpdate && GameTime <= LastUpdate + 2000) continue;
+			
+			declare netread Net_RecordsUpdated for UI = 0;
+			if(Net_RecordsUpdated <= LastUpdate && GameTime <= LastUpdate + 10000) continue;
 			LastUpdate = GameTime;
 			
 			declare LocalPlayer <=> InputPlayer;
 			if (GUIPlayer != Null) LocalPlayer <=> GUIPlayer;			
 			if(LocalPlayer == Null) continue;
 			
-			declare netread RecordRanks for LocalPlayer = Text[];
-			declare netread RecordNames for LocalPlayer = Text[];
-			declare netread RecordTimes for LocalPlayer = Text[];
-						
-			// Foreach records
-			foreach(Idx => Control in Frame_Records.Controls) {
-				if(Idx >=0 && Idx < RecordRanks.count) {
-					declare frame <=> (Control as CMlFrame);
-					declare rankLabel <=> (frame.GetFirstChild("rank") as CMlLabel);
-					declare nameLabel <=> (frame.GetFirstChild("name") as CMlLabel);
-					declare timeLabel <=> (frame.GetFirstChild("time") as CMlLabel);
+			// UPDATE RECORDS IN EACH WIDGET
+			
+			declare netread SmallRecords for LocalPlayer = Text[][];
+			foreach(Idx => Control in Small_Records.Controls) {
+				Control.Visible = Idx < SmallRecords.count;
+				if(!Control.Visible) {
+					continue;
+				}
+				
+				declare frame <=> (Control as CMlFrame);				
+				declare rankLabel <=> (frame.GetFirstChild("rank") as CMlLabel);
+				declare nameLabel <=> (frame.GetFirstChild("name") as CMlLabel);
+				declare timeLabel <=> (frame.GetFirstChild("time") as CMlLabel);
 
-					rankLabel.SetText(RecordRanks[Idx]);
-					nameLabel.SetText(RecordNames[Idx]);
-					timeLabel.SetText(RecordTimes[Idx]);
-					
-					Control.Visible = True;
-				}	else {
-					Control.Visible = False;
-				}				
+				rankLabel.SetText(SmallRecords[Idx][0]);
+				nameLabel.SetText(SmallRecords[Idx][1]);
+				timeLabel.SetText(SmallRecords[Idx][2]);
+				
+				if(SmallRecords[Idx][1] == LocalPlayer.User.Name) {
+				
+				} else {
+				
+				}
+			}
+
+			declare netread RecordsList for UI = Text[][];
+			foreach(Idx => Record in RecordsList) {
+				declare frame = (Records_Panel.GetFirstChild("record"^Idx) as CMlFrame);
+				declare rankLabel <=> (frame.GetFirstChild("rank") as CMlLabel);
+				declare nameLabel <=> (frame.GetFirstChild("name") as CMlLabel);
+				declare timeLabel <=> (frame.GetFirstChild("time") as CMlLabel);
+				declare tryLabel <=> (frame.GetFirstChild("try") as CMlLabel);
+				declare rsLabel <=> (frame.GetFirstChild("rs") as CMlLabel);
+				declare dateLabel <=> (frame.GetFirstChild("date") as CMlLabel);
+				
+				rankLabel.SetText(Record[0]);
+				nameLabel.SetText(Record[1]);
+				timeLabel.SetText(Record[2]);
+				tryLabel.SetText(Record[3]);
+				rsLabel.SetText(Record[4]);
+				dateLabel.SetText(Record[5]);
 			}
 		}
 	}
@@ -281,11 +396,5 @@ Void Refresh(Text[][] _Records) {
 	G_Records = _Records;
 	foreach(Player in AllPlayers) {
 		UpdateManialink(Player);
-		
-		// Update UI
-		declare UI <=> UIManager.GetUI(Player);
-		if (UI == Null) continue;
-		declare netwrite Net_RecordsUpdated for UI = 0;
-		Net_RecordsUpdated = Now;
 	}
 }
