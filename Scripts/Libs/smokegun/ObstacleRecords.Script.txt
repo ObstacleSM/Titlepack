@@ -10,6 +10,7 @@
 #Include "Libs/smokegun/Record.Script.txt" as RecordUtils
 #Include "Libs/Nadeo/Log.Script.txt" as Log
 #Include "Libs/Nadeo/Json2.Script.txt" as Json
+#Include "Libs/Nadeo/ShootMania/SM3.Script.txt" as SM
 
 /*********************************************
 	CONSTANTS
@@ -138,7 +139,7 @@ Void StartMap(Integer _RecordsPerTick, Integer _RecordsTickDelay) {
 // Init the API with a token
 Void Init(Integer _RecordsPerTick, Integer _RecordsTickDelay) {
 	G_PostHeaders = """Content-Type: application/json
-Accept: application/json""";
+Accept: application/xml""";
 	G_GetHeaders = """Accept: application/xml""";
 	G_HostUrlLength = TL::Length(C_HostUrl);
 	
@@ -191,6 +192,9 @@ Void ParseRecords(Text _RecordsAsText) {
 		ToAdd.add(RecordUtils::GetPlayerField(Record, "login"));
 		ToAdd.add(RecordUtils::GetPlayerField(Record, "nickname"));
 		ToAdd.add(RecordUtils::GetTime(Record));
+		ToAdd.add(RecordUtils::GetField(Record, "respawnCount"));
+		ToAdd.add(RecordUtils::GetField(Record, "tryCount"));
+		ToAdd.add(RecordUtils::GetField(Record, "timeago"));
 		G_Records.add(ToAdd);
 	}
 	Xml.Destroy(XmlRecords);
@@ -287,17 +291,37 @@ Void Loop() {
 			declare request <=> Http.Requests[reqId];
 			if(!request.IsCompleted) continue;
 			
-			Log::Log("Request done: ("^request.StatusCode^") "^request.Result);
+			Log::Log("Request done: ("^request.StatusCode^") "^request.Url);
+			Log::Log(request.Result);
 
-			// Save request for later if it fails
+			// Request failed
 			if(request.StatusCode == 401) {
 				G_IsLoggedIn = False;
 				declare ApiUrl = TL::SubString(request.Url, G_HostUrlLength, TL::Length(request.Url) - G_HostUrlLength);
 				SendPost(ApiUrl, data);
-			}
-			
-			// Actualise records at each response
-			if(G_IsLoggedIn) {
+				
+			// Request succeded
+			} else {
+				declare response = Xml.Create(request.Result);
+
+				if(TL::Find("player-finished", request.Url, True, True)) {
+					declare isNewBest = response.Root.GetFirstChild("newBest").TextContents == "True";
+					// TODO: Add fields to backend response
+					declare login = "smokegun";
+					declare nickname = "genius";
+					declare old = 0;
+					declare new = 0;
+					if(isNewBest) {
+						UIManager.UIAll.SendChat("""{{{nickname}}} made a new record ! ({{{TL::TimeToText(new, True)}}})""");
+					} else {
+						declare Player = SM::GetPlayer(login);
+						if(Player != Null) {
+							UIManager.GetUI(Player).SendChat("""Too bad ! ({{{TL::TimeToText(new-old, True)}}})""");
+						}
+					}
+				}
+				
+				Xml.Destroy(response);
 				UpdateRecords();
 			}
 
@@ -349,7 +373,9 @@ Void Loop() {
 				if(LoginRequest.StatusCode == 200)
 				{
 					Log::Log("Logged in: ("^LoginRequest.StatusCode^") "^LoginRequest.Result);
-					G_Token = TL::SubString(LoginRequest.Result, 7, 64);
+					declare XmlResponse = Xml.Create(LoginRequest.Result);
+					G_Token = XmlResponse.Root.GetFirstChild("id").TextContents;
+					Xml.Destroy(XmlResponse);
 					G_IsLoggedIn = True;
 					G_PostHeaders = G_PostHeaders^"""
 Authorization: {{{G_Token}}}""";
