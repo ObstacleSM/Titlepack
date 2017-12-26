@@ -9,25 +9,62 @@
 	</global>
 <Solo color="FF0" logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_Solo.dds" allowevaluate="False" scriptname="Modes\ShootMania\ObstacleSolo.Script.txt">
 	<category name="White">
-<track path="Campaigns\0\zero.Map.Gbx" thumbnail="file://Thumbnails/MapUid/CbLJfRGDbeDs7Fu0zwH91MDojSf/" name="zero" medalnb="0" medaltype="Bronze"/>
-<track path="" thumbnail="" medalnb="0" medaltype="Bronze"/>
-<track path="" thumbnail="" medalnb="0" medaltype="Bronze"/>
-<track path="" thumbnail="" medalnb="0" medaltype="Bronze"/>
-<track path="" thumbnail="" medalnb="0" medaltype="Bronze"/>
-<track path="Campaigns\0\Sans nom.Map.Gbx" thumbnail="file://Thumbnails/MapUid/lLNqAWP6RXXyARFQsQq0iLDojSf/" name="Sans nom" medalnb="1" medaltype="Bronze"/>
-<track path="" thumbnail="" medalnb="1" medaltype="Bronze"/>
-<track path="" thumbnail="" medalnb="1" medaltype="Bronze"/>
-<track path="" thumbnail="" medalnb="1" medaltype="Bronze"/>
-<track path="" thumbnail="" medalnb="1" medaltype="Bronze"/>
-<track path="Campaigns\0\TimeAttack - WayDown.Map.Gbx" thumbnail="file://Thumbnails/MapUid/rVNzHhh71Be2xa0QwTS3x8tKOmk/" name="$fff$sTimeAttack - $f20Wa$f31yD$f42ow$f53n" medalnb="2" medaltype="Bronze"/>
-<track path="" thumbnail="" medalnb="2" medaltype="Bronze"/>
-<track path="" thumbnail="" medalnb="2" medaltype="Bronze"/>
-<track path="" thumbnail="" medalnb="2" medaltype="Bronze"/>
-<track path="" thumbnail="" medalnb="2" medaltype="Bronze"/>
+		<track medalnb="0" medaltype="Bronze">
+			<path>Campaigns\0\zero.Map.Gbx</path>
+			<name>zero</name>
+			<thumbnail>file://Thumbnails/MapUid/CbLJfRGDbeDs7Fu0zwH91MDojSf/</thumbnail>
+		</track>
+		<track medalnb="0" medaltype="Bronze">
+			<path>Campaigns\0\TimeAttack - WayDown.Map.Gbx</path>
+			<name>$fff$sTimeAttack - $f20Wa$f31yD$f42ow$f53n</name>
+			<thumbnail>file://Thumbnails/MapUid/rVNzHhh71Be2xa0QwTS3x8tKOmk/</thumbnail>
+		</track>
+		<track medalnb="0" medaltype="Bronze">
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+		</track>
+		<track medalnb="0" medaltype="Bronze">
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+		</track>
+		<track medalnb="0" medaltype="Bronze">
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+		</track>
+		<track medalnb="2" medaltype="Bronze">
+			<path>Campaigns\0\Sans nom.Map.Gbx</path>
+			<name>Sans nom</name>
+			<thumbnail>file://Thumbnails/MapUid/lLNqAWP6RXXyARFQsQq0iLDojSf/</thumbnail>
+		</track>
+		<track medalnb="2" medaltype="Bronze">
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+		</track>
+		<track medalnb="2" medaltype="Bronze">
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+		</track>
+		<track medalnb="2" medaltype="Bronze">
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+		</track>
+		<track medalnb="2" medaltype="Bronze">
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+		</track>
 	</category>
 </Solo>
-	<Multiplayer logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_Online.dds" activated="True" color="c39" allowallmodes="False" displaytitleserversonly="False">
-		
+	<Multiplayer logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_Online.dds" activated="True" color="c39" allowallmodes="False" displaytitleserversonly="True">
+			<asset id="Online_UGCAsset-0" isdefault="no" titlename="Modes\ShootMania\Obstacle.Script.txt"/>
+	<asset id="Online_UGCAsset-1" isdefault="no" titlename="Modes\ShootMania\TimeAttack.Script.txt"/>
+
 	</Multiplayer>
 	<LocalPlay logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_LocalPlay.dds" activated="True" color="0f8">
 			<asset id="LocalNetwork" isdefault="yes" titlename="Local Network" isvisibleinmaker="True"/>

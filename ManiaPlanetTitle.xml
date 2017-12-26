@@ -68,8 +68,10 @@
 		</score_context>
 		<campaign num="0">
 			<playlist name=""/>
-			<score_context></score_context>
+			<mode name=""/>
+			<score_context>AscendingScore</score_context>
 			<official_record_enabled>true</official_record_enabled>
+			<disable_unlock_system>false</disable_unlock_system>
 			<maps folder="Campaigns\"/>
 		</campaign>
 	</solo>
