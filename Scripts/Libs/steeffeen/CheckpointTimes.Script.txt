@@ -106,25 +106,32 @@ Void Build() {
 	<script><!--
 		#Include "TextLib" as TextLib
 
-		Void UpdateFrameTab(CUIConfig UI, CMlPage Page, Text TabKey, CMlFrame MainFrame) {
+		Void UpdateFrameTab(CUIConfig UI, CMlPage Page, Text TabKey, Text FrameTabId)
+		{
 			declare netread Boolean _TabsLib_UseTabs for UI;
-			if (!_TabsLib_UseTabs) return;
-
+			if (! _TabsLib_UseTabs) return;
+			
 			declare Boolean _TabsLib_ScoresLayerIsVisible 	for UI;
 			declare Boolean _TabsLib_AltLayerIsVisible 		for UI;
 			declare Text 	_TabsLib_CurrentTab 			for UI;
 			declare netread Text _TabsLib_ScoresTableTab 	for UI;
-
-			declare ShowCurrentTab = _TabsLib_AltLayerIsVisible && _TabsLib_CurrentTab == TabKey;
-
-			if (TabKey == _TabsLib_ScoresTableTab) {
-				ShowCurrentTab = _TabsLib_ScoresLayerIsVisible
-					|| _TabsLib_AltLayerIsVisible && _TabsLib_CurrentTab == _TabsLib_ScoresTableTab;
+			
+			declare Boolean ShowCurrentTab = _TabsLib_AltLayerIsVisible && (_TabsLib_CurrentTab == TabKey);
+			
+			if(TabKey == _TabsLib_ScoresTableTab) 
+			{
+				// log("_TabsLib_ScoresTableTab: "^_TabsLib_ScoresTableTab);
+				ShowCurrentTab = _TabsLib_ScoresLayerIsVisible || 
+					(_TabsLib_AltLayerIsVisible && (_TabsLib_CurrentTab == _TabsLib_ScoresTableTab));
 			}
-
-			if (ShowCurrentTab) {
+		
+			declare MainFrame <=> (Page.GetFirstChild(FrameTabId) as CMlFrame);
+			if(MainFrame == Null) return;
+			
+			if(ShowCurrentTab) {
 				MainFrame.Show();
-			} else {
+			}
+			else {
 				MainFrame.Hide();
 			}
 		}
@@ -141,7 +148,6 @@ Void Build() {
 			declare netread Net_Steff_LibTimes_CPTimes for UI = Integer[Integer];
 
 			declare PageNb = 1;
-
 			declare LastUpdate = 0;
 
 			while (True) {
@@ -149,7 +155,8 @@ Void Build() {
 
 				if (!PageIsVisible) continue;
 
-				UpdateFrameTab(UI, Page, "{{{TextLib::MLEncode(G_CPTimes_TabName)}}}", MainFrame);
+				UpdateFrameTab(UI, Page, "{{{TextLib::MLEncode(G_CPTimes_TabName)}}}", "Frame_Times");
+				
 				if (!MainFrame.Visible) continue;
 
 				declare PageCount = Net_Steff_LibTimes_BestCPTimes.count / 21 + 1;
