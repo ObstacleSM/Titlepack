@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
-<manialink version="3">
->
+<frame>
 <frame id="Frame_Records_Panel">
 	<frame id="Frame_Background">
 		<quad pos="0 0" z-index="-1" size="150 70" bgcolor="FFFA" halign="center" valign="center" style="BgsPlayerCard" substyle="BgCard"/>
-		<quad pos="74 34" z-index="0" size="5 5" bgcolor="FFFA" style="Icons128x32_1" substyle="Close" halign="right" valign="top" scriptevents="1" id="records_close_button"/>
 		<label pos="0 30" z-index="0" size="30 10" text="Records" textfont="RajdhaniMono" textsize="6" halign="center" valign="center2" textcolor="FFFFFFFF" maxline="1"/>
 		<quad pos="0 -35" z-index="0" size="5 5" style="Icons64x64_1" substyle="ArrowNext" valign="bottom" scriptevents="1" halign="left" id="records_next_button"/>
 		<quad pos="0 -35" z-index="0" size="5 5" style="Icons64x64_1" substyle="ArrowPrev" valign="bottom" scriptevents="1" halign="right" id="records_prev_button"/>
@@ -32,12 +30,12 @@
 		<frameinstance modelid="record" pos="0 -50" id="record9"/>
 	</frame>
 	<framemodel id="record">
-		<label pos="-64 0" size="10 5" text="123456." valign="center2" halign="right" maxline="1" textsize="1"/>
-		<label pos="-36 0" size="50 5" text="ObsPresidente" valign="center2" halign="center" textsize="1"/>
-		<label pos="-4 0" size="10 5" text="1" valign="center2" halign="center" textsize="1" maxline="1"/>
+		<label pos="-64 0" size="10 5" text="123456." valign="center2" halign="right" maxline="1" textsize="1" id="rank"/>
+		<label pos="-36 0" size="50 5" text="ObsPresidente" valign="center2" halign="center" textsize="1" id="name"/>
+		<label pos="-4 0" size="10 5" text="1" valign="center2" halign="center" textsize="1" maxline="1" id="try"/>
 		<label pos="5 0" size="10 5" text="0" valign="center2" halign="center" textsize="1" maxline="1"/>
-		<label pos="21 0" size="20 5" text="00:00:01" valign="center2" halign="center" textsize="1" maxline="1"/>
-		<label pos="41 0" size="20 5" text="Last year when" valign="center2" halign="center" textsize="1"/>
+		<label pos="21 0" size="20 5" text="00:00:01" valign="center2" halign="center" textsize="1" maxline="1" id="time"/>
+		<label pos="41 0" size="20 5" text="Last year when" valign="center2" halign="center" textsize="1" id="date"/>
 	</framemodel>
 </frame>
-</manialink>
+</frame>
