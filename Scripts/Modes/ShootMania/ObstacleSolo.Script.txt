@@ -4,7 +4,7 @@
 *	Contact:	steeffeen@team-devota.com	*
 ********************************************/
 
-#Extends "Modes/ShootMania/Obstacle.Script.txt"
+#Extends "Modes/ShootMania/ObstacleOld.Script.txt"
 
 #Const SoloScriptName	"ObstacleSolo.Script.txt"
 #Const SoloVersion		"1.1 (2014-06-28)"
