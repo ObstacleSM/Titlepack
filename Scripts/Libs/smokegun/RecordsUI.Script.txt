@@ -234,15 +234,16 @@ Text CreateManialink(Text _Title) {
 	</frame>
 </frame>
 
-<frame id="Frame_Records_Panel" hidden="1">
+>
+<frame id="Frame_Records_Panel">
 	<frame id="Frame_Background">
 		<quad pos="0 0" z-index="-1" size="150 70" bgcolor="FFFA" halign="center" valign="center" style="BgsPlayerCard" substyle="BgCard"/>
-		<quad pos="74 34" z-index="0" size="5 5" bgcolor="FFFA" style="Icons128x32_1" substyle="Close" halign="right" valign="top" scriptevents="1" id="records_close_button"/>
 		<label pos="0 30" z-index="0" size="30 10" text="Records" textfont="RajdhaniMono" textsize="6" halign="center" valign="center2" textcolor="FFFFFFFF" maxline="1"/>
 		<quad pos="0 -35" z-index="0" size="5 5" style="Icons64x64_1" substyle="ArrowNext" valign="bottom" scriptevents="1" halign="left" id="records_next_button"/>
 		<quad pos="0 -35" z-index="0" size="5 5" style="Icons64x64_1" substyle="ArrowPrev" valign="bottom" scriptevents="1" halign="right" id="records_prev_button"/>
-		<quad z-index="0" size="150 10" bgcolor="FFFFFF1C"  halign="center" pos="0 20" style="Bgs1" substyle="BgGradTop" opacity="0.3" valign="top"/>
-		<quad z-index="0" size="150 10" bgcolor="FFFFFF1C"  halign="center" pos="0 -30" style="Bgs1" substyle="BgGradBottom" opacity="0.3" valign="bottom"/>
+		<quad pos="0 20" z-index="-1" size="150 50" bgcolor="000000AA" halign="center"/>
+		<quad pos="0 25" z-index="-1" size="150 0.5" bgcolor="000000AA" halign="center"/>
+		<quad pos="0 -30 	" z-index="-1" size="150 0.5" bgcolor="FFFFFFAA" halign="center" opacity="0.5"/>	
 	</frame>
 	<frame pos="0 22" z-index="2" id="Frame_Records">
 		<frame id="Frame_Records_Heading">
@@ -251,9 +252,9 @@ Text CreateManialink(Text _Title) {
 			<label pos="-4 0" size="10 5" text="Try" valign="center2" halign="center" textsize="1" maxline="1"/>
 			<label pos="6 0" size="10 5" text="RS" valign="center2" halign="center" textsize="1" maxline="1"/>
 			<label pos="21 0" z-index="0" size="20 5" text="Time" valign="center2" halign="center" textsize="1" maxline="1"/>
-			<label pos="41 0" size="20 5" text="Date" valign="center2" halign="center" textsize="1"/>
+			<label pos="41 0" z-index="0" size="20 5" text="Date" valign="center2" halign="center" textsize="1" maxline="1"/>
 		</frame>
-		<frameinstance modelid="record" pos="0 -5"  id="record0"/>
+		<frameinstance modelid="record" pos="0 -5"   id="record0"/>
 		<frameinstance modelid="record" pos="0 -10" id="record1"/>
 		<frameinstance modelid="record" pos="0 -15" id="record2"/>
 		<frameinstance modelid="record" pos="0 -20" id="record3"/>
@@ -265,12 +266,12 @@ Text CreateManialink(Text _Title) {
 		<frameinstance modelid="record" pos="0 -50" id="record9"/>
 	</frame>
 	<framemodel id="record">
-		<label pos="-64 0" size="10 5" id="rank" text="123456." valign="center2" halign="right" maxline="1" textsize="1"/>
-		<label pos="-36 0" size="50 5" id="name" text="ObsPresidente" valign="center2" halign="center" textsize="1"/>
-		<label pos="-4 0" size="10 5" id="try" text="-1" valign="center2" halign="center" textsize="1" maxline="1"/>
-		<label pos="5 0" size="10 5" id="rs" text="-1" valign="center2" halign="center" textsize="1" maxline="1"/>
-		<label pos="21 0" size="20 5" id="time" text="00:00:01" valign="center2" halign="center" textsize="1" maxline="1"/>
-		<label pos="41 0" size="20 5" id="date" text="Last year when" valign="center2" halign="center" textsize="1"/>
+		<label pos="-64 0" size="10 5" text="123456." valign="center2" halign="right" maxline="1" textsize="1" id="rank"/>
+		<label pos="-36 0" size="50 5" text="ObsPresidente" valign="center2" halign="center" textsize="1" id="name"/>
+		<label pos="-4 0" size="10 5" text="1" valign="center2" halign="center" textsize="1" maxline="1" id="try"/>
+		<label pos="5 0" size="10 5" text="0" valign="center2" halign="center" textsize="1" maxline="1" id="rs"/>
+		<label pos="21 0" size="20 5" text="00:00:01" valign="center2" halign="center" textsize="1" maxline="1" id="time"/>
+		<label pos="41 0" size="20 5" text="Last year when" valign="center2" halign="center" textsize="1" id="date"/>
 	</framemodel>
 </frame>
 <script><!--
@@ -371,21 +372,29 @@ Text CreateManialink(Text _Title) {
 			}
 
 			declare netread RecordsList for UI = Text[][];
-			foreach(Idx => Record in RecordsList) {
+			for(Idx, 0, 9) {
 				declare frame = (Records_Panel.GetFirstChild("record"^Idx) as CMlFrame);
-				declare rankLabel <=> (frame.GetFirstChild("rank") as CMlLabel);
-				declare nameLabel <=> (frame.GetFirstChild("name") as CMlLabel);
-				declare timeLabel <=> (frame.GetFirstChild("time") as CMlLabel);
-				declare tryLabel <=> (frame.GetFirstChild("try") as CMlLabel);
-				declare rsLabel <=> (frame.GetFirstChild("rs") as CMlLabel);
-				declare dateLabel <=> (frame.GetFirstChild("date") as CMlLabel);
 				
-				rankLabel.SetText(Record[0]);
-				nameLabel.SetText(Record[1]);
-				timeLabel.SetText(Record[2]);
-				tryLabel.SetText(Record[3]);
-				rsLabel.SetText(Record[4]);
-				dateLabel.SetText(Record[5]);
+				if(Idx < RecordsList.count) {
+					declare Record = RecordsList[Idx];
+					declare rankLabel <=> (frame.GetFirstChild("rank") as CMlLabel);
+					declare nameLabel <=> (frame.GetFirstChild("name") as CMlLabel);
+					declare timeLabel <=> (frame.GetFirstChild("time") as CMlLabel);
+					declare tryLabel <=> (frame.GetFirstChild("try") as CMlLabel);
+					declare rsLabel <=> (frame.GetFirstChild("rs") as CMlLabel);
+					declare dateLabel <=> (frame.GetFirstChild("date") as CMlLabel);
+					
+					rankLabel.SetText(Record[0]);
+					nameLabel.SetText(Record[1]);
+					timeLabel.SetText(Record[2]);
+					tryLabel.SetText(Record[3]);
+					rsLabel.SetText(Record[4]);
+					dateLabel.SetText(Record[5]);
+					
+					frame.Visible = True;
+				} else {
+					frame.Visible = False;
+				}				
 			}
 		}
 	}
