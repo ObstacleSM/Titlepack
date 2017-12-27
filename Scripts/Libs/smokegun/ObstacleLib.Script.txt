@@ -255,16 +255,11 @@ Void Private_UpdatePlayerBestTime(CSmPlayer _Player) {
 	declare cpProgress = Player::getCpProgress(_Player);
 	declare usedJump = Player::usedJump(_Player);
 	declare bestRun = Player::getBestRun(_Player);
-	
-	declare LastBestTime for _Player = "";
 	declare newBestTime = "--:--.--";
-
-	if(LastBestTime == newBestTime)
-		return;
 
 	if(bestRun > 0) {
 		newBestTime = TextLib::TimeToText(bestRun, True);
-	} else if(cpProgress > 0){
+	} else {
 		newBestTime = "CP"^cpProgress;
 		
 		if(usedJump) {
@@ -274,7 +269,6 @@ Void Private_UpdatePlayerBestTime(CSmPlayer _Player) {
 	
 	Hud.ScoresTable.SetColumnValue (_Player.Score, "BestTime", newBestTime);
 	Private_UpdateRanking();
-	LastBestTime = newBestTime;
 }
 
 /**
