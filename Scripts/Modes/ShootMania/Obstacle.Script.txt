@@ -38,7 +38,7 @@
 
 #Setting S_RecordsWidgetTitle "Records" as "<hidden>"
 #Setting S_RecordsPerTick	100 as "<hidden>"
-#Setting S_RecordsTickDelay	100 as "<hidden>"
+#Setting S_RecordsTickDelay	50 as "<hidden>"
 #Setting S_NextMapVotingRatio	0.7		as "<hidden>"
 
 // ---------------------------------- //
@@ -107,7 +107,7 @@ if (Hud != Null && Hud.ScoresTable != Null) {
 	Hud.ScoresTable.Scores_Sort(CModulePlaygroundScoresTable::EScoreSortOrder::SMPoints);
 	
 	Tabs::Load();
-	declare TabsLayer <=> Tabs::CreateTabPaneLayer(["ScoresTab" => "Rankings", "CPTimes" => "Race", "RecordsList" => "Rankings"], 13, -50, False);
+	declare TabsLayer <=> Tabs::CreateTabPaneLayer(["ScoresTab" => "Rankings", "CPTimes" => "Race", "RecordsList" => "Rankings"], 13, 0, False);
 	TabsLayer.Type = CUILayer::EUILayerType::AltMenu;
 	UIManager.UIAll.UILayers.add(TabsLayer);
 	

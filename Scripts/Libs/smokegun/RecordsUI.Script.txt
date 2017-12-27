@@ -9,6 +9,9 @@
 #Const	Version		"2017-07-28"
 #Const	ScriptName	"RecordsUI.Script.txt"
 
+#Const	RecordsPerPage	16
+
+
 declare Text[][] G_Records;
 declare Integer G_PageNb;
 
@@ -108,7 +111,7 @@ Void DisplayPlayersFromTo(Integer _Start, Integer _End, CSmPlayer _Player) {
 }
 
 Void ChangePage(CUIConfig _UI, Integer dir) {
-	if(dir > 0 && G_Records.count > (G_PageNb+1) * 10) {
+	if(dir > 0 && G_Records.count > (G_PageNb+1) * 16) {
 		G_PageNb =  G_PageNb + 1;
 	} else if (dir < 0 && G_PageNb > 0) {
 		G_PageNb = G_PageNb - 1;
@@ -117,7 +120,7 @@ Void ChangePage(CUIConfig _UI, Integer dir) {
 	declare netwrite RecordsList for _UI = Text[][];
 	RecordsList.clear();
 	
-	for(Idx, G_PageNb * 10, G_PageNb * 10 + 9) {
+	for(Idx, G_PageNb * RecordsPerPage, G_PageNb * RecordsPerPage + RecordsPerPage - 1) {
 		if(Idx >= G_Records.count) {
 			break;
 		}
@@ -235,17 +238,16 @@ Text CreateManialink(Text _Title) {
 </frame>
 
 >
-<frame id="Frame_Records_Panel">
+<frame id="Frame_Records_Panel" hidden="1">
 	<frame id="Frame_Background">
-		<quad pos="0 0" z-index="-1" size="150 70" bgcolor="FFFA" halign="center" valign="center" style="BgsPlayerCard" substyle="BgCard"/>
-		<label pos="0 30" z-index="0" size="30 10" text="Records" textfont="RajdhaniMono" textsize="6" halign="center" valign="center2" textcolor="FFFFFFFF" maxline="1"/>
-		<quad pos="0 -35" z-index="0" size="5 5" style="Icons64x64_1" substyle="ArrowNext" valign="bottom" scriptevents="1" halign="left" id="records_next_button"/>
-		<quad pos="0 -35" z-index="0" size="5 5" style="Icons64x64_1" substyle="ArrowPrev" valign="bottom" scriptevents="1" halign="right" id="records_prev_button"/>
-		<quad pos="0 20" z-index="-1" size="150 50" bgcolor="000000AA" halign="center"/>
-		<quad pos="0 25" z-index="-1" size="150 0.5" bgcolor="000000AA" halign="center"/>
-		<quad pos="0 -30 	" z-index="-1" size="150 0.5" bgcolor="FFFFFFAA" halign="center" opacity="0.5"/>	
+		<quad pos="0 0" z-index="-1" size="220 100" bgcolor="FFFA" halign="center" valign="center" style="BgsPlayerCard" substyle="BgCard"/>
+		<label pos="0 45" z-index="0" size="30 10" text="Records" textfont="RajdhaniMono" textsize="6" halign="center" valign="center2" textcolor="FFFFFFFF" maxline="1"/>
+		<quad pos="0 -50" z-index="0" size="5 5" style="Icons64x64_1" substyle="ArrowNext" valign="bottom" scriptevents="1" halign="left" id="records_next_button"/>
+		<quad pos="0 -50" z-index="0" size="5 5" style="Icons64x64_1" substyle="ArrowPrev" valign="bottom" scriptevents="1" halign="right" id="records_prev_button"/>
+		<quad pos="0 35" z-index="-1" size="220 80" bgcolor="000000AA" halign="center"/>
+		<quad pos="0 40" z-index="-1" size="220 0.5" bgcolor="000000AA" halign="center"/>
 	</frame>
-	<frame pos="0 22" z-index="2" id="Frame_Records">
+	<frame pos="0 37" z-index="2" id="Frame_Records">
 		<frame id="Frame_Records_Heading">
 			<label pos="-68 0" size="10 5" text="Rank" valign="center2" textsize="1" maxline="1" halign="center"/>
 			<label pos="-36 0" size="50 5" text="Name" valign="center2" halign="center" textsize="1"/>
@@ -264,6 +266,12 @@ Text CreateManialink(Text _Title) {
 		<frameinstance modelid="record" pos="0 -40" id="record7"/>
 		<frameinstance modelid="record" pos="0 -45" id="record8"/>
 		<frameinstance modelid="record" pos="0 -50" id="record9"/>
+		<frameinstance modelid="record" pos="0 -55" id="record10"/>
+		<frameinstance modelid="record" pos="0 -60" id="record11"/>
+		<frameinstance modelid="record" pos="0 -65" id="record12"/>
+		<frameinstance modelid="record" pos="0 -70" id="record13"/>
+		<frameinstance modelid="record" pos="0 -75" id="record14"/>
+		<frameinstance modelid="record" pos="0 -80" id="record15"/>
 	</frame>
 	<framemodel id="record">
 		<label pos="-64 0" size="10 5" text="123456." valign="center2" halign="right" maxline="1" textsize="1" id="rank"/>
@@ -339,7 +347,7 @@ Text CreateManialink(Text _Title) {
 			{{{CustomUI::InjectMLLoop()}}}
 			
 			declare netread Net_RecordsUpdated for UI = 0;
-			if(Net_RecordsUpdated <= LastUpdate && GameTime <= LastUpdate + 10000) continue;
+			if(Net_RecordsUpdated < LastUpdate && GameTime <= LastUpdate + 10000) continue;
 			LastUpdate = GameTime;
 			
 			declare LocalPlayer <=> InputPlayer;
@@ -372,7 +380,7 @@ Text CreateManialink(Text _Title) {
 			}
 
 			declare netread RecordsList for UI = Text[][];
-			for(Idx, 0, 9) {
+			for(Idx, 0, {{{RecordsPerPage-1}}}) {
 				declare frame = (Records_Panel.GetFirstChild("record"^Idx) as CMlFrame);
 				
 				if(Idx < RecordsList.count) {
