@@ -201,6 +201,7 @@ Void ParseRecords(Text _RecordsAsText) {
 	
 	RecordsUI::Refresh(G_Records);
 	Log::Log("Endparse ("^G_Records.count^"|"^G_RecordsCount^")");
+	
 	if(G_Records.count < G_RecordsCount) {
 		StartParsingRecords();
 	} else {
@@ -305,18 +306,18 @@ Void Loop() {
 				declare response = Xml.Create(request.Result);
 
 				if(TL::Find("player-finished", request.Url, True, True)) {
-					declare isNewBest = response.Root.GetFirstChild("newBest").TextContents == "True";
+					declare isNewBest = response.Root.GetFirstChild("newBest").TextContents == "true";
 					// TODO: Add fields to backend response
-					declare login = "smokegun";
-					declare nickname = "genius";
-					declare old = 0;
-					declare new = 0;
+					declare login = response.Root.GetFirstChild("login").TextContents;
+					declare old = TL::ToInteger(response.Root.GetFirstChild("old").TextContents);
+					declare new = TL::ToInteger(response.Root.GetFirstChild("new").TextContents);
+					
+					declare Player = SM::GetPlayer(login);
 					if(isNewBest) {
-						UIManager.UIAll.SendChat("""{{{nickname}}} made a new record ! ({{{TL::TimeToText(new, True)}}})""");
+						UIManager.UIAll.SendChat("""{{{Player.User.Name}}} made a new record ! ({{{TL::TimeToText(new, True)}}})""");
 					} else {
-						declare Player = SM::GetPlayer(login);
 						if(Player != Null) {
-							UIManager.GetUI(Player).SendChat("""Too bad ! ({{{TL::TimeToText(new-old, True)}}})""");
+							UIManager.GetUI(Player).SendChat("""Too bad ! +({{{TL::TimeToText(new-old, True)}}})""");
 						}
 					}
 				}
