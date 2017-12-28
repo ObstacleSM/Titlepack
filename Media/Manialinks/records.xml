@@ -1,47 +1,69 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
-<frame>
+<manialink version="3">
 <frame id="Frame_Records_Panel">
+	<frame id="Frame_Heading">
+		<label pos="0 40" size="30 10" text="Records" textsize="6" textcolor="FFFFFFFF" maxline="1" halign="center" valign="bottom"/>
+		<quad pos="0 40" z-index="-1" size="220 0.5" bgcolor="000000AA" halign="center"/>
+		<frameinstance modelid="records_heading" pos="5 37"/>
+		<frameinstance modelid="records_heading" pos="-105 37"/>
+	</frame>
+	<frame pos="0 37" id="Frame_Records">
+		<frameinstance modelid="record" pos="-105 -5"   id="record0"/>
+		<frameinstance modelid="record" pos="-105 -10" id="record1"/>
+		<frameinstance modelid="record" pos="-105 -15" id="record2"/>
+		<frameinstance modelid="record" pos="-105 -20" id="record3"/>
+		<frameinstance modelid="record" pos="-105 -25" id="record4"/>
+		<frameinstance modelid="record" pos="-105 -30" id="record5"/>
+		<frameinstance modelid="record" pos="-105 -35" id="record6"/>
+		<frameinstance modelid="record" pos="-105 -40" id="record7"/>
+		<frameinstance modelid="record" pos="-105 -45" id="record8"/>
+		<frameinstance modelid="record" pos="-105 -50" id="record9"/>
+		<frameinstance modelid="record" pos="-105 -55" id="record10"/>
+		<frameinstance modelid="record" pos="-105 -60" id="record11"/>
+		<frameinstance modelid="record" pos="-105 -65" id="record12"/>
+		<frameinstance modelid="record" pos="-105 -70" id="record13"/>
+		<frameinstance modelid="record" pos="-105 -75" id="record14"/>
+		<frameinstance modelid="record" pos="-105 -80" id="record15"/>
+		<frameinstance modelid="record" pos="5 -5"   id="record16"/>
+		<frameinstance modelid="record" pos="5 -10" id="record17"/>
+		<frameinstance modelid="record" pos="5 -15" id="record18"/>
+		<frameinstance modelid="record" pos="5 -20" id="record19"/>
+		<frameinstance modelid="record" pos="5 -25" id="record20"/>
+		<frameinstance modelid="record" pos="5 -30" id="record21"/>
+		<frameinstance modelid="record" pos="5 -35" id="record22"/>
+		<frameinstance modelid="record" pos="5 -40" id="record23"/>
+		<frameinstance modelid="record" pos="5 -45" id="record24"/>
+		<frameinstance modelid="record" pos="5 -50" id="record25"/>
+		<frameinstance modelid="record" pos="5 -55" id="record26"/>
+		<frameinstance modelid="record" pos="5 -60" id="record27"/>
+		<frameinstance modelid="record" pos="5 -65" id="record28"/>
+		<frameinstance modelid="record" pos="5 -70" id="record29"/>
+		<frameinstance modelid="record" pos="5 -75" id="record30"/>
+		<frameinstance modelid="record" pos="5 -80" id="record31"/>
+	</frame>
+	<frame id="Frame_Footer">
+		<quad pos="0 -50" size="5 5" style="Icons64x64_1" substyle="ArrowNext" valign="bottom" scriptevents="1" halign="left" id="records_next_button"/>
+		<quad pos="0 -50" size="5 5" style="Icons64x64_1" substyle="ArrowPrev" valign="bottom" scriptevents="1" halign="right" id="records_prev_button"/>
+	</frame>
 	<frame id="Frame_Background">
-		<quad pos="0 0" z-index="-1" size="240 100" bgcolor="FFFA" halign="center" valign="center" style="BgsPlayerCard" substyle="BgCard"/>
-		<label pos="0 45" z-index="0" size="30 10" text="Records" textfont="RajdhaniMono" textsize="6" halign="center" valign="center2" textcolor="FFFFFFFF" maxline="1"/>
-		<quad pos="0 -50" z-index="0" size="5 5" style="Icons64x64_1" substyle="ArrowNext" valign="bottom" scriptevents="1" halign="left" id="records_next_button"/>
-		<quad pos="0 -50" z-index="0" size="5 5" style="Icons64x64_1" substyle="ArrowPrev" valign="bottom" scriptevents="1" halign="right" id="records_prev_button"/>
-		<quad pos="0 35" z-index="-1" size="240 80" bgcolor="000000AA" halign="center"/>
-		<quad pos="0 40" z-index="-1" size="240 0.5" bgcolor="000000AA" halign="center"/>
+		<quad z-index="-1" size="220 100" bgcolor="000000FF" halign="center" valign="center"  opacity="0.5"/>
+		<quad pos="0 35" z-index="0" size="0.5 80" bgcolor="FFFF" halign="center" valign="top" opacity="0.1"/>
+		<quad pos="0 35" z-index="-1" size="220 80" bgcolor="000000AA" halign="center" valign="top"/>
 	</frame>
-	<frame pos="0 37" z-index="2" id="Frame_Records">
-		<frame id="Frame_Records_Heading">
-			<label pos="-68 0" size="10 5" text="Rank" valign="center2" textsize="1" maxline="1" halign="center"/>
-			<label pos="-36 0" size="50 5" text="Name" valign="center2" halign="center" textsize="1"/>
-			<label pos="-4 0" size="10 5" text="Try" valign="center2" halign="center" textsize="1" maxline="1"/>
-			<label pos="6 0" size="10 5" text="RS" valign="center2" halign="center" textsize="1" maxline="1"/>
-			<label pos="21 0" z-index="0" size="20 5" text="Time" valign="center2" halign="center" textsize="1" maxline="1"/>
-			<label pos="41 0" z-index="0" size="20 5" text="Date" valign="center2" halign="center" textsize="1" maxline="1"/>
-		</frame>
-		<frameinstance modelid="record" pos="0 -5"   id="record0"/>
-		<frameinstance modelid="record" pos="0 -10" id="record1"/>
-		<frameinstance modelid="record" pos="0 -15" id="record2"/>
-		<frameinstance modelid="record" pos="0 -20" id="record3"/>
-		<frameinstance modelid="record" pos="0 -25" id="record4"/>
-		<frameinstance modelid="record" pos="0 -30" id="record5"/>
-		<frameinstance modelid="record" pos="0 -35" id="record6"/>
-		<frameinstance modelid="record" pos="0 -40" id="record7"/>
-		<frameinstance modelid="record" pos="0 -45" id="record8"/>
-		<frameinstance modelid="record" pos="0 -50" id="record9"/>
-		<frameinstance modelid="record" pos="0 -55" id="record10"/>
-		<frameinstance modelid="record" pos="0 -60" id="record11"/>
-		<frameinstance modelid="record" pos="0 -65" id="record12"/>
-		<frameinstance modelid="record" pos="0 -70" id="record13"/>
-		<frameinstance modelid="record" pos="0 -75" id="record14"/>
-		<frameinstance modelid="record" pos="0 -80" id="record15"/>
-	</frame>
-	<framemodel id="record">
-		<label pos="-64 0" size="10 5" text="123456." valign="center2" halign="right" maxline="1" textsize="1" id="rank"/>
-		<label pos="-36 0" size="50 5" text="ObsPresidente" valign="center2" halign="center" textsize="1" id="name"/>
-		<label pos="-4 0" size="10 5" text="1" valign="center2" halign="center" textsize="1" maxline="1" id="try"/>
-		<label pos="5 0" size="10 5" text="0" valign="center2" halign="center" textsize="1" maxline="1" id="rs"/>
-		<label pos="21 0" size="20 5" text="00:00:01" valign="center2" halign="center" textsize="1" maxline="1" id="time"/>
-		<label pos="41 0" size="20 5" text="Last year when" valign="center2" halign="center" textsize="1" id="date"/>
-	</framemodel>
 </frame>
-</frame>
+<framemodel id="records_heading">
+	<label pos="5 0" size="10 5" text="Rank" valign="center2" textsize="1" maxline="1" halign="center"/>
+	<label pos="35 0" size="50 5" text="Name" valign="center2" halign="center" textsize="1"/>
+	<label pos="65 0" size="10 5" text="Try" valign="center2" halign="center" textsize="1"/>
+	<label pos="75 0" size="10 5" text="RS" valign="center2" halign="center" textsize="1"/>
+	<label pos="90 0"  size="20 5" text="Time" valign="center2" halign="center" textsize="1"/>
+</framemodel>
+<framemodel id="record">
+	<label pos="5 0" size="10 5" text="123456." valign="center2" halign="center" maxline="1" textsize="1" id="rank"/>
+	<label pos="35 0" size="50 5" text="ObsPresidente" valign="center2" halign="center" textsize="1" id="name"/>
+	<label pos="65 0" size="10 5" text="1" valign="center2" halign="center" textsize="1" id="try"/>
+	<label pos="75 0" size="10 5" text="0" valign="center2" halign="center" textsize="1" id="rs"/>
+	<label pos="90 0" size="20 5" text="00:00:01" valign="center2" halign="center" textsize="1" id="time"/>
+	<label pos="50 0" size="110 5" valign="center2" halign="center" text="" action="highlight" focusareacolor1="FFFFFF00" focusareacolor2="FFFFFF44"/>
+</framemodel>
+</manialink>
