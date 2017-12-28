@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+	<manialink version="3">
+		<frame pos="0 50" z-index="0.00" scale="1.00">
+			<framemodel id="framemodelscorecard">
+				<frame z-index="100" hidden="1" id="framespecconfirm" pos="11.20 -4.29">
+					<quad size="76.30 8.57" halign="left" valign="center" bgcolor="111E" z-index="-1" />
+					<label pos="2.90" size="44.26" valign="center2" textsize="2" text="Passer en mode spectateur ?" />
+					<label pos="55.70" size="12.21 3.60" style="TextButtonNav" focusareacolor1="333F" focusareacolor2="EEEF" textcolor="FFF" halign="center" valign="center2" text="Oui" scriptevents="1" id="specconfirm_yes" />
+					<label pos="68.67" size="12.21 3.60" style="TextButtonNav" focusareacolor1="333F" focusareacolor2="EEEF" textcolor="FFF" halign="center" valign="center2" text="Non" scriptevents="1" id="specconfirm_no" />
+				</frame>
+				<frame z-index="-100" >
+					<quad pos="3.50 -4.29" size="3.28 8.14" image="file://Media/Manialinks/Common/Echelons/small_echelon9.dds" halign="right" valign="center" id="scorecard_quadechelon"/>
+					<quad pos="3.28 -4.29" size="8.57 8.57" colorize="111" halign="left" valign="center" bgcolor="0007" image="file://Media/Manialinks/Shootmania/ScoresTable/playerline-square.dds" id="scorecard_quadsquare" />
+					<quad pos="11.20 -4.29" size="76.30 8.57" halign="left" valign="center" bgcolor="0007" image="file://Media/Manialinks/Shootmania/ScoresTable/playerline-left.dds" id="scorecard_quadbackground" />
+					<quad pos="0 -4.29" z-index="-1" size="87.94 9.00" valign="center" opacity="0.8" id="scorecard_quadbackgroundblink"  style="Icons128x128_Blink" substyle="ShareBlink" hidden="1" />
+				</frame>
+				<quad pos="11.20 -4.29" size="76.30 8.57" hidden="1" halign="left" valign="center" bgcolor="0007" colorize="777" image="file://Media/Manialinks/Shootmania/ScoresTable/playerline-left.dds" opacity="0.7" id="scorecard_quaddarkening" z-index="100" />
+				<label pos="7.57 -4.29" size="8.57 8.57" scale="0.80" halign="center" valign="center2" textsize="5" opacity="0.4" style="" text="0" id="scorecard_localrank"/>
+				<frame pos="11.85 -6.26">
+					<quad pos="1.75 -1.16" size="2.31 2.31" scale="0.9" halign="left" valign="center" style="Icons64x64_2" substyle="DisconnectedLight" id="scorecard_quadstatus"/>
+					<label pos="4.32 -1.16" size="37.82 2.31" valign="center2" style="TextCardSmallScores2Rank" text="Other: -" id="scorecard_labelmultirank"/>
+					<frame id="framelpgain">
+						<quad pos="71.36 -1.16" size="2.31 2.31" scale="1.5" valign="center" style="Icons128x128_1" substyle="LadderPoints"/>
+						<label pos="70.93 -1.16" size="30.26 2.31" halign="right" valign="center2" style="TextCardSmallScores2Rank" textcolor="bb8" text="+0.0" id="scorecard_labellpgain"/>
+					</frame>
+				</frame>
+				<frame z-index="1">
+					<label pos="86.55 -3.21" size="14.74 8.57" halign="right" valign="center2" style="TextRaceMessage" text="--:--.--" textsize="2.00" id="columns_BestTime"/>
+					<label pos="66.13 -3.21" size="9.47 8.57" halign="center" valign="center2" style="TextRaceMessage" text="0" textsize="2.00" id="columns_RS"/>
+					<quad pos="58.08 -2.01" size="2.79 2.79" halign="center" valign="center" scale="1.3" style="UIConstructionSimple_Buttons" substyle="Camera" scriptevents="1" id="columns_quadspec"/>
+					<quad pos="58.08 -4.24" size="2.79 2.79" halign="center" valign="center" scale="1.3" style="UIConstructionSimple_Buttons" substyle="Author" scriptevents="1" id="columns_quadprofile"/>
+					<quad pos="51.213 -2.030" size="2.368 2.368" halign="center" valign="center" style="BgRaceScore2" substyle="Fame" id="columns_quadmaniastar0"/>
+					<quad pos="53.581 -2.030" size="2.368 2.368" halign="center" valign="center" style="BgRaceScore2" substyle="Fame" id="columns_quadmaniastar1"/>
+					<quad pos="52.397 -3.214" size="2.368 2.368" halign="center" valign="center" style="BgRaceScore2" substyle="Fame" id="columns_quadmaniastar2"/>
+					<quad pos="51.213 -4.398" size="2.368 2.368" halign="center" valign="center" style="BgRaceScore2" substyle="Fame" id="columns_quadmaniastar3"/>
+					<quad pos="53.581 -4.398" size="2.368 2.368" halign="center" valign="center" style="BgRaceScore2" substyle="Fame" id="columns_quadmaniastar4"/>
+					<frame pos="49.08 -1.30">
+						<quad pos="-5.68" size="1.89 2.07" z-index="1" halign="right" valign="center" style="Icons64x64_1" substyle="TagTypeNone" id="columns_quadtagtype0"/>
+						<quad pos="-6.63" size="6.63 1.91" valign="center" id="columns_quadtag0"/>
+					</frame>
+					<frame pos="49.08 -3.21">
+						<quad pos="-5.68" size="1.89 2.07" z-index="1" halign="right" valign="center" style="Icons64x64_1" substyle="TagTypeNone" id="columns_quadtagtype1"/>
+						<quad pos="-6.63" size="6.63 1.91" valign="center" id="columns_quadtag1"/>
+					</frame>
+					<frame pos="49.08 -5.13">
+						<quad pos="-5.68" size="1.89 2.07" z-index="1" halign="right" valign="center" style="Icons64x64_1" substyle="TagTypeNone" id="columns_quadtagtype2"/>
+						<quad pos="-6.63" size="6.63 1.91" valign="center" id="columns_quadtag2"/>
+					</frame>
+					<label pos="17.83 -3.21" size="22.73 8.57" halign="left" valign="center2" style="TextRaceMessage" text="long player name (to check the overflow)" textsize="2.00" id="columns_labelname"/>
+					<quad pos="14.51 -3.21" size="4.74 4.74" image="file://Avatars/smokegun/Default" halign="center" valign="center" id="columns_quadavatar"/>
+				</frame>
+			</framemodel>
+			<framemodel id="framemodellegends">
+				<label pos="86.55" size="14.74 5" halign="right" valign="bottom" textsize="1" text="BestTime"/>
+				<label pos="66.13" size="9.47 5" halign="center" valign="bottom" textsize="1" text="Respawn"/>
+				<label pos="58.08" size="4.74 5" halign="center" valign="bottom" textsize="1" text=""/>
+				<label pos="52.40" size="4.74 5" halign="center" valign="bottom" textsize="1" text=""/>
+				<label pos="45.29" size="7.58 5" halign="center" valign="bottom" textsize="1" text=""/>
+				<label pos="17.83" size="22.73 5" halign="left" valign="bottom" textsize="1" text=""/>
+				<label pos="14.51" size="4.74 5" halign="center" valign="bottom" textsize="1" text=""/>
+			</framemodel>
+			<quad z-index="-100" size="220.00 100.00" image="" halign="center" id="quadbackground"  pos="0 0"/>
+			<frame id="frameheader">
+				<label pos="0 -6.75" size="44.00 5" style="TextButtonBig" textsize="2" z-index="1" halign="center" valign="center2" scale="2.00" text="Ranking" id="header_title"/>
+				<quad pos="36.96 -6.75" size="4.50 4.50" image="" halign="right" valign="center"/>
+			</frame>
+			<frame id="framefooter" pos="0 -75.00">
+				<frame id="frameplayerinfo" pos="-85.80 -15.00">
+					<quad size="11.00 11.00" image="file://Avatars/smokegun/Default" valign="bottom" id="playerinfo_avatar" />
+					<label pos="16.50 1.50" size="22.00 10.00" valign="bottom" style="TextButtonBig" textsize="5" scale="1.00" text="#1" id="playerinfo_rank" />
+				</frame>
+				<frame id="frameadditionnalinfo" pos="0 -15.00">
+					<label pos="0 3.00" size="70.40 4.00" text="$6CFम$fffscҽητ$6CF « Şӎo$fffƙэ$z's awesome server" halign="center" valign="bottom" textsize="3" id="additionnalinfo_servername" />
+					<label pos="0 2.50" size="70.40 4.00" text="Score 3 points to win !" halign="center" valign="top" textsize="1" translate="1" id="additionnalinfo_footertext" />
+				</frame>
+				<frame id="framepager" pos="61.60 -15.00">
+					<quad pos="0 9.00" rot="180" halign="center" valign="center" style="Icons64x64_1" substyle="ShowUpChanging" size="6.00 6.00" scriptevents="1" id="pager_buttonprev"/>
+					<quad pos="0 1.00" halign="center" valign="center" style="Icons64x64_1" substyle="ShowUpChanging" size="6.00 6.00" scriptevents="1" id="pager_buttonnext"/>
+					<quad pos="0 5.00" size="5.00 5.00" z-index="2" halign="center" valign="center" style="Icons64x64_1" substyle="Maximize" scriptevents="1" id="pager_findplayer" />
+				</frame>
+			</frame>
+			<frame id="frametable" pos="0 -15.00">
+				<frameinstance id="framelegends#1" modelid="framemodellegends" pos="-88.50"/>
+				<frameinstance id="scorecard#1" modelid="framemodelscorecard" pos="-88.50 -0.00" />
+				<frameinstance id="scorecard#2" modelid="framemodelscorecard" pos="-88.50 -8.57" />
+				<frameinstance id="scorecard#3" modelid="framemodelscorecard" pos="-88.50 -17.14" />
+				<frameinstance id="scorecard#4" modelid="framemodelscorecard" pos="-88.50 -25.71" />
+				<frameinstance id="scorecard#5" modelid="framemodelscorecard" pos="-88.50 -34.29" />
+				<frameinstance id="scorecard#6" modelid="framemodelscorecard" pos="-88.50 -42.86" />
+				<frameinstance id="scorecard#7" modelid="framemodelscorecard" pos="-88.50 -51.43" />
+				<frameinstance id="framelegends#2" modelid="framemodellegends" pos="-0.50"/>
+				<frameinstance id="scorecard#8" modelid="framemodelscorecard" pos="-0.50 -0.00" />
+				<frameinstance id="scorecard#9" modelid="framemodelscorecard" pos="-0.50 -8.57" />
+				<frameinstance id="scorecard#10" modelid="framemodelscorecard" pos="-0.50 -17.14" />
+				<frameinstance id="scorecard#11" modelid="framemodelscorecard" pos="-0.50 -25.71" />
+				<frameinstance id="scorecard#12" modelid="framemodelscorecard" pos="-0.50 -34.29" />
+				<frameinstance id="scorecard#13" modelid="framemodelscorecard" pos="-0.50 -42.86" />
+				<frameinstance id="scorecard#14" modelid="framemodelscorecard" pos="-0.50 -51.43" />
+			</frame>
+		</frame>
+		<script><!--
+#Include "TextLib" as TL
+declare Frame_Settings <=> Page.GetFirstChild("framesettings");
+declare Button_Settings <=> Page.GetFirstChild("settings_toggle");
+while(True) {
+foreach(Event in PendingEvents) {
+if (Event.Type == CMlEvent::Type::KeyPress) {
+if (Event.CharPressed == "5177344") {
+SendCustomEvent("PagerNext", [""]);
+} else if (Event.CharPressed == "6815744") {
+SendCustomEvent("PagerPrev", [""]);
+} else if (Event.CharPressed == "3670016") {
+SendCustomEvent("PagerFind", [""]);
+}
+} else if (Event.Type == CMlEvent::Type::MouseClick) {
+if (Event.ControlId == "pager_buttonprev") {
+SendCustomEvent("PagerPrev", [""]);
+} else if (Event.ControlId == "pager_buttonnext") {
+SendCustomEvent("PagerNext", [""]);
+} else if (Event.ControlId == "pager_findplayer") {
+SendCustomEvent("PagerFind", [""]);
+} else if (Event.ControlId == "columns_quadprofile"  && Event.Control.DataAttributeExists("playerlogin")) {
+SendCustomEvent("ColumnProfile", [Event.Control.DataAttributeGet("playerlogin")]);
+} else if (Event.ControlId == "columns_quadspec" && Event.Control.DataAttributeExists("playerlogin")) {
+SendCustomEvent("ColumnSpec", [Event.Control.DataAttributeGet("playerlogin")]);
+} else if (Event.ControlId == "settings_toggle") {
+if (Frame_Settings.RelativeScale == 0) {
+AnimMgr.Add(Frame_Settings, """<frame scale="1" hidden="0" />""", Now, 250, CGameManialinkAnimManager::EAnimManagerEasing::ExpOut);
+AnimMgr.Add(Button_Settings, """<quad rot="-110" />""", Now, 250, CGameManialinkAnimManager::EAnimManagerEasing::ExpOut);
+} else {
+AnimMgr.Add(Frame_Settings, """<frame scale="0" hidden="1" />""", Now, 250, CGameManialinkAnimManager::EAnimManagerEasing::ExpOut);
+AnimMgr.Add(Button_Settings, """<quad rot="0" />""", Now, 250, CGameManialinkAnimManager::EAnimManagerEasing::ExpOut);
+}
+} else if (Event.ControlId == "settings_spectators") {
+SendCustomEvent("SettingsSpectators", [""]);
+} else if (Event.ControlId == "settings_disconnected") {
+SendCustomEvent("SettingsDisconnected", [""]);
+} else if (Event.ControlId == "specconfirm_yes") {
+SendCustomEvent("SpecConfirmYes", [""]);
+} else if (Event.ControlId == "specconfirm_no") {
+SendCustomEvent("SpecConfirmNo", [""]);
+}
+} }yield;}
+--></script>
+</manialink>
