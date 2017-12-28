@@ -314,10 +314,10 @@ Void Loop() {
 					
 					declare Player = SM::GetPlayer(login);
 					if(isNewBest) {
-						UIManager.UIAll.SendChat("""{{{Player.User.Name}}} made a new record ! ({{{TL::TimeToText(new, True)}}})""");
+						UIManager.UIAll.SendChat("""{{{Player.User.Name}}}$z made a new record ! ({{{TL::TimeToText(new, True)}}})""");
 					} else {
 						if(Player != Null) {
-							UIManager.GetUI(Player).SendChat("""Too bad ! +({{{TL::TimeToText(new-old, True)}}})""");
+							UIManager.GetUI(Player).SendChat("""$zAtleast you tried, you were too late by {{{TL::TimeToText(new-old, True)}}} !""");
 						}
 					}
 				}
