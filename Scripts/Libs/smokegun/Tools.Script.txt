@@ -115,13 +115,13 @@ Integer GetPlayerRank(CSmPlayer _Player) {
 		foreach (Score in Scores) {
 			declare CheckpointsTimeBest for Score = Integer[Ident];
 			if (!CheckpointsTimeBest.existskey(LastCheckpointId)) continue;
-			Ranking[Score.User.Id] = CheckpointsTimeLast[LastCheckpointId];
+			Ranking[Score.User.Id] = CheckpointsTimeBest[LastCheckpointId];
 		}
 	}
 
 	// Rank players by time
 	Ranking = Ranking.sort();
-	log(Ranking);
+
 	// Get final rank
 	foreach (UserId => Time in Ranking) {
 		if (UserId == _Player.User.Id) break;
