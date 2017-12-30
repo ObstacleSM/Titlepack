@@ -19,8 +19,8 @@
 #Const	ScriptName	"ObstacleRecords.Script.txt"
 
 
-#Const C_HostUrl "http://localhost:3000/api/"
-//#Const C_HostUrl "http://164.132.228.75:3000/api/"
+//#Const C_HostUrl "http://localhost:3000/api/"
+#Const C_HostUrl "http://164.132.228.75:3000/api/"
 
 
 #Const C_SIdle 0
@@ -120,11 +120,15 @@ Void Login() {
 	if(G_LoginRequestId != NullId && Http.Requests.existskey(G_LoginRequestId)) {
 		Http.Destroy(Http.Requests[G_LoginRequestId]);
 	}
-			
+	
+	// Get the first line of the file
+	declare pass = Http.CreateGet("file://Media/Private/test.txt").Result;
+	pass = TL::Split("\r\n", pass)[0];
+	
 	declare payload = """
 	{
 		"username": "vincent",
-		"password": "vincent"
+		"password": "{{{pass}}}"
 	}""";
 	
 	G_LoginRequestId = MakePost("Users/Login", payload);
@@ -370,7 +374,7 @@ Void Loop() {
 			declare LoginRequest <=> Http.Requests[G_LoginRequestId];
 			
 			if(LoginRequest.IsCompleted)
-			{			
+			{
 				if(LoginRequest.StatusCode == 200)
 				{
 					Log::Log("Logged in: ("^LoginRequest.StatusCode^") "^LoginRequest.Result);
