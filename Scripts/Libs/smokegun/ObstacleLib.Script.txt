@@ -512,10 +512,9 @@ Void Private_HandleFinish(CSmPlayer _Player, Ident _GoalId) {
 
 	// Update time diff before updating best run
 	ObsUI::UpdateLayerTimeDiff(_Player, LastRun, BestRun);
-
+	
 	// Check if last run is  if last run is better
 	if (LastRun < BestRun || BestRun < 0) {
-		Log::Log(_Player.User.Login^" has finished ! "^TextLib::TimeToText(LastRun, True)^" (Previous best was : "^TextLib::TimeToText(BestRun, True)^")");
 		BestRun = LastRun;
 		CheckpointsTimeBest = CheckpointsTimeLast;
 
@@ -615,7 +614,7 @@ Void Private_HandleCheckpoint(CSmPlayer _Player, Ident _CheckpointId) {
 	declare Variant = 0;
 
 	if(!Net_UsedJump) {
-		declare BestTime = -1;
+		declare BestTime = 0;
 		if (CheckpointsTimeBest.existskey(_CheckpointId)) {
 			BestTime = CheckpointsTimeBest[_CheckpointId];
 		}
@@ -639,7 +638,7 @@ Void HandleCapture(CSmPlayer _Player) {
 	declare CpProgress = Player::getCpProgress(_Player);
 	declare HasJumped = Player::usedJump(_Player);
 	declare MessageToShow = "";
-		
+
 	switch (Landmark.Tag) {
 	
 		case "Goal": {
