@@ -23,7 +23,7 @@
 #Include "Libs/smokegun/UI.Script.txt" as ObsUI
 #Include "Libs/smokegun/ObstacleRecords.Script.txt" as API
 
-#Include "Libs/steeffeen/CheckpointTimes.Script.txt" as CPTimes
+#Include "Libs/smokegun/CPTimes.Script.txt" as CPTimes
 
 
 /*********************************************
@@ -110,9 +110,8 @@ Boolean PrepareMap() {
 	// Publish the numbers of checkpoint for the UI
 	declare netwrite Integer Net_CheckpointsTotal for Teams[0];
 	Net_CheckpointsTotal = G_CheckpointsTotal;
-	
-	CPTimes::SetNbCheckpoints(G_CheckpointsTotal + 1);
-	CPTimes::ResetTimes();
+
+	CPTimes::StartMap(G_CheckpointsTotal);
 
 	// Search start spawn
 	foreach (SpawnLandmark in MapLandmarks_PlayerSpawn) {
@@ -502,37 +501,29 @@ Void JumpToCheckpoint(CSmPlayer _Player, Integer _Target) {
  *            Ident     _GoalId Goal
  */
 Void Private_HandleFinish(CSmPlayer _Player, Ident _GoalId) {
-	declare CheckpointsTimeBest for _Player.Score = Integer[Ident];
-	declare CheckpointsTimeLast for _Player.Score = Integer[Ident];
-	declare BestRun for _Player.Score = -1;
-	declare LastRun for _Player.Score = -1;
-
-	// Update run
-	LastRun = Player::getTime(_Player);
-
+	declare LastCPTimes = Player::getLastCPTimes(_Player);
+	declare BestCPTimes = Player::getBestCPTimes(_Player);
+	declare Goal <=> MapLandmarks_Gauge[_GoalId];
+	declare BestRun = Player::getBestRun(_Player);
+	
+	declare time = Player::getTime(_Player);	
+	declare LastRun = Player::setLastRun(_Player, time);
+	
+	LastCPTimes = Player::setLastCPTimes(_Player, _GoalId, time);
+	
 	// Update time diff before updating best run
 	ObsUI::UpdateLayerTimeDiff(_Player, LastRun, BestRun);
 	
 	// Check if last run is  if last run is better
 	if (LastRun < BestRun || BestRun < 0) {
-		BestRun = LastRun;
-		CheckpointsTimeBest = CheckpointsTimeLast;
-
-		// Update ui only if run improved
-		Private_UpdatePlayerBestTime(_Player);
-		Private_UpdatePlayerRsCounter(_Player);
+		BestRun = Player::setBestRun(_Player, LastRun);
+		BestCPTimes = Player::setBestCPTimes(_Player, LastCPTimes);
+		
+		CPTimes::UpdatePlayer(_Player);
 	}
 
 	// Send score
 	Private_SendFinishedRun(_Player, LastRun, _GoalId);
-
-	// From steeffeen
-	declare TimeDiff = LastRun;
-	declare LastCheckpointId for _Player = NullId;
-	if (CheckpointsTimeLast.existskey(LastCheckpointId)) {
-		TimeDiff -= CheckpointsTimeLast[LastCheckpointId];
-	}
-	declare Success = CPTimes::SubmitCheckpointTime(CheckpointsTimeLast.count + 1, _Player, TimeDiff);
 
 	//Update UI
 	declare UI <=> UIManager.GetUI(_Player);
@@ -563,29 +554,15 @@ Void Private_HandleFinish(CSmPlayer _Player, Ident _GoalId) {
  *            Ident     _CheckpointId Checkpoint captured (guaranted to be the next cp)
  */
 Void Private_HandleCheckpoint(CSmPlayer _Player, Ident _CheckpointId) {
-	declare netwrite Integer Net_CpProgress for _Player;
-	declare netwrite Boolean Net_UsedJump for _Player;
-	declare CheckpointsTimeLast for _Player.Score = Integer[Ident];
-	declare CheckpointsTimeBest for _Player.Score = Integer[Ident];
-	declare LastCheckpointId for _Player = NullId;
+	declare LastCPTimes = Player::getLastCPTimes(_Player);
+	declare BestCPTimes = Player::getBestCPTimes(_Player);
 	declare Checkpoint <=> MapLandmarks_Gauge[_CheckpointId];
 	
-	if(!Net_UsedJump) {
-		// Update player's progress
-		CheckpointsTimeLast[_CheckpointId] = Player::getTime(_Player);
-		Net_CpProgress = CheckpointsTimeLast.count;
+	declare time = Player::getTime(_Player);
 	
-		//From steeffeen
-		declare TimeDiff = CheckpointsTimeLast[_CheckpointId];
-		if (CheckpointsTimeLast.existskey(LastCheckpointId)) {
-			TimeDiff -= CheckpointsTimeLast[LastCheckpointId];
-		}
-		declare NewBest = CPTimes::SubmitCheckpointTime(Net_CpProgress, _Player, TimeDiff);
-	} else {
-		Net_CpProgress = Checkpoint.Order;
-	}
-	
-	LastCheckpointId = _CheckpointId;
+	Player::setLastCPTimes(_Player, _CheckpointId, time);
+	Player::setCpProgress(_Player, LastCPTimes.count + 1);
+	Player::setLastCheckpoint(_Player, _CheckpointId);
 	
 	// Apply special checkpoints effect
 	declare CheckpointName = Checkpoint.Tag;
@@ -605,23 +582,17 @@ Void Private_HandleCheckpoint(CSmPlayer _Player, Ident _CheckpointId) {
 	}
 
 	// UPDATE UI
-	// Update markers
   Private_UpdatePoleIds(_Player);
-
 	Private_UpdatePlayerBestTime(_Player);
-	declare UI <=> UIManager.GetUI(_Player);
-	if (_Player.Score == Null) return;
-	declare Variant = 0;
-
-	if(!Net_UsedJump) {
-		declare BestTime = 0;
-		if (CheckpointsTimeBest.existskey(_CheckpointId)) {
-			BestTime = CheckpointsTimeBest[_CheckpointId];
-		}
 	
-		ObsUI::UpdateLayerTimeDiff(_Player, CheckpointsTimeLast[_CheckpointId], BestTime);
-		if(CheckpointsTimeLast[_CheckpointId] > BestTime) Variant = 1;
-	}	
+	declare UI <=> UIManager.GetUI(_Player);
+	if (_Player.Score == Null) return;	
+	declare Variant = 0;
+	
+	declare BestTime = Player::getBestTime(_Player, _CheckpointId);
+	if(time > BestTime) Variant = 1;
+
+	ObsUI::UpdateLayerTimeDiff(_Player, time, BestTime);
 
 	UI.SendNotice("",
 			CUIConfig::ENoticeLevel::PlayerInfo, _Player.User, CUIConfig::EAvatarVariant::Default,

@@ -23,7 +23,7 @@
 #Include "Libs/smokegun/Items.Script.txt" as Items
 #Include "Libs/smokegun/ObstacleRecords.Script.txt" as API
 
-#Include "Libs/steeffeen/CheckpointTimes.Script.txt" as CPTimes
+#Include "Libs/smokegun/CPTimes.Script.txt" as CPTimes
 
 
 // ---------------------------------- //
@@ -44,7 +44,7 @@
 // ---------------------------------- //
 // Constants
 // ---------------------------------- //
-#Const C_HudModulePath "Obstacle/testUI.Module.Gbx" ///< Path to the hud module
+#Const C_HudModulePath "Obstacle/UI.Module.Gbx" ///< Path to the hud module
 #Const Description _("Finish map as fast as possible !")
 #Const C_DefaultTimeLimit 30
 
@@ -111,10 +111,12 @@ if (Hud != Null && Hud.ScoresTable != Null) {
 	TabsLayer.Type = CUILayer::EUILayerType::AltMenu;
 	UIManager.UIAll.UILayers.add(TabsLayer);
 	
+	/*
 	CPTimes::Load("CPTimes");
 	CPTimes::SetSize(<240., 100.>);
 	CPTimes::SetBackgroundImage("file://Media/Manialinks/Shootmania/Common/topsBg.dds", <242., 200.>, <0., 6.>);
 	CPTimes::Build();
+	*/
 }
 ***
 
@@ -133,7 +135,7 @@ declare Integer G_LastUpdate = 0;
 Spectators::ForceCamera(Spectators::Camera_FirstPerson());
 ObsUI::SetNextMapVotingRatio(S_NextMapVotingRatio);
 Items::Init();
-CreateUI();	
+CreateUI();
 API::Init(S_RecordsPerTick, S_RecordsTickDelay);
 ***
 
@@ -152,7 +154,7 @@ if(!Obstacle::PrepareMap())
 	MB_StopMap();
 }
 
-CPTimes::Synchro();
+//CPTimes::Synchro();
 API::StartMap(S_RecordsPerTick, S_RecordsTickDelay);
 
 UIManager.UIAll.MarkersXML = ObsUI::CreateHud3dMarkers();
@@ -183,6 +185,7 @@ foreach(Player in Spectators) {
 	}
 }
 
+
 API::Loop();
 
 if (Now > EndTime) {
@@ -204,6 +207,11 @@ foreach(Event in UIManager.PendingEvents) {
 				
 				declare netwrite Net_RecordsUpdated for Event.UI = 0;
 				Net_RecordsUpdated = Now;
+			}
+			case "jump_request": {
+				declare Player = SM::GetPlayer(Event.CustomEventData[0]);
+				declare CP = TL::ToInteger(Event.CustomEventData[1]);
+				Obstacle::JumpToCheckpoint(Player, CP);
 			}
 		}
 	}
@@ -285,12 +293,6 @@ foreach (Player in Players) {
 		}
 		
 	}
-}
-
-// Process Jumps
-declare JumpRequests = CPTimes::PendingJumps();
-foreach (Player => CheckpointNumber in JumpRequests) {
-	Obstacle::JumpToCheckpoint(Player, CheckpointNumber);
 }
 
 // Update settings at runtime
@@ -397,6 +399,7 @@ Void CreateUI() {
 	Layers::SetType("Markers", CUILayer::EUILayerType::Markers);
 	Layers::Create("Items", Items::CreateLayerItems());
 	Layers::Create("Records", RecordsUI::CreateManialink(S_RecordsWidgetTitle));
+	Layers::Create("CPTimes", CPTimes::CreateManialink());
 	
 	Layers::Attach("Info");
 	Layers::Attach("TimeDiff");
@@ -404,6 +407,7 @@ Void CreateUI() {
 	Layers::Attach("Markers");
 	Layers::Attach("Items");
 	Layers::Attach("Records");
+	Layers::Attach("CPTimes");
 	
 	CustomUI::Load();
 	CustomUI::Add("CustomUI_Info", <-100., 88.>, <40., 8.>);
