@@ -92,7 +92,6 @@ Boolean IsSpawn(CSmMapLandmark _Landmark) {
 }
 
 Integer GetPlayerRank(CSmPlayer _Player) {
-	declare Rank = 1;
 	declare LastCheckpointId for _Player = NullId;
 	declare BestRun for _Player.Score = -1;
 	declare CheckpointsTimeLast for _Player.Score = Integer[Ident];
@@ -119,9 +118,15 @@ Integer GetPlayerRank(CSmPlayer _Player) {
 		}
 	}
 
+	if(Ranking.count == 0) {
+		return 0;
+	}
+
 	// Rank players by time
 	Ranking = Ranking.sort();
 
+
+	declare Rank = 1;
 	// Get final rank
 	foreach (UserId => Time in Ranking) {
 		if (UserId == _Player.User.Id) break;

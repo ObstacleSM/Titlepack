@@ -129,14 +129,33 @@ Integer[Ident] getBestCPTimes(CSmPlayer _Player) {
 	return CheckpointsTimeBest;
 }
 
+Integer[Ident] setBestCPTimes(CSmPlayer _Player, Integer[Ident] _Value) {
+	declare Integer[Ident] CheckpointsTimeBest for _Player.Score;
+	CheckpointsTimeBest = _Value;
+	return CheckpointsTimeBest;
+}
+
 Integer[Ident] clearBestCPTimes(CSmPlayer _Player) {
 	declare Integer[Ident] CheckpointsTimeBest for _Player.Score;
   CheckpointsTimeBest.clear();
 	return CheckpointsTimeBest;
 }
 
+Integer getBestTime(CSmPlayer _Player, Ident _Ident) {
+	declare BestTimes = getBestCPTimes(_Player);
+	if(BestTimes.existskey(_Ident))
+		return BestTimes[_Ident];
+	return -1;
+}
+
 Integer[Ident] getLastCPTimes(CSmPlayer _Player) {
 	declare Integer[Ident] CheckpointsTimeLast for _Player.Score;
+	return CheckpointsTimeLast;
+}
+
+Integer[Ident] setLastCPTimes(CSmPlayer _Player, Ident _Key, Integer _Value) {
+	declare Integer[Ident] CheckpointsTimeLast for _Player.Score;
+	CheckpointsTimeLast[_Key] = _Value;
 	return CheckpointsTimeLast;
 }
 
