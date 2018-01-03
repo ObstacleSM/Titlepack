@@ -199,6 +199,7 @@ Text CreateLayerTimeDiff() {
 			declare netread Net_Time1 for UI = 0;
 			declare netread Net_Time2 for UI = 0;
 			declare netread Net_CheckpointRank for UI = 0;
+			
 			declare LayerTimeDiffUpdated = 0;
 			declare ShowTimeDiff = False;
 
@@ -207,6 +208,7 @@ Text CreateLayerTimeDiff() {
 
 				if (!PageIsVisible) continue;
 
+				// Hide after 3 sec
 				if (ShowTimeDiff && LayerTimeDiffUpdated + 3000 < ArenaNow) {
 					ShowTimeDiff = False;
 					Frame_TimeDiff.Hide();
@@ -227,14 +229,10 @@ Text CreateLayerTimeDiff() {
 
 					if (Diff < 0) {
 						DiffString = "$s$33f" ^ TextLib::TimeToText(Diff, True);
-					} else {
-						if (Diff == 0) {
-							DiffString = "$s$3f3 (00:00.00)";
-						} else {
-							if (Diff > 0) {
-								DiffString = "$s$f33+" ^ TextLib::TimeToText(Diff, True);
-							}
-						}
+					} else if (Diff == 0) {
+						DiffString = "$s$3f3 (00:00.00)";
+					} else if (Diff > 0) {
+						DiffString = "$s$f33+" ^ TextLib::TimeToText(Diff, True);
 					}
 
 					Label_Diff.SetText(DiffString);
