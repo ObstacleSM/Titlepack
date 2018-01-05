@@ -41,6 +41,8 @@
 #Setting S_RecordsTickDelay	50 as "<hidden>"
 #Setting S_NextMapVotingRatio	0.7		as "<hidden>"
 
+#Setting S_ScriptEnvironment "development"
+
 // ---------------------------------- //
 // Constants
 // ---------------------------------- //
@@ -51,11 +53,6 @@
 ***Match_LogVersions***
 ***
 Log::RegisterScript(ScriptName, Version);
-***
-
-***MB_Private_LoadLibraries***
-***
-Env::Set(Env::Env_Development());
 ***
 
 ***Match_Settings***
@@ -107,16 +104,13 @@ if (Hud != Null && Hud.ScoresTable != Null) {
 	Hud.ScoresTable.Scores_Sort(CModulePlaygroundScoresTable::EScoreSortOrder::SMPoints);
 	
 	Tabs::Load();
-	declare TabsLayer <=> Tabs::CreateTabPaneLayer(["ScoresTab" => "Rankings", "CPTimes" => "Race", "RecordsList" => "Rankings"], 13, 0, False);
+	declare TabsLayer <=> Tabs::CreateTabPaneLayer(
+		[ "ScoresTab" => "Rankings"
+		, "CPTimes" => "Race"
+		, "RecordsList" => "Rankings"
+		], 15, 7, False);
 	TabsLayer.Type = CUILayer::EUILayerType::AltMenu;
 	UIManager.UIAll.UILayers.add(TabsLayer);
-	
-	/*
-	CPTimes::Load("CPTimes");
-	CPTimes::SetSize(<240., 100.>);
-	CPTimes::SetBackgroundImage("file://Media/Manialinks/Shootmania/Common/topsBg.dds", <242., 200.>, <0., 6.>);
-	CPTimes::Build();
-	*/
 }
 ***
 
@@ -154,7 +148,6 @@ if(!Obstacle::PrepareMap())
 	MB_StopMap();
 }
 
-//CPTimes::Synchro();
 API::StartMap(S_RecordsPerTick, S_RecordsTickDelay);
 
 UIManager.UIAll.MarkersXML = ObsUI::CreateHud3dMarkers();
