@@ -234,14 +234,19 @@ Void UpdatePlayer(CSmPlayer _Player) {
 	declare netwrite Text[][] Net_CPTimes_RecordsName for Teams[0];
 	declare netwrite Integer[][] Net_CPTimes_RecordsTime for Teams[0];
 	
+	// Make sure times are sorted to get the right cp order
+	// But they should be automatically sorted in theory
+	LastCPTimes.sort();
+	
+	declare nth_cp = 0;
+		
 	foreach(Id => CPTime in LastCPTimes) {
-		declare Landmark <=> MapLandmarks_Gauge[Id];
+		// declare Landmark <=> MapLandmarks_Gauge[Id];
+		
 		declare Time = CPTime - TimeToSub;
 		
 		// Get Index of the current checkpoint
-		declare Idx = LastCPTimes.count - 1;
-		if(Tools::IsCheckpoint(Landmark) && Landmark.Order != 0)
-			Idx = Landmark.Order - 1;
+		declare Idx = nth_cp;
 
 		// Remove previous time if it exists
 		if(Net_CPTimes_RecordsName[Idx].exists(_Player.User.Name)) {
@@ -279,6 +284,7 @@ Void UpdatePlayer(CSmPlayer _Player) {
 		}
 		
 		TimeToSub = CPTime;
+		nth_cp += 1;
 	}
 	
 	
