@@ -240,7 +240,7 @@ Void UpdatePlayer(CSmPlayer _Player) {
 		
 		// Get Index of the current checkpoint
 		declare Idx = LastCPTimes.count - 1;
-		if(Tools::IsCheckpoint(Landmark))
+		if(Tools::IsCheckpoint(Landmark) && Landmark.Order != 0)
 			Idx = Landmark.Order - 1;
 
 		// Remove previous time if it exists
