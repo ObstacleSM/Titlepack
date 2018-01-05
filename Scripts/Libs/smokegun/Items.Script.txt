@@ -37,6 +37,10 @@ Void Place() {
 	foreach (AnchorLandmark in MapLandmarks_ObjectAnchor) {
 	
 		declare ObjectName = AnchorLandmark.ObjectAnchor.ItemName;
+		
+		// should fix crash on aven unchained ?
+		if(!G_ItemIdents.existskey(ObjectName)) continue;
+		
 		declare Object <=> ObjectCreate(G_ItemIdents[ObjectName]);
 		if (Object == Null) continue;
 		
@@ -65,8 +69,6 @@ Void Place() {
 			}
 			
 		}
-		
-		if (Objects.count > 100) break;
 	}
 }
 
