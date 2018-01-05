@@ -76,7 +76,11 @@ Void NewPlayer(CSmPlayer _Player)
 	Ladder::AddPlayer(_Player.Score);
 
 	declare UI <=> UIManager.GetUI(_Player);
-	if (UI != Null) Tabs::UseTabs(UI, "ScoresTab");	
+	if(UI == Null) return;
+	Tabs::UseTabs(UI, "ScoresTab");
+	
+	Hud.ScoresTable.SetColumnValue (_Player.Score, "BestTime", "--:--:--");
+	Hud.ScoresTable.SetColumnValue (_Player.Score, "RS", 0);
 }
 
 /**
@@ -175,6 +179,7 @@ Void Private_UpdatePoleIds(CSmPlayer _Player) {
 Void Private_SendXmlRpcCallback(Text _CallbackName, CSmPlayer _Player, Integer _RunTime, Ident _CheckpointId) {
 	if (_Player == Null || _Player.IsFakePlayer || _Player.Score == Null || _CallbackName == "" || _RunTime <= 0) return;
 
+	declare LastCPTimes = Player::getLastCPTimes(_Player);
 	declare JSON =
 	"""{
 		"Player":
@@ -186,7 +191,7 @@ Void Private_SendXmlRpcCallback(Text _CallbackName, CSmPlayer _Player, Integer _
 		{
 			"Time": {{{_RunTime}}},
 			"RespawnCount": {{{Player::getRespawnCount(_Player)}}},
-			"CheckpointIndex": {{{Player::getLastCPTimes(_Player).count - 1}}},
+			"CheckpointIndex": {{{LastCPTimes.count - 1}}},
 			"CheckpointId": "{{{_CheckpointId}}}"
 		}
 	}""";
@@ -563,6 +568,8 @@ Void Private_HandleCheckpoint(CSmPlayer _Player, Ident _CheckpointId) {
 	Player::setLastCPTimes(_Player, _CheckpointId, time);
 	Player::setCpProgress(_Player, LastCPTimes.count + 1);
 	Player::setLastCheckpoint(_Player, _CheckpointId);
+	
+	CPTimes::UpdatePlayer(_Player);	
 	
 	// Apply special checkpoints effect
 	declare CheckpointName = Checkpoint.Tag;
