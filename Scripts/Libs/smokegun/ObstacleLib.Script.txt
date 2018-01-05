@@ -568,9 +568,7 @@ Void Private_HandleCheckpoint(CSmPlayer _Player, Ident _CheckpointId) {
 	Player::setLastCPTimes(_Player, _CheckpointId, time);
 	Player::setCpProgress(_Player, LastCPTimes.count + 1);
 	Player::setLastCheckpoint(_Player, _CheckpointId);
-	
-	CPTimes::UpdatePlayer(_Player);	
-	
+		
 	// Apply special checkpoints effect
 	declare CheckpointName = Checkpoint.Tag;
 	// special checkpoint
