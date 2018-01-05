@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
-<manialink version="3">
+<frame>
 <frame id="Frame_Records_Panel">
 	<frame id="Frame_Heading">
-		<label pos="0 40" size="30 10" text="Records" textsize="6" textcolor="FFFFFFFF" maxline="1" halign="center" valign="bottom"/>
+		<label pos="0 39" size="50 10" text="Records" textsize="9" textcolor="FFFFFFFF" maxline="1" halign="center" valign="bottom" style="TextTitle3" textfont="Oswald" textemboss="1" translate="0"/>
 		<quad pos="0 40" z-index="-1" size="220 0.5" bgcolor="000000AA" halign="center"/>
 		<frameinstance modelid="records_heading" pos="5 37"/>
 		<frameinstance modelid="records_heading" pos="-105 37"/>
@@ -52,18 +52,18 @@
 	</frame>
 </frame>
 <framemodel id="records_heading">
-	<label pos="5 0" size="10 5" text="Rank" valign="center2" textsize="1" maxline="1" halign="center"/>
-	<label pos="35 0" size="50 5" text="Name" valign="center2" halign="center" textsize="1"/>
-	<label pos="65 0" size="10 5" text="Try" valign="center2" halign="center" textsize="1"/>
-	<label pos="75 0" size="10 5" text="RS" valign="center2" halign="center" textsize="1"/>
-	<label pos="90 0"  size="20 5" text="Time" valign="center2" halign="center" textsize="1"/>
+	<label pos="5 0" size="10 5" text="Rank" valign="center2" textsize="1" maxline="1" halign="center" textfont="Oswald"/>
+	<label pos="35 0" size="50 5" text="Name" valign="center2" halign="center" textsize="1" textfont="Oswald"/>
+	<label pos="65 0" size="10 5" text="Try" valign="center2" halign="center" textsize="1" textfont="Oswald"/>
+	<label pos="75 0" size="10 5" text="RS" valign="center2" halign="center" textsize="1" textfont="Oswald"/>
+	<label pos="90 0"  size="20 5" text="Time" valign="center2" halign="center" textsize="1" textfont="OswaldMono"/>
 </framemodel>
 <framemodel id="record">
-	<label pos="5 0" size="10 5" text="123456." valign="center2" halign="center" maxline="1" textsize="1" id="rank"/>
-	<label pos="35 0" size="50 5" text="ObsPresidente" valign="center2" halign="center" textsize="1" id="name"/>
-	<label pos="65 0" size="10 5" text="1" valign="center2" halign="center" textsize="1" id="try"/>
-	<label pos="75 0" size="10 5" text="0" valign="center2" halign="center" textsize="1" id="rs"/>
-	<label pos="90 0" size="20 5" text="00:00:01" valign="center2" halign="center" textsize="1" id="time"/>
-	<label pos="50 0" size="110 5" valign="center2" halign="center" text="" action="highlight" focusareacolor1="FFFFFF00" focusareacolor2="FFFFFF44"/>
+	<label pos="5 0" size="10 5" text="123456." valign="center2" halign="center" maxline="1" textsize="1" id="rank" textfont="OswaldMono"/>
+	<label pos="35 0" size="50 5" text="ObsPresidente" valign="center2" halign="center" textsize="1" id="name" textfont="Oswald"/>
+	<label pos="65 0" size="10 5" text="1" valign="center2" halign="center" textsize="1" id="try" textfont="OswaldMono"/>
+	<label pos="75 0" size="10 5" text="0" valign="center2" halign="center" textsize="1" id="rs" textfont="OswaldMono"/>
+	<label pos="90 0" size="20 5" text="00:00:01" valign="center2" halign="center" textsize="1" id="time" textfont="OswaldMono"/>
+	<label pos="50 0" size="110 5" valign="center2" halign="center" text="" action="highlight" focusareacolor1="FFFFFF00" focusareacolor2="FFFFFFFF" textfont="OswaldMono" opacity="0.1"/>
 </framemodel>
-</manialink>
+</frame>

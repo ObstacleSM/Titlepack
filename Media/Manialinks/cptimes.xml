@@ -2,7 +2,7 @@
 <frame>
 <frame id="Frame_CPTimes">
 	<frame id="Frame_Heading">
-		<label pos="0 40" size="100 10" text="Checkpoints Times" textsize="6" textcolor="FFFFFFFF" maxline="1" halign="center" valign="bottom"/>
+		<label pos="0 39" size="100 10" text="Checkpoints Times" textcolor="FFFFFFFF" maxline="1" halign="center" valign="bottom" textfont="Oswald" textsize="9" style="TextTitle3" textemboss="1"/>
 		<quad pos="0 40" z-index="-1" size="220 0.5" bgcolor="000000AA" halign="center"/>
 	</frame>
 	<frame pos="0 35" id="Frame_Checkpoints">
@@ -14,8 +14,8 @@
 		<frameinstance modelid="cp" pos="70 -40"/>
 	</frame>
 	<frame id="Frame_Footer">
-		<quad pos="0 -50" size="5 5" style="Icons64x64_1" substyle="ArrowNext" valign="bottom" scriptevents="1" halign="left" id="records_next_button"/>
-		<quad pos="0 -50" size="5 5" style="Icons64x64_1" substyle="ArrowPrev" valign="bottom" scriptevents="1" halign="right" id="records_prev_button"/>
+		<quad pos="0 -50" size="5 5" style="Icons64x64_1" substyle="ArrowNext" valign="bottom" scriptevents="1" halign="left" id="next_button"/>
+		<quad pos="0 -50" size="5 5" style="Icons64x64_1" substyle="ArrowPrev" valign="bottom" scriptevents="1" halign="right" id="prev_button"/>
 	</frame>
 	<frame id="Frame_Background">
 		<quad z-index="-1" size="220 100" bgcolor="000000FF" halign="center" valign="center"  opacity="0.5" pos="0 0"/>
@@ -23,20 +23,20 @@
 	</frame>
 </frame>
 <framemodel id="cp">
-	<label pos="0 -5" z-index="0" size="60 5" text="JUMP" halign="center" valign="bottom" scriptevents="1"/>
-	<label pos="0 -5" z-index="0" size="60 5" text="63" halign="center" valign="bottom" textprefix="CP " id="cp_number"/>
-	<frameinstance modelid="cp_time" pos="0 -5"/>
-	<frameinstance modelid="cp_time" pos="0 -10"/>
-	<frameinstance modelid="cp_time" pos="0 -15"/>
-	<frameinstance modelid="cp_time" pos="0 -20"/>
-	<frameinstance modelid="cp_time" pos="0 -25"/>
-	<frameinstance modelid="cp_time" pos="0 -30"/>
-	<quad pos="0 0" z-index="0" size="60 5" bgcolor="484848AA" halign="center"/>
-	<quad pos="0 -5" z-index="0" size="60 30" bgcolor="FFFA" halign="center"/>
+	<label pos="0 -5" z-index="0" size="60 5" text="63" halign="center" valign="bottom" textprefix="CP " id="title" style="CardButtonMediumXXL" scriptevents="1"/>
+	<frame id="Frame_Records">
+		<frameinstance modelid="cp_time" pos="0 -5"/>
+		<frameinstance modelid="cp_time" pos="0 -10"/>
+		<frameinstance modelid="cp_time" pos="0 -15"/>
+		<frameinstance modelid="cp_time" pos="0 -20"/>
+		<frameinstance modelid="cp_time" pos="0 -25"/>
+		<frameinstance modelid="cp_time" pos="0 -30"/>
+	</frame>
+	<quad pos="0 -5" z-index="0" size="60 30" bgcolor="FFFFFFFF"  halign="center" opacity="0.1"/>
 </framemodel>
 <framemodel id="cp_time">
-	<label pos="-28 -2.5" z-index="0" size="4 5" text="1." textsize="2" valign="center2" halign="center"/>
-	<label pos="-8.5 -2.5" z-index="0" size="35 5" text="superpseudodelamortsuperlong" halign="center" valign="center2" textsize="2"/>
-	<label pos="19.5 -2.5" z-index="0" size="21 5" text="00:00:00:00" halign="center" valign="center2" textsize="2"/>
+	<label pos="-28 -2.5" z-index="0" size="4 5" text="1." textsize="2" valign="center2" halign="center" id="rank" textfont="OswaldMono"/>
+	<label pos="-8.5 -2.5" z-index="0" size="35 5" text="superpseudodelamortsuperlong" halign="center" valign="center2" textsize="2" id="name" textfont="Oswald"/>
+	<label pos="19.5 -2.5" z-index="0" size="21 5" text="00:00:00:00" halign="center" valign="center2" textsize="2" id="time" textfont="OswaldMono"/>
 </framemodel>
 </frame>

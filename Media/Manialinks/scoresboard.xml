@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
-<manialink version="3">
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?><manialink version="3">
 <frame pos="0 50" z-index="0.00" scale="1.00">
 	<framemodel id="framemodelscorecard">
 		<frame z-index="100" hidden="1" id="framespecconfirm" pos="11.20 -4.29">
@@ -58,13 +57,16 @@
 		<label pos="45.29" size="7.58 5" halign="center" valign="bottom" textsize="1" text=""/>
 		<label pos="17.83" size="22.73 5" halign="left" valign="bottom" textsize="1" text=""/>
 		<label pos="14.51" size="4.74 5" halign="center" valign="bottom" textsize="1" text=""/>
-	</framemodel>
-	<quad z-index="-100" size="220.00 100.00" image="" halign="center" id="quadbackground"  pos="0 0" style="BgsPlayerCard" substyle="BgCard"/>
+	</framemodel>	
+	<quad z-index="-100" size="220.00 100.00" bgcolor="000000FF" halign="center" id="quadbackground"  pos="0 0" opacity="0.5"/>
+	
 	<frame id="frameheader">
-		<label pos="0 -6.75" size="44.00 5" style="TextButtonBig" textsize="2" z-index="1" halign="center" valign="center2" scale="2.00" text="Ranking" id="header_title"/>
-		<frame id="frameadditionnalinfo" pos="0 -20.00">
-			<label pos="0 3.00" size="70.40 4.00" text="$6CFम$fffscҽητ$6CF « Şӎo$fffƙэ$z's awesome server" halign="center" valign="bottom" textsize="3" id="additionnalinfo_servername" />
-			<label pos="0 2.50" size="70.40 4.00" text="Score 3 points to win !" halign="center" valign="top" textsize="1" translate="1" id="additionnalinfo_footertext" />
+		<label pos="0 -6" size="44.00 5" style="TextTitle3" textsize="4" z-index="1" halign="center" valign="center2" scale="2.00" text="Ranking" id="header_title" textfont="Oswald" textemboss="1"/>
+		<quad pos="0 -10" z-index="-1" size="220 0.5" bgcolor="000000AA" halign="center"/>
+		<frame id="frameadditionnalinfo" pos="0 -22.00">
+			<quad pos="0 -2" z-index="-1" size="220 0.5" bgcolor="000000AA" halign="center"/>
+			<label pos="0 3.00" size="70.40 7" text="$6CFम$fffscҽητ$6CF « Şӎo$fffƙэ$z's awesome server" halign="center" valign="bottom" textsize="5" id="additionnalinfo_servername"  textfont="Oswald"/>
+			<label pos="0 2.50" size="80 5" text="Score 3 points to win !" halign="center" valign="top" textsize="2" translate="1" id="additionnalinfo_footertext"  textfont="Oswald"/>
 		</frame>
 	</frame>
 	<frame id="framefooter" pos="0 -75.00">

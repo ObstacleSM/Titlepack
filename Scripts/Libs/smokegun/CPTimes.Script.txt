@@ -18,7 +18,7 @@ Text GetWidget() {
 	return """
 <frame id="Frame_CPTimes" hidden="1">
 	<frame id="Frame_Heading">
-		<label pos="0 40" size="100 10" text="Checkpoints Times" textsize="6" textcolor="FFFFFFFF" maxline="1" halign="center" valign="bottom"/>
+		<label pos="0 39" size="100 10" text="Checkpoints Times" textcolor="FFFFFFFF" maxline="1" halign="center" valign="bottom" textfont="Oswald" textsize="9" style="TextTitle3" textemboss="1"/>
 		<quad pos="0 40" z-index="-1" size="220 0.5" bgcolor="000000AA" halign="center"/>
 	</frame>
 	<frame pos="0 35" id="Frame_Checkpoints">
@@ -39,8 +39,7 @@ Text GetWidget() {
 	</frame>
 </frame>
 <framemodel id="cp">
-	<label id="jump" pos="0 -5" z-index="0" size="60 5" text="JUMP" halign="center" valign="bottom" hidden="1" scriptevents="1"/>
-	<label pos="0 -5" z-index="0" size="60 5" text="63" halign="center" valign="bottom" textprefix="CP " id="cp_number" scriptevents="1"/>
+	<label pos="0 -5" z-index="0" size="60 5" text="63" halign="center" valign="bottom" textprefix="CP " id="title" style="CardButtonMediumXXL" scriptevents="1"/>
 	<frame id="Frame_Records">
 		<frameinstance modelid="cp_time" pos="0 -5"/>
 		<frameinstance modelid="cp_time" pos="0 -10"/>
@@ -49,13 +48,12 @@ Text GetWidget() {
 		<frameinstance modelid="cp_time" pos="0 -25"/>
 		<frameinstance modelid="cp_time" pos="0 -30"/>
 	</frame>
-	<quad pos="0 0" z-index="0" size="60 5" bgcolor="484848AA" halign="center"/>
-	<quad pos="0 -5" z-index="0" size="60 30" bgcolor="FFFA" halign="center"/>
+	<quad pos="0 -5" z-index="0" size="60 30" bgcolor="FFFFFFFF"  halign="center" opacity="0.1"/>
 </framemodel>
 <framemodel id="cp_time">
-	<label id="rank" pos="-28 -2.5" z-index="0" size="4 5" text="1." textsize="2" valign="center2" halign="center"/>
-	<label id="name" pos="-8.5 -2.5" z-index="0" size="35 5" text="superpseudodelamortsuperlong" halign="center" valign="center2" textsize="2"/>
-	<label id="time" pos="19.5 -2.5" z-index="0" size="21 5" text="00:00:00:00" halign="center" valign="center2" textsize="2"/>
+	<label pos="-28 -2.5" z-index="0" size="4 5" text="1." textsize="2" valign="center2" halign="center" id="rank" textfont="OswaldMono"/>
+	<label pos="-8.5 -2.5" z-index="0" size="35 5" text="superpseudodelamortsuperlong" halign="center" valign="center2" textsize="2" id="name" textfont="Oswald"/>
+	<label pos="19.5 -2.5" z-index="0" size="21 5" text="00:00:00:00" halign="center" valign="center2" textsize="2" id="time" textfont="OswaldMono"/>
 </framemodel>
 	""";
 }
@@ -124,13 +122,16 @@ Text CreateManialink() {
 				// Update values
 				declare checkpoint = (Control as CMlFrame);
 				declare records = (checkpoint.GetFirstChild("Frame_Records") as CMlFrame);
-				declare title = (checkpoint.GetFirstChild("cp_number") as CMlLabel);
+				declare title = (checkpoint.GetFirstChild("title") as CMlLabel);
 				
 				// Set checkpoints number or goal
 				if(cp_number == G_CheckpointsTotal)
 					title.SetText("Goal");
 				else
 					title.SetText(""^cp_number);
+					
+				declare Cp_Number for title = "";
+				Cp_Number = title.Value;
 				
 				// Update times
 				foreach(RecordId => ControlR in records.Controls) {
@@ -158,54 +159,46 @@ Text CreateManialink() {
 		main() {
 			declare LastUpdate = -1;
 			declare LastTimesUpdate = -1;
-			
+
 			while(True) {
 				yield;
-				
+
 				UpdateFrameTab(UI, Page, "CPTimes", "Frame_CPTimes");
-				
+
 				foreach(Event in PendingEvents) {
-	
-					if(Event.Control != Null && 
-						 (Event.Control.ControlId == "jump" || Event.Control.ControlId == "cp_number")) {
-						declare frame <=> Event.Control.Parent;
-						declare number <=> (frame.GetFirstChild("cp_number") as CMlLabel);
-						declare jump <=> (frame.GetFirstChild("jump") as CMlLabel);
-						
-						switch(Event.Type) {
-							case CMlScriptEvent::Type::MouseOver: {
-								if(Event.Control.ControlId == number.ControlId) {
-									jump.Show();
-									number.Hide();
-								}
+					switch(Event.Type) {
+						case CMlScriptEvent::Type::MouseOver: {
+							if(Event.Control.ControlId == "title") {
+								declare title = (Event.Control as CMlLabel);
+								title.SetText("JUMP");
 							}
-							case CMlScriptEvent::Type::MouseOut: {
-								if(Event.Control.ControlId == jump.ControlId) {
-									number.Show();
-									jump.Hide();
-								}
+						}
+						case CMlScriptEvent::Type::MouseOut: {
+							if(Event.Control.ControlId == "title") {
+								declare title = (Event.Control as CMlLabel);
+								declare Cp_Number for title = "";
+								title.SetText(Cp_Number);
 							}
-							case CMlScriptEvent::Type::MouseClick: {
-								SendCustomEvent("jump_request", [LocalUser.Login, number.Value]);							
-							}
-						}						
-					} else {
-						if(Event.Type == CMlScriptEvent::Type::MouseClick) {
+						}
+						case CMlScriptEvent::Type::MouseClick: {
 							switch(Event.Control.ControlId) {
+								case "title": {
+									declare Cp_Number for Event.Control = "";
+									SendCustomEvent("jump_request", [LocalUser.Login, Cp_Number]);
+								}
 								case "next_button": {
 									ChangePage(1);
 								}
 								case "prev_button": {
-									ChangePage(-1);								
+									ChangePage(-1);
 								}
 							}
 						}
-					}
-					
+					}					
 				}
-				
+
 				if(LastUpdate + 500 < GameTime) {
-					
+
 					// It may be a new map
 					declare netread Integer Net_CheckpointsTotal for Teams[0];
 					if(G_CheckpointsTotal != Net_CheckpointsTotal + 1) {
@@ -221,10 +214,10 @@ Text CreateManialink() {
 
 						G_RecordsName = Net_CPTimes_RecordsName;
 						G_RecordsTime = Net_CPTimes_RecordsTime;
-												
+
 						ChangePage(0);
 					}
-					
+
 					LastUpdate = GameTime;
 				}
 			}
@@ -245,18 +238,10 @@ Void UpdatePlayer(CSmPlayer _Player) {
 		declare Landmark <=> MapLandmarks_Gauge[Id];
 		declare Time = CPTime - TimeToSub;
 		
-		// Get Index
+		// Get Index of the current checkpoint
 		declare Idx = LastCPTimes.count - 1;
 		if(Tools::IsCheckpoint(Landmark))
 			Idx = Landmark.Order - 1;
-	
-		// Find player rank
-		declare rank = 0;		
-		while(rank < Net_CPTimes_RecordsTime[Idx].count && Net_CPTimes_RecordsTime[Idx][rank] < Time) {
-			rank += 1;
-		}
-		
-		if(rank > 6) return;
 
 		// Remove previous time if it exists
 		if(Net_CPTimes_RecordsName[Idx].exists(_Player.User.Name)) {
@@ -264,20 +249,33 @@ Void UpdatePlayer(CSmPlayer _Player) {
 			Net_CPTimes_RecordsName[Idx].removekey(prev);
 			Net_CPTimes_RecordsTime[Idx].removekey(prev);
 		}
+
+		// Find player rank
+		declare rank = 0;		
+		while(rank < Net_CPTimes_RecordsTime[Idx].count && Net_CPTimes_RecordsTime[Idx][rank] < Time) {
+			rank += 1;
+		}
+
+		if(rank > 6) return;
+	
+		// Add the player's time at the end
+		Net_CPTimes_RecordsName[Idx].add(_Player.User.Name);
+		Net_CPTimes_RecordsTime[Idx].add(Time);
 		
-		if(rank >= Net_CPTimes_RecordsTime[Idx].count) {
-			Net_CPTimes_RecordsName[Idx].add(_Player.User.Name);
-			Net_CPTimes_RecordsTime[Idx].add(Time);
-		} else {
-		
-			// Shit all times to create a gap at the rank position
-			for(i, rank+1, Net_CPTimes_RecordsName.count-1) {
-				Net_CPTimes_RecordsName[Idx][i] = Net_CPTimes_RecordsName[Idx][i-1];
-				Net_CPTimes_RecordsTime[Idx][i] = Net_CPTimes_RecordsTime[Idx][i-1];
-			}
+
+		// And move it to the desired rank
+		declare i = Net_CPTimes_RecordsName[Idx].count - 1;
+		while(i > rank) {
+			declare tmp_name = Net_CPTimes_RecordsName[Idx][i];
+			declare tmp_time = Net_CPTimes_RecordsTime[Idx][i];
 			
-			Net_CPTimes_RecordsName[Idx][rank] = _Player.User.Name;
-			Net_CPTimes_RecordsTime[Idx][rank] = Time;
+			Net_CPTimes_RecordsName[Idx][i] = Net_CPTimes_RecordsName[Idx][i-1];
+			Net_CPTimes_RecordsTime[Idx][i] = Net_CPTimes_RecordsTime[Idx][i-1];
+			
+			Net_CPTimes_RecordsName[Idx][i-1] = tmp_name;
+			Net_CPTimes_RecordsTime[Idx][i-1] = tmp_time;
+			
+			i -= 1;
 		}
 		
 		TimeToSub = CPTime;
