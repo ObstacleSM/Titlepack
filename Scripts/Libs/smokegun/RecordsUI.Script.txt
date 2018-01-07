@@ -88,12 +88,12 @@ Text Private_GetRecordsList() {
 
 Text Private_GetSmallRecords() {
 	return """
-<frame id="Frame_Small_Records" class="LibCustomUI_Module" pos="139 75">
-	<frame id="Frame_Background"halign="center" valign="center2">
+<frame id="Frame_Small_Records" class="LibCustomUI_Module">
+	<frame id="Frame_Background"halign="center" valign="center2" pos="139 75">
 		<quad z-index="-1" size="44 67" style="BgRaceScore2" substyle="BgCardPlayer" halign="center" valign="top"/>
 		<label pos="0 -1" size="40 5" text="Records" style="TextTitle3" textsize="4" halign="center" textfont="OswaldMono" maxline="1" valign="top" textemboss="1"/>
 	</frame>
-	<frame id="Frame_Records" pos="0 -8" z-index="1">
+	<frame id="Frame_Records" pos="139 67" z-index="1">
 		<frameinstance modelid="small_record" pos="0 0" id="record0" hidden="1"/>
 		<frameinstance modelid="small_record" pos="0 -4" id="record1" hidden="1"/>
 		<frameinstance modelid="small_record" pos="0 -8" id="record2" hidden="1"/>
@@ -179,7 +179,7 @@ Void UpdateNetVars(Integer _RecordIdx, CSmPlayer _Player, Boolean _Empty) {
 	}
 
 	// Time
-	declare time = line_color^"--:--:---";
+	declare time = line_color^"--:--:--";
 	if(!_Empty) {
 		time = line_color^Private_GetTime(_RecordIdx);
 	}
@@ -310,7 +310,9 @@ Void UpdateManialink(CSmPlayer _Player) {
 Text CreateManialink(Text _Title) {
 	return """
 <manialink version="3">
-{{{Private_GetSmallRecords()}}}
+<frame>
+	{{{Private_GetSmallRecords()}}}
+</frame>
 <frame>
 	{{{Private_GetRecordsList()}}}
 </frame>
