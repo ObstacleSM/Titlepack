@@ -75,12 +75,19 @@ Ident setLastCheckpoint(CSmPlayer _Player, Ident _Value) {
 }
 
 Integer[Text] getBuffTimes(CSmPlayer _Player) {
-	declare netwrite ItemBuffTimes for _Player = Integer[Text];	
+	declare netwrite ItemBuffTimes for _Player = Integer[Text];
   return ItemBuffTimes;
 }
 
+Integer[Text] setBuffTime(CSmPlayer _Player, Text _Key, Integer _Value) {
+	declare netwrite ItemBuffTimes for _Player = Integer[Text];
+	ItemBuffTimes[_Key] = _Value;
+  return ItemBuffTimes;	
+	
+}
+
 Integer[Text] clearBuffTimes(CSmPlayer _Player) {
-	declare netwrite ItemBuffTimes for _Player = Integer[Text];	
+	declare netwrite ItemBuffTimes for _Player = Integer[Text];
 	ItemBuffTimes.clear();
   return ItemBuffTimes;
 }
@@ -163,17 +170,6 @@ Integer[Ident] clearLastCPTimes(CSmPlayer _Player) {
 	declare Integer[Ident] CheckpointsTimeLast for _Player.Score;
   CheckpointsTimeLast.clear();
 	return CheckpointsTimeLast;
-}
-
-Integer[Text] getItemBuff(CSmPlayer _Player) {
-	declare Integer[Text] ItemBuffTimes for _Player;
-	return ItemBuffTimes;
-}
-
-Integer[Text] clearItemBuff(CSmPlayer _Player) {
-	declare Integer[Text] ItemBuffTimes for _Player;
-  ItemBuffTimes.clear();
-	return ItemBuffTimes;
 }
 
 // Declare player's variable
