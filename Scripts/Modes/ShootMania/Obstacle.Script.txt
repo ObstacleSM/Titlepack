@@ -219,7 +219,7 @@ foreach (Event in PendingEvents) {
 			
 			// Dont respawn if the player has the offzone item
 			if (Event.Victim.IsInOffZone) {			
-				declare ItemBuffs = Player::getItemBuff(Event.Victim);
+				declare ItemBuffs = Player::getBuffTimes(Event.Victim);
 				if (ItemBuffs.existskey(Items::T_ItemOffzone) && ItemBuffs[Items::T_ItemOffzone] >= Now) {
 					continue;
 				}
@@ -269,7 +269,8 @@ foreach (Player in Players) {
 		
 		case CSmPlayer::ESpawnStatus::Spawned: {
 			// Manage item effects
-			declare ItemBuff = Player::getItemBuff(Player);
+			declare ItemBuff = Player::getBuffTimes(Player);
+
 			foreach (Name => Time in ItemBuff) {
 				if (Time < Now) continue;
 				switch (Name) {

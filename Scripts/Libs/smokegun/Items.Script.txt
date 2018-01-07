@@ -7,9 +7,10 @@
 
 #Include "TextLib" as TL
 #Include "MathLib" as ML
-#Include "Libs/smokegun/Tools.Script.txt" as Tools
 #Include "Libs/Nadeo/ShootMania/SM3.Script.txt" as SM
 #Include "Libs/Nadeo/CustomUI.Script.txt" as CustomUI
+#Include "Libs/smokegun/Tools.Script.txt" as Tools
+#Include "Libs/smokegun/Player.Script.txt" as Player
 
 /***************************************
 	CONSTANTS
@@ -74,7 +75,8 @@ Void Place() {
 
 Boolean PickupItems(CSmModeEvent _Event) {
 	declare ItemName for _Event.Object = "";
-	declare netwrite ItemBuffTimes for _Event.Player = Integer[Text];
+	
+	declare ItemBuffTimes = Player::getBuffTimes(_Event.Player);
 	
 	if (ItemBuffTimes.existskey(ItemName) && ItemBuffTimes[ItemName] >= Now) {
 		return False;
@@ -84,15 +86,14 @@ Boolean PickupItems(CSmModeEvent _Event) {
 	
 		case T_ItemOffzone: {
 			declare Duration for _Event.Object = 5.;
-			
-			ItemBuffTimes[ItemName] = Now + ML::NearestInteger(Duration * 1000.);
+			Player::setBuffTime(_Event.Player, ItemName, Now + ML::NearestInteger(Duration * 1000.));
 		}
 		
 		case T_ItemAmmo: {
 			declare Duration for _Event.Object = 0.;
 			declare Amount for _Event.Object = 1.;
 			
-			ItemBuffTimes[T_ItemAmmo] = Now + ML::NearestInteger(Duration * 1000.);
+			Player::setBuffTime(_Event.Player, ItemName, Now + ML::NearestInteger(Duration * 1000.));
 			
 			declare Real AmmoItemBuffDuration for _Event.Player;
 			declare Real AmmoItemBuffAmount for _Event.Player;				
@@ -157,7 +158,8 @@ Text CreateLayerItems() {
 				if (LocalPlayer.SpawnStatus == CSmPlayer::ESpawnStatus::Spawned) {
 					if(ItemBuffTimes.count == 0) {
 						Label_Info.Visible = False;
-					}
+					}					
+					
 					foreach (ItemName => BuffTime in ItemBuffTimes) {
 						declare Frame <=> (Page.GetFirstChild("Frame_ItemGauge"^Index) as CMlFrame);
 						if (Frame == Null) continue;
