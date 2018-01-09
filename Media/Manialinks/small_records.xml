@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
-<frame>
+<manialink version="3">
 <frame id="Frame_Small_Records" class="LibCustomUI_Module" pos="139 75">
 	<frame id="Frame_Background"halign="center" valign="center2">
 		<quad z-index="-1" size="44 67" style="BgRaceScore2" substyle="BgCardPlayer" halign="center" valign="top"/>
@@ -23,9 +23,9 @@
 		<frameinstance modelid="small_record" pos="0 -56" id="record14"/>
 	</frame>
 	<framemodel id="small_record">
-		<label id="rank" pos="-20 0" size="6 4" halign="left" valign="center2" style="TextCardSmallScores2" textsize="1" text="1." textfont="OswaldMono"/>
-		<label id="name" pos="-14 0" size="20 4" halign="left" valign="center2" textsize="1" text="mon super pseudo" textfont="Oswald"/>
-		<label id="time" pos="20 0" size="14 4" halign="right" valign="center2" style="TextTitle2" textsize="1" text="00:00:01" textfont="OswaldMono"/>
+		<label id="rank" pos="-20 0" size="3 4" halign="left" valign="center2" style="TextCardSmallScores2" textsize="1" text="1." textfont="OswaldMono"/>
+		<label id="name" pos="-17 0" size="27 4" halign="left" valign="center2" textsize="1" text="mon super pseudo de la mort qui tue blablabla" textfont="Oswald"/>
+		<label id="time" pos="20 0" size="15 4" halign="right" valign="center2" style="TextTitle2" textsize="1" text="00:00:01" textfont="OswaldMono"/>
 	</framemodel>
 </frame>
-</frame>
+</manialink>

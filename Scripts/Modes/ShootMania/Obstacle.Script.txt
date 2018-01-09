@@ -1,4 +1,4 @@
-#Extends "Modes/ShootMania/Base/ModeShootmania.Script.txt"
+#Extends "Modes/ShootMania/Base/ModeBase.Script.txt"
 
 #Const CompatibleMapTypes		"ObstacleArena,ObstacleTitleArena,TimeAttackArena"
 #Const	Version							"1.2"
@@ -10,11 +10,14 @@
 #Include "TextLib" as TL
 #Include "MathLib" as ML
 
+#Include "Libs/Nadeo/Message.Script.txt" as Message
+#Include "Libs/Nadeo/Spectators.Script.txt" as Spectators
 #Include "Libs/Nadeo/Layers2.Script.txt" as Layers
-#Include "Libs/Nadeo/Env.Script.txt" as Env
 #Include "Libs/Nadeo/CustomUI.Script.txt" as CustomUI
 #Include "Libs/Nadeo/TabsServer.Script.txt" as Tabs
-#Include "Libs/Nadeo/Spectators.Script.txt" as Spectators
+#Include "Libs/Nadeo/ShootMania/Scores.Script.txt" as Scores
+#Include "Libs/Nadeo/ShootMania/SM3.Script.txt" as SM
+#Include "Libs/Nadeo/ShootMania/SpawnScreen.Script.txt" as SpawnScreen
 
 #Include "Libs/smokegun/Player.Script.txt" as Player
 #Include "Libs/smokegun/ObstacleLib.Script.txt" as Obstacle
@@ -50,12 +53,12 @@
 #Const Description _("Finish map as fast as possible !")
 #Const C_DefaultTimeLimit 30
 
-***Match_LogVersions***
+***LogVersions***
 ***
 Log::RegisterScript(ScriptName, Version);
 ***
 
-***Match_Settings***
+***Settings***
 ***
 MB_Settings_UseDefaultHud = False;
 MB_Settings_UseDefaultTimer = False;
@@ -66,7 +69,7 @@ UseSameWallJump = True;
 UsePvPWeapons = S_PvPWeapons;
 ***
 
-***Match_Rules***
+***Rules***
 ***
 ModeInfo::SetName("Obstacle");
 ModeInfo::SetType(ModeInfo::Type_FreeForAll());
@@ -81,15 +84,15 @@ declare OpenSpecial1Text = "$<$00f";
 	
 	declare ModeRules = """
 Finish the {{{OpenSpecial2Text}}}Obstacle Course{{{CloseText}}} as fast as possible.	
-To validate a Race you must touch the Finish after going through all the {{{OpenSpecial2Text}}}Checkpoints{{{CloseText}}}.
-You can start over and improve your Time as often as you want during {{{OpenSettingText^S_TimeLimit^CloseText}}} Minutes.
-The Player with the best Time wins the Map.
-Press the {{{OpenBoldText}}}Respawn{{{CloseText}}} Button (default: {{{OpenSpecial2Text}}}Backspace{{{CloseText}}}) or die to {{{OpenSpecial3Text}}}Respawn{{{CloseText}}} at the last reached Checkpoint.
-Press the {{{OpenBoldText}}}Give Up{{{CloseText}}} Button (default: {{{OpenSpecial2Text}}}Delete{{{CloseText}}}) to {{{OpenSpecial3Text}}}Restart{{{CloseText}}} from the beginning. (You can also set another Restart Button at the bottom.)
+To validate a race you must touch the {{{OpenSpecial2Text}}}Goal{{{CloseText}}} after going through all the {{{OpenSpecial2Text}}}Checkpoints{{{CloseText}}}.
+You can start over and improve your time as often as you want during {{{OpenSettingText^S_TimeLimit^CloseText}}} minutes.
+The player with the best time wins the map.
+Press the {{{OpenBoldText}}}Respawn{{{CloseText}}} button (default: {{{OpenSpecial2Text}}}Backspace{{{CloseText}}}) or die to {{{OpenSpecial3Text}}}Respawn{{{CloseText}}} at the last reached checkpoint.
+Press the {{{OpenBoldText}}}Give Up{{{CloseText}}} button (default: {{{OpenSpecial2Text}}}Delete{{{CloseText}}}) to {{{OpenSpecial3Text}}}Restart{{{CloseText}}} from the beginning.
 
-Press {{{OpenSpecial4Text}}}F3{{{CloseText}}} when you're ready for the next Map (Press F3 again to change your Decision).
-Press {{{OpenSpecial4Text}}}F4{{{CloseText}}} to disable/enable Respawning at Checkpoints.
-Press {{{OpenSpecial4Text}}}F6{{{CloseText}}} to get an Overview of the Map.
+Press {{{OpenSpecial4Text}}}F3{{{CloseText}}} when you're ready for the next Map (Press F3 again to change your decision).
+Press {{{OpenSpecial4Text}}}F4{{{CloseText}}} to disable/enable respawning at checkpoints.
+Press {{{OpenSpecial4Text}}}F5{{{CloseText}}} to disable/enable respawning from the start.
 """;
 
 
@@ -97,7 +100,7 @@ ModeInfo::SetRules(ModeRules);
 ModeInfo::SetStatusMessage(_("Finish the map as fast as possible."));
 ***
 
-***Match_LoadHud***
+***LoadHud***
 ***
 Hud_Load(C_HudModulePath);
 if (Hud != Null && Hud.ScoresTable != Null) {
@@ -114,18 +117,21 @@ if (Hud != Null && Hud.ScoresTable != Null) {
 }
 ***
 
-***Match_SpawnScreen***
+***SpawnScreen***
 ***
 SpawnScreen::CreateScores("Score.Points");
 ***
 
-***Match_InitServer***
+***InitServer***
 ***
 declare Integer G_LastUpdate = 0;
 ***
 
-***Match_StartServer***
+***StartServer***
 ***
++++LoadHud+++
+SM::SetupDefaultVisibility();
+
 Spectators::ForceCamera(Spectators::Camera_FirstPerson());
 ObsUI::SetNextMapVotingRatio(S_NextMapVotingRatio);
 Items::Init();
@@ -133,14 +139,14 @@ CreateUI();
 API::Init(S_RecordsPerTick, S_RecordsTickDelay);
 ***
 
-***Match_InitMap***
+***InitMap***
 ***
 declare Integer PrevTimeLimit = -1;
 declare Boolean PrevPvPWeapons = S_PvPWeapons;
 declare Text PrevRecordsWidgetTitle = S_RecordsWidgetTitle;
 ***
 
-***Match_StartMap***
+***StartMap***
 ***
 // map is invalid
 if(!Obstacle::PrepareMap())
@@ -153,6 +159,7 @@ API::StartMap(S_RecordsPerTick, S_RecordsTickDelay);
 UIManager.UIAll.MarkersXML = ObsUI::CreateHud3dMarkers();
 Layers::Get("Markers").ManialinkPage = ObsUI::CreateLayerMarkers();
 
+Obstacle::SetSettings(S_FullAmmoSpawn, S_FastRespawn, S_LegacyRespawn, S_AllowJump);
 Items::Place();
 
 foreach(Player in AllPlayers) {
@@ -169,14 +176,18 @@ if (S_TimeLimit > 0) {
 
 ***
 
-***Match_PlayLoop***
+***OnNewPlayer***
 ***
-// Initalize player who joins as spectator
-foreach(Player in Spectators) {
-	if(!Player::isInitialized(Player)) {
-		Obstacle::NewPlayer(Player);
-	}
-}
+Obstacle::NewPlayer(Player);
+***
+
+***OnNewSpectator***
+***
+Obstacle::NewPlayer(Spectator);
+***
+
+***PlayLoop***
+***
 
 
 API::Loop();
@@ -270,7 +281,6 @@ foreach (Player in Players) {
 		case CSmPlayer::ESpawnStatus::Spawned: {
 			// Manage item effects
 			declare ItemBuff = Player::getBuffTimes(Player);
-
 			foreach (Name => Time in ItemBuff) {
 				if (Time < Now) continue;
 				switch (Name) {
@@ -323,7 +333,7 @@ if (G_LastUpdate + 1000 < Now) {
 ***
 
 
-***Match_EndMap***
+***EndMap***
 ***
 Items::Destroy();
 EndTime = -1;
@@ -338,7 +348,7 @@ if (BestPlayerScore != Null) {
 }
 ***
 
-***MB_Private_BeforeCloseLadder***
+***BeforeCloseLadder***
 ***
 declare Unranked = CSmScore[];
 
@@ -360,12 +370,12 @@ foreach(Score in Unranked) {
 }
 ***
 
-***MB_Private_AfterCloseLadder***
+***AfterCloseLadder***
 ***
 DoNothing();
 ***
 
-***Match_EndServer***
+***EndServer***
 ***
 SpawnScreen::DestroyRules();
 SpawnScreen::DestroyMapInfo();

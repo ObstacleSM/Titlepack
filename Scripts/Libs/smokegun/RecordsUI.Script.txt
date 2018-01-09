@@ -11,7 +11,6 @@
 
 #Const	RecordsPerPage	32
 
-
 declare Text[][] G_Records;
 declare Integer G_PageNb;
 

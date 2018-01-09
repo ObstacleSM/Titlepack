@@ -14,6 +14,7 @@
 	GLOBALES
 *************************/
 
+// from Media/Manialinks/cptimes.xml
 Text GetWidget() {
 	return """
 <frame id="Frame_CPTimes" hidden="1">
@@ -243,7 +244,10 @@ Void UpdatePlayer(CSmPlayer _Player) {
 	foreach(Id => CPTime in LastCPTimes) {
 		// declare Landmark <=> MapLandmarks_Gauge[Id];
 		
-		declare Time = CPTime - TimeToSub;
+		// declare Time = CPTime - TimeToSub;
+		
+		// Put the total time instead of the cp time
+		declare Time = CPTime;
 		
 		// Get Index of the current checkpoint
 		declare Idx = nth_cp;
@@ -261,13 +265,17 @@ Void UpdatePlayer(CSmPlayer _Player) {
 			rank += 1;
 		}
 
-		if(rank > 6) return;
+		if(rank > 5) return;
 	
-		// Add the player's time at the end
-		Net_CPTimes_RecordsName[Idx].add(_Player.User.Name);
-		Net_CPTimes_RecordsTime[Idx].add(Time);
+		if(Net_CPTimes_RecordsName.count < 6) {
+			// Add the player's time at the end
+			Net_CPTimes_RecordsName[Idx].add(_Player.User.Name);
+			Net_CPTimes_RecordsTime[Idx].add(Time);
+		} else {
+			Net_CPTimes_RecordsName[Idx][5] = _Player.User.Name;
+			Net_CPTimes_RecordsTime[Idx][5] = Time;
+		}
 		
-
 		// And move it to the desired rank
 		declare i = Net_CPTimes_RecordsName[Idx].count - 1;
 		while(i > rank) {
@@ -302,8 +310,7 @@ Void StartMap(Integer _CheckpointsNb) {
 	for(i, 0, _CheckpointsNb) {
 		Net_CPTimes_RecordsName.add(Text[]);
 		Net_CPTimes_RecordsTime.add(Integer[]);
-	}
-	
+	}	
 	
 	declare netwrite Integer Net_CPTimesUpdated for Teams[0] = 0;
 	Net_CPTimesUpdated = Now;

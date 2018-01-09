@@ -194,11 +194,6 @@ Text CreateLayerTimeDiff() {
 			declare Label_Time <=> (Frame_TimeDiff.GetFirstChild("Label_Time") as CMlLabel);
 			declare Label_Diff <=> (Frame_TimeDiff.GetFirstChild("Label_Diff") as CMlLabel);
 			declare Label_Rank <=> (Frame_TimeDiff.GetFirstChild("Label_Rank") as CMlLabel);
-
-			declare netread Net_LayerTimeDiffUpdated for UI = 0;
-			declare netread Net_Time1 for UI = 0;
-			declare netread Net_Time2 for UI = 0;
-			declare netread Net_CheckpointRank for UI = 0;
 			
 			declare LayerTimeDiffUpdated = 0;
 			declare ShowTimeDiff = False;
@@ -206,6 +201,14 @@ Text CreateLayerTimeDiff() {
 			while (True) {
 				yield;
 
+				declare LocalPlayer <=> InputPlayer;
+				if (GUIPlayer != Null) LocalPlayer <=> GUIPlayer;
+				
+				declare netread Net_LayerTimeDiffUpdated for LocalPlayer = 0;
+				declare netread Net_Time1 for LocalPlayer = 0;
+				declare netread Net_Time2 for LocalPlayer = 0;
+				declare netread Net_CheckpointRank for LocalPlayer = 0;
+				
 				if (!PageIsVisible) continue;
 
 				// Hide after 3 sec
@@ -664,13 +667,11 @@ Void UpdateLayerUtilities() {
 }
 
 Void UpdateLayerTimeDiff(CSmPlayer _Player, Integer _Time1, Integer _Time2) {
-	declare UI <=> UIManager.GetUI(_Player);
-	if (UI == Null) return;
-	declare netwrite Net_LayerTimeDiffUpdated for UI = 0;
-	declare netwrite Net_Time1 for UI = 0;
-	declare netwrite Net_Time2 for UI = 0;
-	declare netwrite Net_CheckpointRank for UI = 0;
-	declare netwrite Net_RespawnCount for UI = -1;
+	declare netwrite Net_LayerTimeDiffUpdated for _Player = 0;
+	declare netwrite Net_Time1 for _Player = 0;
+	declare netwrite Net_Time2 for _Player = 0;
+	declare netwrite Net_CheckpointRank for _Player = 0;
+	declare netwrite Net_RespawnCount for _Player = -1;
 	Net_LayerTimeDiffUpdated = Now;
 	Net_Time1 = _Time1;
 	Net_Time2 = _Time2;

@@ -5,13 +5,9 @@
 *	Weapons related functions.			            	*
 ************************************************/
 
-#Include "TextLib" as TextLib
-#Include "MathLib" as MathLib
-#Include "Libs/smokegun/Tools.Script.txt" as Tools
-#Include "Libs/Nadeo/CustomUI.Script.txt" as CustomUI
-#Include "Libs/Nadeo/ShootMania/Map.Script.txt" as Map
-#Include "Libs/Nadeo/ShootMania/SM.Script.txt" as SM
 #Include "Libs/Nadeo/Message.Script.txt" as Message
+#Include "Libs/Nadeo/ShootMania/Attributes.Script.txt" as Attributes
+#Include "Libs/smokegun/Player.Script.txt" as Player
 
 /***************************************
 	CONSTANTS
@@ -20,40 +16,70 @@
 #Const	Version		"2017-07-10"
 #Const	ScriptName	"Weapons.Script.txt"
 
+#Const C_Weapon_Rocket 0
+#Const C_Weapon_Laser 1
+#Const C_Weapon_Nucleus 2
+#Const C_Weapon_Arrow 3
 
-// Sets the weapon type
-Void ApplyWeaponType(CSmPlayer _Player, Integer _Type) {
-	if (_Player == Null) return;
+/* Reset a player's weapon max ammo default values
+ * Set weapon to rocket
+ */
+Void ResetWeapon(CSmPlayer _Player) {
+	_Player.AmmoGain = 1.0;
+	SetPlayerAmmoMax(_Player, CSmMode::EWeapon::Laser, 1);
+	SetPlayerAmmoMax(_Player, CSmMode::EWeapon::Rocket, 4);
+	SetPlayerAmmoMax(_Player, CSmMode::EWeapon::Nucleus, 2);
+	SetPlayerAmmoMax(_Player, CSmMode::EWeapon::Arrow, 3);
+	SetPlayerWeapon(_Player, CSmMode::EWeapon::Rocket, False);
+}
+
+Void SetWeapon(CSmPlayer _Player, Integer _WeaponType, Real _Gain, Integer _Count) {
+	ResetWeapon(_Player);
+	
+	declare Weapon = CSmMode::EWeapon::Rocket;
+	switch(_WeaponType) {
+		case C_Weapon_Laser: {
+			Weapon = CSmMode::EWeapon::Laser;
+		}
+		case C_Weapon_Nucleus: {
+			Weapon = CSmMode::EWeapon::Nucleus;
+		}
+		case C_Weapon_Arrow: {
+			Weapon = CSmMode::EWeapon::Arrow;
+		}
+	}
+
+	_Player.AmmoGain = _Gain;
+	SetPlayerWeapon(_Player, Weapon, False);
+	SetPlayerAmmoMax(_Player, Weapon, _Count);
+}
+
+/*
+ * Set the weapon based on the type of old checkpionts
+ */
+Void ApplyWeaponForCheckpointType(CSmPlayer _Player, Integer _Type) {
 	declare Text UIMessage;
+	
 	switch (_Type) {
+		// No ammunition gain
 		case 1: {
-			// No ammunition gain
-			_Player.AmmoGain = 0.0;
-			SetPlayerAmmoMax(_Player, CSmMode::EWeapon::Laser, 0);
-			SetPlayerAmmoMax(_Player, CSmMode::EWeapon::Rocket, 0);
-			SetPlayerAmmoMax(_Player, CSmMode::EWeapon::Nucleus, 0);
-			SetPlayerAmmoMax(_Player, CSmMode::EWeapon::Arrow, 0);
+			SetWeapon(_Player, C_Weapon_Rocket, 0.0, 0);
 			UIMessage = _("No Ammunition!");
 		}
+		
+		// Endless ammunition
 		case 2: {
-			// Endless ammunition
-			_Player.AmmoGain = 10.0;
-			SetPlayerAmmoMax(_Player, CSmMode::EWeapon::Laser, 10);
-			SetPlayerAmmoMax(_Player, CSmMode::EWeapon::Rocket, 10);
-			SetPlayerAmmoMax(_Player, CSmMode::EWeapon::Nucleus, 10);
-			SetPlayerAmmoMax(_Player, CSmMode::EWeapon::Arrow, 10);
+			SetWeapon(_Player, C_Weapon_Rocket, 10.0, 10);
 			UIMessage = ("Endless Ammunition!");
 		}
+		
 		default: {
 			// Default values
-			_Player.AmmoGain = 1.0;
-			SetPlayerAmmoMax(_Player, CSmMode::EWeapon::Laser, 1);
-			SetPlayerAmmoMax(_Player, CSmMode::EWeapon::Rocket, 4);
-			SetPlayerAmmoMax(_Player, CSmMode::EWeapon::Nucleus, 2);
-			SetPlayerAmmoMax(_Player, CSmMode::EWeapon::Arrow, 3);
+			ResetWeapon(_Player);
 			UIMessage = ("Normal Ammunition!");
 		}
 	}
+	
 	declare LastWeaponType for _Player = 0;
 	if (LastWeaponType != _Type) {
 		Message::SendStatusMessage(_Player, UIMessage, 3000, 1);
@@ -61,11 +87,10 @@ Void ApplyWeaponType(CSmPlayer _Player, Integer _Type) {
 	}
 }
 
-// Fill up current player ammo
 Void FillUpPlayerAmmo(CSmPlayer _Player) {
-	if (_Player == Null || _Player.SpawnStatus != CSmPlayer::ESpawnStatus::Spawned ) return;
-	SetPlayerAmmo(_Player, CSmMode::EWeapon::Rocket, 10);
-	SetPlayerAmmo(_Player, CSmMode::EWeapon::Laser, 10);
-	SetPlayerAmmo(_Player, CSmMode::EWeapon::Nucleus, 10);
-	SetPlayerAmmo(_Player, CSmMode::EWeapon::Arrow, 10);
+	declare Real AmmoItemBuffDuration for _Player;
+	declare Real AmmoItemBuffAmount for _Player;				
+	AmmoItemBuffDuration = 0.1;
+	AmmoItemBuffAmount = 10.;
+	Player::setBuffTime(_Player, "Obstacle\\Ammo.Item.gbx", Now + 3570);
 }

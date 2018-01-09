@@ -20,7 +20,7 @@
 ***************************************************/
 
 #Const	ScriptName	"ObstacleTitleArena.Script.txt"
-#Const	Version		"3.5 (2014-12-18)"
+#Const	Version		"4.0 (2018-07-08)"
 
 /***************************************************
 	GLOBALES
@@ -84,7 +84,7 @@ foreach (Event in PendingEvents) {
 }
 ***
 
-***StopScript***
+***EndScript***
 ***
 UILayerDestroyAll();
 ***

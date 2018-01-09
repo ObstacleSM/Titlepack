@@ -18,15 +18,15 @@
 	<category name="White">
 		<track>
 			<path>Campaigns\0\zero.Map.Gbx</path>
-			<name>zero</name>
-			<thumbnail>file://Thumbnails/MapUid/CbLJfRGDbeDs7Fu0zwH91MDojSf/</thumbnail>
+			<name></name>
+			<thumbnail></thumbnail>
 			<unlock id="1" medalnb="0" medaltype="Bronze"/>
 			<unlock id="2" medalnb="0" medaltype="Bronze"/>
 		</track>
 		<track>
 			<path>Campaigns\0\TimeAttack - WayDown.Map.Gbx</path>
-			<name>$fff$sTimeAttack - $f20Wa$f31yD$f42ow$f53n</name>
-			<thumbnail>file://Thumbnails/MapUid/rVNzHhh71Be2xa0QwTS3x8tKOmk/</thumbnail>
+			<name></name>
+			<thumbnail></thumbnail>
 			<unlock id="1" medalnb="0" medaltype="Bronze"/>
 			<unlock id="2" medalnb="0" medaltype="Bronze"/>
 		</track>
@@ -53,8 +53,8 @@
 		</track>
 		<track>
 			<path>Campaigns\0\Sans nom.Map.Gbx</path>
-			<name>Sans nom</name>
-			<thumbnail>file://Thumbnails/MapUid/lLNqAWP6RXXyARFQsQq0iLDojSf/</thumbnail>
+			<name></name>
+			<thumbnail></thumbnail>
 			<unlock id="1" medalnb="5" medaltype="Bronze"/>
 			<unlock id="2" medalnb="5" medaltype="Bronze"/>
 		</track>
