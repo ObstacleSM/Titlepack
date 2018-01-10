@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<frame>
+<frame>
+	<label pos="0 0" z-index="0" size="70 5" text="Checkpoint" halign="center" style="TextTitle3" textsize="3" valign="bottom"/>
+	<frame id="Frame_Advanced_Options">
+		<frame pos="-40 -5">
+			<label pos="17.5 0" z-index="0" size="40 5" text="Weapon" halign="center"/>
+			<label pos="0 -10" z-index="0" size="20 5" text="Type"/>
+			<label pos="20 -10" z-index="0" size="20 5" text="Rocket" scriptevents="1"/>
+			<label pos="0 -20" z-index="0" size="20 5" text="Gain"/>
+			<entry pos="20 -20" z-index="0" size="10 5" default="100" scriptevents="1" selecttext="1"/>
+			<label pos="30 -20" z-index="0" size="8 5" text="%"/>
+			<label pos="0 -30" z-index="0" size="20 5" text="Count"/>
+			<entry pos="20 -30" z-index="0" size="9 5" default="10" scriptevents="1" selecttext="1"/>
+		</frame>
+		<frame pos="5 -5">
+			<label pos="17.5 0" z-index="0" size="40 5" text="Stamina" halign="center"/>
+			
+			<label pos="0 -10" z-index="0" size="20 5" text="Amount"/>
+			<entry pos="20 -10" z-index="0" size="9 5" default="100" scriptevents="1" selecttext="1"/>
+			<label pos="30 -10" z-index="0" size="8 5" text="%"/>
+			
+			<label pos="0 -20" z-index="0" size="20 5" text="Gain"/>
+			<entry pos="20 -20" z-index="0" size="10 5" default="100" scriptevents="1" selecttext="1"/>
+			<label pos="30 -20" z-index="0" size="8 5" text="%"/>
+		</frame>
+	</frame>
+	<quad pos="0 0" z-index="0" size="100 50" bgcolor="FFFA" halign="center"/>
+</frame>
+</frame>
