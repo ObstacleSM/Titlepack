@@ -477,7 +477,8 @@ Void JumpToCheckpoint(CSmPlayer _Player, Integer _Target) {
 			}
 			PoleIndex += 1;
 		}
-	}	
+	}
+	
 	if (Target == Null) {
 		UI.SendChat("$f11Cannot find Checkpoint "^_Target^"!$z");
 		return;
@@ -490,8 +491,10 @@ Void JumpToCheckpoint(CSmPlayer _Player, Integer _Target) {
 	}
 	
 	UI.SendChat("$1f1Jumping to Checkpoint "^_Target^"!");
+	
 	Player::setUsedJump(_Player, True);
 	Player::setLastCheckpoint(_Player, Target.Id);
+	
 	Private_CpRestart(_Player, 3500, Target.Id, Spawn, False);
 	
 	// TODO: Below is copy pasted in common behaviour after respawn
@@ -606,13 +609,20 @@ Void Private_CheckpointEffect(CSmPlayer _Player, Ident _CheckpointId) {
  *            Ident     _CheckpointId Checkpoint captured (guaranted to be the next cp)
  */
 Void Private_HandleCheckpoint(CSmPlayer _Player, Ident _CheckpointId) {
+	declare Checkpoint <=> MapLandmarks_Gauge[_CheckpointId];
 	declare LastCPTimes = Player::getLastCPTimes(_Player);
 	declare BestCPTimes = Player::getBestCPTimes(_Player);
 	
 	declare time = Player::getTime(_Player);
 	
 	Player::setLastCPTimes(_Player, _CheckpointId, time);
-	Player::setCpProgress(_Player, LastCPTimes.count + 1);
+	
+	// lazy fix might not fix cp progress completely
+	if(Player::usedJump(_Player))
+		Player::setCpProgress(_Player, Checkpoint.Order);
+	else
+		Player::setCpProgress(_Player, LastCPTimes.count + 1);
+	
 	Player::setLastCheckpoint(_Player, _CheckpointId);
 	Private_CheckpointEffect(_Player, _CheckpointId);
 
