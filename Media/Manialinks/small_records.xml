@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
-<manialink version="3">
+<frame>
 <frame id="Frame_Small_Records" class="LibCustomUI_Module" pos="139 75">
 	<frame id="Frame_Background"halign="center" valign="center2">
 		<quad z-index="-1" size="44 67" style="BgRaceScore2" substyle="BgCardPlayer" halign="center" valign="top"/>
@@ -28,4 +28,4 @@
 		<label id="time" pos="20 0" size="15 4" halign="right" valign="center2" style="TextTitle2" textsize="1" text="00:00:01" textfont="OswaldMono"/>
 	</framemodel>
 </frame>
-</manialink>
+</frame>
