@@ -9,7 +9,8 @@
 #Const	Version		"2017-07-28"
 #Const	ScriptName	"RecordsUI.Script.txt"
 
-#Const	RecordsPerPage	32
+#Const C_SmallRecords_Max 15
+#Const C_RecordsPerPage 32
 
 declare Text[][] G_Records;
 declare Integer G_PageNb;
@@ -118,6 +119,11 @@ Text Private_GetSmallRecords() {
 	""";
 }
 
+
+
+/// ------------
+/// Record is ["login", "nickname", "time", "rs", "try", "timeago"]
+
 Text Private_GetPlayerLogin(Integer _Index) {
 	if(_Index < 0 || _Index >= G_Records.count) return "Error wrong idx";
 	return G_Records[_Index][0];
@@ -152,7 +158,11 @@ Text Private_Vec(Vec2 _Vector) {
 	return _Vector.X^" "^_Vector.Y;
 }
 
-Void UpdateNetVars(Integer _RecordIdx, CSmPlayer _Player, Boolean _Empty) {
+
+/// ------------
+/// Small records widget functions
+
+Void AddRecord(CSmPlayer _Player, Integer _RecordIdx, Boolean _Empty) {
 	declare line_color = "$FFF";
 	
 	if(_RecordIdx == 0) {
@@ -188,33 +198,91 @@ Void UpdateNetVars(Integer _RecordIdx, CSmPlayer _Player, Boolean _Empty) {
 }
 
 
-Void UpdateNetVars(Integer _RecordIdx, CSmPlayer _Player) {
-	return UpdateNetVars(_RecordIdx, _Player, False);
+Void AddRecord(CSmPlayer _Player, Integer _RecordIdx) {
+	return AddRecord(_Player, _RecordIdx, False);
 }
 
-Void DisplayPlayersFromTo(Integer _Start, Integer _End, CSmPlayer _Player) {
-	// Check that both index are valid
-	if(_Start >= 0 && _Start < G_Records.count && _End > 0 && _End >= _Start) {
+Void AddRecordsRange(CSmPlayer _Player, Integer _Start, Integer _End) {
 
-		// Need a substitute variable because params are readonly
-		declare End = _End;
-		if(End >= G_Records.count) {
-			End = G_Records.count - 1;
-		}
-				
-		declare netwrite SmallRecords for _Player = Text[][];
-		// Display player records
-		for(Index, _Start, End) {
-			if(SmallRecords.count >= 15) break;
-			UpdateNetVars(Index, _Player);
-		}
-	} else {
-		Log::Log("Error when displaying records. Wrong index, StartIdx "^_Start^"| EndIdx "^_End^"| Records "^G_Records.count);
+	// Check that both index are valid
+	if(_Start < 0 || _Start >= G_Records.count || _End <= 0 || _End < _Start) {
+		Log::Log("WARNING: wrong index when displaying records.");
+		Log::Log("StartIdx "^_Start^"| EndIdx "^_End^"| Records count "^G_Records.count);
+		return;
+	}
+
+	// Need another variable for _End because params are readonly
+	declare End = _End;
+	if(End >= G_Records.count) {
+		End = G_Records.count - 1;
+	}
+
+	// Display player records
+	declare netwrite SmallRecords for _Player = Text[][];
+	for(Index, _Start, End) {
+		if(SmallRecords.count >= C_SmallRecords_Max) break;
+		AddRecord(_Player, Index);
 	}
 }
 
+Void UpdateSmallRecords(CSmPlayer _Player) {
+
+	// Find player record
+	declare Rank = -1;
+	foreach(Idx => Record in G_Records) {
+		if(Private_GetPlayerLogin(Idx) == _Player.User.Login) {
+			Rank = Idx;
+			break;
+		}
+	}
+
+	declare netwrite SmallRecords for _Player = Text[][];
+	SmallRecords.clear();
+
+	// Display top 3 players
+	AddRecordsRange(_Player, 0, 2);
+
+	if(Rank < 0) {
+		// We need to set the end to (records count-2) to leave a blank line
+		// for the current player
+
+		// Show the last records
+		if(G_Records.count > C_SmallRecords_Max) {
+			AddRecordsRange(_Player, G_Records.count - 11, G_Records.count - 1);
+			
+		// Display all records
+		} else {
+			AddRecordsRange(_Player, 3, G_Records.count - 1);
+		}
+		
+		// Add an empty line for the player
+		AddRecord(_Player, -1, True);
+	} else {
+		if(Rank < C_SmallRecords_Max) {
+			// Display all records
+			AddRecordsRange(_Player, 3, G_Records.count);
+		} else {
+
+			// Display only records around the player
+			declare upper_half = 6;
+			declare records_below = G_Records.count - Rank - 1;
+
+			// There is a gap between the last record and the widget
+			// So display more records to fill the gap
+			if(records_below < upper_half) {
+				upper_half += upper_half - records_below;
+			}
+
+			AddRecordsRange(_Player, Rank + 1 - upper_half, G_Records.count);
+		}
+	}
+}
+
+/// ------------
+/// Records list widget functions
+
 Void ChangePage(CUIConfig _UI, Integer dir) {
-	if(dir > 0 && G_Records.count > (G_PageNb+1) * RecordsPerPage) {
+	if(dir > 0 && G_Records.count > (G_PageNb+1) * C_RecordsPerPage) {
 		G_PageNb =  G_PageNb + 1;
 	} else if (dir < 0 && G_PageNb > 0) {
 		G_PageNb = G_PageNb - 1;
@@ -223,7 +291,7 @@ Void ChangePage(CUIConfig _UI, Integer dir) {
 	declare netwrite RecordsList for _UI = Text[][];
 	RecordsList.clear();
 	
-	for(Idx, G_PageNb * RecordsPerPage, G_PageNb * RecordsPerPage + RecordsPerPage - 1) {
+	for(Idx, G_PageNb * C_RecordsPerPage, G_PageNb * C_RecordsPerPage + C_RecordsPerPage - 1) {
 		if(Idx >= G_Records.count) {
 			break;
 		}
@@ -243,60 +311,10 @@ Void ChangePage(CUIConfig _UI, Integer dir) {
 }
 
 Void UpdateManialink(CSmPlayer _Player) {
-	// Find player record
-	declare CurrentPlayerRecordId = -1;
-	foreach(Idx => Record in G_Records) {
-		if(Private_GetPlayerLogin(Idx) == _Player.User.Login) {
-			CurrentPlayerRecordId = Idx;
-			break;
-		}
-	}
 	
-	declare netwrite SmallRecords for _Player = Text[][];
-	SmallRecords.clear();
-
-	// Display top X players
-	DisplayPlayersFromTo(0, 2, _Player);
-
-	// The player has no record
-	if(CurrentPlayerRecordId < 0) {
-		// We need to set end to records count - 2 to leave a blank line
-		// for the current player
-						
-		// Display records from the end
-		if(G_Records.count >= 15) {
-			DisplayPlayersFromTo(G_Records.count - 11, G_Records.count - 1, _Player);
-			
-		// Display all records
-		} else {
-			DisplayPlayersFromTo(3, G_Records.count - 1, _Player);
-		}
-		
-		// Add an empty line for the player
-		UpdateNetVars(-1, _Player, True);
-
-	// The player has record
-	} else {
-		if(CurrentPlayerRecordId < 15) {
-			// Display all records
-			DisplayPlayersFromTo(3, G_Records.count, _Player);
-		} else {
-
-			// Display only records around the player
-			declare upper_half = 6;
-			declare records_below = G_Records.count - CurrentPlayerRecordId - 1;
-
-			// There is a gap between the last record and the widget
-			// So display more records to fill the gap
-			if(records_below < upper_half) {
-				upper_half += upper_half - records_below;
-			}
-
-			DisplayPlayersFromTo(CurrentPlayerRecordId + 1 - upper_half, G_Records.count, _Player);
-		}
-	}
+	UpdateSmallRecords(_Player);
 	
-		// Update UI
+	// Update UI
 	declare UI <=> UIManager.GetUI(_Player);
 	if (UI == Null) return;
 		
@@ -310,44 +328,47 @@ Text CreateManialink(Text _Title) {
 	return """
 <manialink version="3">
 <frame>
+	// <include url="../../../Media/Manialinks/small_records.xml" />
 	{{{Private_GetSmallRecords()}}}
 </frame>
 <frame>
 	{{{Private_GetRecordsList()}}}
 </frame>
 <script><!--
-		Void UpdateFrameTab(CUIConfig UI, CMlPage Page, Text TabKey, Text FrameTabId)
-		{
-			declare netread Boolean _TabsLib_UseTabs for UI;
-			if (! _TabsLib_UseTabs) return;
-			
-			declare Boolean _TabsLib_ScoresLayerIsVisible 	for UI;
-			declare Boolean _TabsLib_AltLayerIsVisible 		for UI;
-			declare Text 	_TabsLib_CurrentTab 			for UI;
-			declare netread Text _TabsLib_ScoresTableTab 	for UI;
-			
-			declare Boolean ShowCurrentTab = _TabsLib_AltLayerIsVisible && (_TabsLib_CurrentTab == TabKey);
-			
-			if(TabKey == _TabsLib_ScoresTableTab) 
-			{
-				// log("_TabsLib_ScoresTableTab: "^_TabsLib_ScoresTableTab);
-				ShowCurrentTab = _TabsLib_ScoresLayerIsVisible || 
-					(_TabsLib_AltLayerIsVisible && (_TabsLib_CurrentTab == _TabsLib_ScoresTableTab));
-			}
+
+	// From Libs/Nadeo/TabsClient.Script.txt
+	Void UpdateFrameTab(CUIConfig UI, CMlPage Page, Text TabKey, Text FrameTabId)
+	{
+		declare netread Boolean _TabsLib_UseTabs for UI;
+		if (! _TabsLib_UseTabs) return;
 		
-			declare MainFrame <=> (Page.GetFirstChild(FrameTabId) as CMlFrame);
-			if(MainFrame == Null) return;
-			
-			if(ShowCurrentTab) {
-				MainFrame.Show();
-			}
-			else {
-				MainFrame.Hide();
-			}
+		declare Boolean _TabsLib_ScoresLayerIsVisible 	for UI;
+		declare Boolean _TabsLib_AltLayerIsVisible 		for UI;
+		declare Text 	_TabsLib_CurrentTab 			for UI;
+		declare netread Text _TabsLib_ScoresTableTab 	for UI;
+		
+		declare Boolean ShowCurrentTab = _TabsLib_AltLayerIsVisible && (_TabsLib_CurrentTab == TabKey);
+		
+		if(TabKey == _TabsLib_ScoresTableTab) 
+		{
+			// log("_TabsLib_ScoresTableTab: "^_TabsLib_ScoresTableTab);
+			ShowCurrentTab = _TabsLib_ScoresLayerIsVisible || 
+				(_TabsLib_AltLayerIsVisible && (_TabsLib_CurrentTab == _TabsLib_ScoresTableTab));
 		}
+	
+		declare MainFrame <=> (Page.GetFirstChild(FrameTabId) as CMlFrame);
+		if(MainFrame == Null) return;
+		
+		if(ShowCurrentTab) {
+			MainFrame.Show();
+		}
+		else {
+			MainFrame.Hide();
+		}
+	}
 
 	main() {
-		declare LastUpdate = 0;
+		declare LastUpdate = -1;
 		
 		// Records widget on the right
 		declare Frame_Small_Records <=> (Page.GetFirstChild("Frame_Small_Records") as CMlFrame);
@@ -380,15 +401,19 @@ Text CreateManialink(Text _Title) {
 			{{{CustomUI::InjectMLLoop()}}}
 			
 			declare netread Net_RecordsUpdated for UI = 0;
+			
+			// Update when needed or every ten seconds
 			if(Net_RecordsUpdated < LastUpdate && GameTime <= LastUpdate + 10000) continue;
 			LastUpdate = GameTime;
 			
+			// Get the local or specced player
 			declare LocalPlayer <=> InputPlayer;
 			if (GUIPlayer != Null) LocalPlayer <=> GUIPlayer;			
 			if(LocalPlayer == Null) continue;
 			
 			// UPDATE RECORDS IN EACH WIDGET
 			
+			// Small records widget on the right
 			declare netread SmallRecords for LocalPlayer = Text[][];
 			foreach(Idx => Control in Small_Records.Controls) {
 				Control.Visible = Idx < SmallRecords.count;
@@ -404,16 +429,17 @@ Text CreateManialink(Text _Title) {
 				rankLabel.SetText(SmallRecords[Idx][0]);
 				nameLabel.SetText(SmallRecords[Idx][1]);
 				timeLabel.SetText(SmallRecords[Idx][2]);
-				
+			
 				if(SmallRecords[Idx][1] == LocalPlayer.User.Name) {
-				
+					// Highlight the record
 				} else {
-				
+					// Un-highlight the record
 				}
 			}
 
+			// All Records Widget tab
 			declare netread RecordsList for UI = Text[][];
-			for(Idx, 0, {{{RecordsPerPage-1}}}) {
+			for(Idx, 0, {{{C_RecordsPerPage-1}}}) {
 				declare frame = (Records_Panel.GetFirstChild("record"^Idx) as CMlFrame);
 				
 				if(Idx < RecordsList.count) {
@@ -429,6 +455,7 @@ Text CreateManialink(Text _Title) {
 					timeLabel.SetText(Record[2]);
 					tryLabel.SetText(Record[3]);
 					
+					// Display rs count if we have it
 					if(Record[4] != "-1")
 						rsLabel.SetText(Record[4]);
 					else
