@@ -1,4 +1,5 @@
-#Extends "Modes/ShootMania/Base/ModeBase.Script.txt"
+#Extends "Modes/ModeBase2.Script.txt"
+#RequireContext CSmMode
 
 #Const CompatibleMapTypes		"ObstacleArena,ObstacleTitleArena,TimeAttackArena"
 #Const	Version							"1.2"
@@ -10,13 +11,12 @@
 #Include "TextLib" as TL
 #Include "MathLib" as ML
 
-#Include "Libs/Nadeo/Message.Script.txt" as Message
-#Include "Libs/Nadeo/Spectators.Script.txt" as Spectators
 #Include "Libs/Nadeo/Layers2.Script.txt" as Layers
 #Include "Libs/Nadeo/CustomUI.Script.txt" as CustomUI
 #Include "Libs/Nadeo/TabsServer.Script.txt" as Tabs
-#Include "Libs/Nadeo/ShootMania/Scores.Script.txt" as Scores
+
 #Include "Libs/Nadeo/ShootMania/SM3.Script.txt" as SM
+#Include "Libs/Nadeo/ShootMania/Scores.Script.txt" as Scores
 #Include "Libs/Nadeo/ShootMania/SpawnScreen.Script.txt" as SpawnScreen
 
 #Include "Libs/smokegun/Player.Script.txt" as Player
@@ -25,7 +25,6 @@
 #Include "Libs/smokegun/RecordsUI.Script.txt" as RecordsUI
 #Include "Libs/smokegun/Items.Script.txt" as Items
 #Include "Libs/smokegun/ObstacleRecords.Script.txt" as API
-
 #Include "Libs/smokegun/CPTimes.Script.txt" as CPTimes
 
 
@@ -50,18 +49,18 @@
 // Constants
 // ---------------------------------- //
 #Const C_HudModulePath "Obstacle/UI.Module.Gbx" ///< Path to the hud module
+#Const C_DefaultHudModulePath "Obstacle/UI.Module.Gbx" ///< Path to the hud module
 #Const Description _("Finish map as fast as possible !")
 #Const C_DefaultTimeLimit 30
 
-***LogVersions***
+***MB_Private_LogVersions***
 ***
 Log::RegisterScript(ScriptName, Version);
 ***
 
-***Settings***
+***MB_Private_Settings***
 ***
 MB_Settings_UseDefaultHud = False;
-MB_Settings_UseDefaultTimer = False;
 
 UsePvPCollisions = False;
 UseClans = False;
@@ -69,7 +68,7 @@ UseSameWallJump = True;
 UsePvPWeapons = S_PvPWeapons;
 ***
 
-***Rules***
+***MB_Private_Rules***
 ***
 ModeInfo::SetName("Obstacle");
 ModeInfo::SetType(ModeInfo::Type_FreeForAll());
@@ -100,7 +99,7 @@ ModeInfo::SetRules(ModeRules);
 ModeInfo::SetStatusMessage(_("Finish the map as fast as possible."));
 ***
 
-***LoadHud***
+***MB_Private_LoadHud***
 ***
 Hud_Load(C_HudModulePath);
 if (Hud != Null && Hud.ScoresTable != Null) {
@@ -117,21 +116,18 @@ if (Hud != Null && Hud.ScoresTable != Null) {
 }
 ***
 
-***SpawnScreen***
+***MB_Private_SpawnScreen***
 ***
 SpawnScreen::CreateScores("Score.Points");
 ***
 
-***InitServer***
+***MB_Private_InitServer***
 ***
 declare Integer G_LastUpdate = 0;
 ***
 
-***StartServer***
+***MB_Private_StartServer***
 ***
-+++LoadHud+++
-SM::SetupDefaultVisibility();
-
 Spectators::ForceCamera(Spectators::Camera_FirstPerson());
 ObsUI::SetNextMapVotingRatio(S_NextMapVotingRatio);
 Items::Init();
@@ -139,19 +135,19 @@ CreateUI();
 API::Init(S_RecordsPerTick, S_RecordsTickDelay);
 ***
 
-***InitMap***
+***MB_Private_InitMap***
 ***
 declare Integer PrevTimeLimit = -1;
 declare Boolean PrevPvPWeapons = S_PvPWeapons;
 declare Text PrevRecordsWidgetTitle = S_RecordsWidgetTitle;
 ***
 
-***StartMap***
+***MB_Private_StartMap***
 ***
 // map is invalid
 if(!Obstacle::PrepareMap())
 {
-	MB_StopMap();
+	MB_Private_StopMap();
 }
 
 API::StartMap(S_RecordsPerTick, S_RecordsTickDelay);
@@ -176,25 +172,21 @@ if (S_TimeLimit > 0) {
 
 ***
 
-***OnNewPlayer***
-***
-Obstacle::NewPlayer(Player);
+***MB_Private_PlayLoop***
 ***
 
-***OnNewSpectator***
-***
-Obstacle::NewPlayer(Spectator);
-***
-
-***PlayLoop***
-***
-
+// Initalize player who joins as spectator 
+foreach(Player in Spectators) { 
+  if(!Player::isInitialized(Player)) { 
+    Obstacle::NewPlayer(Player); 
+  } 
+} 
 
 API::Loop();
 
 if (Now > EndTime) {
 	Message::SendBigMessage(_("Time limit reached"),	2000, 3, CUIConfig::EUISound::Silence, 0);
-	MB_StopMatch();
+	MB_Private_StopMatch();
 }
 
 foreach(Event in UIManager.PendingEvents) {
@@ -333,7 +325,7 @@ if (G_LastUpdate + 1000 < Now) {
 ***
 
 
-***EndMap***
+***MB_Private_EndMap***
 ***
 Items::Destroy();
 EndTime = -1;
@@ -348,7 +340,7 @@ if (BestPlayerScore != Null) {
 }
 ***
 
-***BeforeCloseLadder***
+***MB_Private_BeforeCloseLadder***
 ***
 declare Unranked = CSmScore[];
 
@@ -370,12 +362,12 @@ foreach(Score in Unranked) {
 }
 ***
 
-***AfterCloseLadder***
+***MB_Private_AfterCloseLadder***
 ***
 DoNothing();
 ***
 
-***EndServer***
+***MB_Private_EndServer***
 ***
 SpawnScreen::DestroyRules();
 SpawnScreen::DestroyMapInfo();
