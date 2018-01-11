@@ -193,13 +193,13 @@ Void InitPlayer(CSmPlayer _Player) {
 	_Player.Score.Points = 0;
 }
 
-Boolean wantsRestart(CSmPlayer _Player) {
+Boolean wantsRestart(CSmPlayer _Player, Boolean _GiveUp) {
 	declare UI <=> UIManager.GetUI(_Player);
 	declare restart = False;
 	if (UI != Null) {
 		declare netread Net_PlayerWantsRestart for UI = False;
 		declare netread Net_PlayerLockedRestart for UI = False;
-		restart = Net_PlayerWantsRestart && !Net_PlayerLockedRestart;
+		restart = (Net_PlayerWantsRestart || _GiveUp) && !Net_PlayerLockedRestart;
 	}
 	return restart;
 }

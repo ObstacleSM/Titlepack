@@ -378,7 +378,7 @@ Void RespawnPlayer(CSmPlayer _Player, Boolean _forceRestart) {
 	if(!Player::isInitialized(_Player))
 		NewPlayer(_Player);
 
-	declare shouldRestart = Player::wantsRestart(_Player) || _forceRestart;
+	declare shouldRestart = Player::wantsRestart(_Player, _forceRestart);
 	declare LastCP = Player::getLastCheckpoint(_Player);
 	declare Delay = 3500;
 	declare CPSpawnId = NullId;	
