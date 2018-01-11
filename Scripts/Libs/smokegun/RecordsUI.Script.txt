@@ -368,6 +368,7 @@ Text CreateManialink(Text _Title) {
 	}
 
 	main() {
+		declare LastPlayerLogin = "";
 		declare LastUpdate = -1;
 		
 		// Records widget on the right
@@ -400,17 +401,24 @@ Text CreateManialink(Text _Title) {
 			
 			{{{CustomUI::InjectMLLoop()}}}
 			
-			declare netread Net_RecordsUpdated for UI = 0;
-			
-			// Update when needed or every ten seconds
-			if(Net_RecordsUpdated < LastUpdate && GameTime <= LastUpdate + 10000) continue;
-			LastUpdate = GameTime;
 			
 			// Get the local or specced player
 			declare LocalPlayer <=> InputPlayer;
 			if (GUIPlayer != Null) LocalPlayer <=> GUIPlayer;			
 			if(LocalPlayer == Null) continue;
 			
+			
+			if(LocalPlayer.Login != LastPlayerLogin) {
+				LastUpdate = -10000;
+				LastPlayerLogin = LocalPlayer.Login;
+			}
+			
+			declare netread Net_RecordsUpdated for UI = 0;
+			
+			// Update when needed or every ten seconds
+			if(Net_RecordsUpdated < LastUpdate && GameTime <= LastUpdate + 10000) continue;
+			LastUpdate = GameTime;
+						
 			// UPDATE RECORDS IN EACH WIDGET
 			
 			// Small records widget on the right
