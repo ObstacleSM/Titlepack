@@ -599,6 +599,8 @@ Void Private_CheckpointEffect(CSmPlayer _Player, Ident _CheckpointId) {
 		declare metadata StaminaGain for Checkpoint = 1.0;
 		
 		Weapons::SetWeapon(_Player, AmmoType, AmmoGain, AmmoCount);
+		_Player.StaminaMax = StaminaAmount;
+		_Player.StaminaGain = StaminaGain;
 	}
 }
 
