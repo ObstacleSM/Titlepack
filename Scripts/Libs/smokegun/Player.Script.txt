@@ -8,6 +8,8 @@
 #Include "TextLib" as TextLib
 #Include "MathLib" as MathLib
 
+#Include "Libs/Nadeo/Json2.Script.txt" as Json
+
 /*********************************************
 	CONSTANTS
 *********************************************/
@@ -206,4 +208,38 @@ Boolean wantsRestart(CSmPlayer _Player, Boolean _GiveUp) {
 
 Integer getTime(CSmPlayer _Player) {
 	return Now - getStartTime(_Player);
+}
+
+Text Private_CPTimesToJSON(Integer[Ident] _Times) {
+	declare res = "{";
+	declare i = 0;
+	foreach(CPId => CPTime in _Times) {
+		res ^= """ "{{{Json::GetInteger(MapLandmarks_Gauge[CPId].Order)}}}" : {{{Json::GetInteger(CPTime)}}}""";
+		
+		if(i < _Times.count-1)
+			res ^= ",";
+		i += 1;
+	}
+	return res^"}";
+}
+
+Text ToJSON(CSmPlayer _Player) {
+	return """
+{
+	"Player" : {
+		"Login" : {{{Json::GetText(_Player.User.Login)}}},
+		"Name" : {{{Json::GetText(_Player.User.Name)}}}
+	},
+	"Run" : {
+		"Time" : {{{Json::GetInteger(getTime(_Player))}}},
+		"RespawnCount" : {{{Json::GetInteger(getRespawnCount(_Player))}}},
+		"LastRun" : {{{Json::GetInteger(getLastRun(_Player))}}},
+		"BestRun" : {{{Json::GetInteger(getBestRun(_Player))}}},
+		"LastCheckpoinId" : {{{Json::GetIdent(getLastCheckpoint(_Player))}}},
+		"UsedJump" : {{{Json::GetBoolean(usedJump(_Player))}}},
+		"CpProgess" : {{{Json::GetInteger(getCpProgress(_Player))}}},		
+		"LastCPTimes" : {{{Private_CPTimesToJSON(getLastCPTimes(_Player))}}},
+		"BestCPTimes" : {{{Private_CPTimesToJSON(getBestCPTimes(_Player))}}}
+	}
+}""";
 }

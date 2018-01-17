@@ -404,9 +404,11 @@ Void RespawnPlayer(CSmPlayer _Player, Boolean _forceRestart) {
 	Player::clearBuffTimes(_Player);
 	
 	// TODO: Make it works with full restart too
+	/*
 	if (G_FullAmmoSpawn) {
 		Weapons::FillUpPlayerAmmo(_Player);
 	}
+	*/
 }
 
 /**
@@ -537,6 +539,7 @@ Void Private_HandleFinish(CSmPlayer _Player, Ident _GoalId) {
 
 	// Send score
 	Private_SendFinishedRun(_Player, LastRun, _GoalId);
+	XmlRpc.SendCallback("Obstacle_OnFinish", Player::ToJSON(_Player));
 
 	//Update UI
 	declare UI <=> UIManager.GetUI(_Player);
@@ -628,10 +631,12 @@ Void Private_HandleCheckpoint(CSmPlayer _Player, Ident _CheckpointId) {
 	Player::setLastCheckpoint(_Player, _CheckpointId);
 	Private_CheckpointEffect(_Player, _CheckpointId);
 
+	XmlRpc.SendCallback("Obstacle_OnCheckpoint", Player::ToJSON(_Player));
+	
 	// UPDATE UI
   Private_UpdatePoleIds(_Player);
 	Private_UpdatePlayerBestTime(_Player);
-	
+		
 	declare UI <=> UIManager.GetUI(_Player);
 	if (_Player.Score == Null) return;	
 	declare Variant = 0;
