@@ -71,8 +71,8 @@
 	</frame>
 	<frame id="framefooter" pos="0 -75.00">
 		<frame id="framepager" pos="0 -20">
-			<quad pos="3 0" rot="180" halign="center" valign="center" style="Icons128x128_1" substyle="BackFocusable" size="6.00 6.00" scriptevents="1" id="pager_buttonprev"/>
-			<quad pos="-3 0" halign="center" valign="center" style="Icons128x128_1" substyle="BackFocusable" size="6.00 6.00" scriptevents="1" id="pager_buttonnext"/>
+			<quad pos="-3 0" halign="center" valign="center" style="Icons128x128_1" substyle="BackFocusable" size="6.00 6.00" scriptevents="1" id="pager_buttonprev"/>
+			<quad pos="3 0" rot="180" halign="center" valign="center" style="Icons128x128_1" substyle="BackFocusable" size="6.00 6.00" scriptevents="1" id="pager_buttonnext"/>
 		</frame>
 	</frame>
 	<frame id="frametable" pos="0 -30.00">
