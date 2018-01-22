@@ -1,5 +1,4 @@
-#Extends "Modes/ModeBase2.Script.txt"
-#RequireContext CSmMode
+#Extends "Modes/ShootMania/Base/ModeShootmania.Script.txt"
 
 #Const CompatibleMapTypes		"ObstacleArena,ObstacleTitleArena,TimeAttackArena"
 #Const	Version							"1.2"
@@ -11,11 +10,13 @@
 #Include "TextLib" as TL
 #Include "MathLib" as ML
 
+#Include "Libs/Nadeo/Message.Script.txt" as Message
+#Include "Libs/Nadeo/Spectators.Script.txt" as Spectators
+#Include "Libs/Nadeo/Layers2.Script.txt" as Layers
 #Include "Libs/Nadeo/CustomUI.Script.txt" as CustomUI
 #Include "Libs/Nadeo/TabsServer.Script.txt" as Tabs
-
-#Include "Libs/Nadeo/ShootMania/SM3.Script.txt" as SM
 #Include "Libs/Nadeo/ShootMania/Scores.Script.txt" as Scores
+#Include "Libs/Nadeo/ShootMania/SM3.Script.txt" as SM
 #Include "Libs/Nadeo/ShootMania/SpawnScreen.Script.txt" as SpawnScreen
 
 #Include "Libs/smokegun/Player.Script.txt" as Player
@@ -24,6 +25,7 @@
 #Include "Libs/smokegun/RecordsUI.Script.txt" as RecordsUI
 #Include "Libs/smokegun/Items.Script.txt" as Items
 #Include "Libs/smokegun/ObstacleRecords.Script.txt" as API
+
 #Include "Libs/smokegun/CPTimes.Script.txt" as CPTimes
 
 
@@ -48,18 +50,19 @@
 // Constants
 // ---------------------------------- //
 #Const C_HudModulePath "Obstacle/UI.Module.Gbx" ///< Path to the hud module
-#Const C_DefaultHudModulePath "Obstacle/UI.Module.Gbx" ///< Path to the hud module
 #Const Description _("Finish map as fast as possible !")
 #Const C_DefaultTimeLimit 30
 
-***MB_Private_LogVersions***
+***Match_LogVersions***
 ***
 Log::RegisterScript(ScriptName, Version);
 ***
 
-***MB_Private_Settings***
+***Match_Settings***
 ***
 MB_Settings_UseDefaultHud = False;
+MB_Settings_UseDefaultTimer = False;
+MB_Private_UseMatchmaking = False;
 
 UsePvPCollisions = False;
 UseClans = False;
@@ -67,7 +70,7 @@ UseSameWallJump = True;
 UsePvPWeapons = S_PvPWeapons;
 ***
 
-***MB_Private_Rules***
+***Match_Rules***
 ***
 ModeInfo::SetName("Obstacle");
 ModeInfo::SetType(ModeInfo::Type_FreeForAll());
@@ -98,7 +101,7 @@ ModeInfo::SetRules(ModeRules);
 ModeInfo::SetStatusMessage(_("Finish the map as fast as possible."));
 ***
 
-***MB_Private_LoadHud***
+***Match_LoadHud***
 ***
 Hud_Load(C_HudModulePath);
 if (Hud != Null && Hud.ScoresTable != Null) {
@@ -115,18 +118,21 @@ if (Hud != Null && Hud.ScoresTable != Null) {
 }
 ***
 
-***MB_Private_SpawnScreen***
+***Match_SpawnScreen***
 ***
 SpawnScreen::CreateScores("Score.Points");
 ***
 
-***MB_Private_InitServer***
+***InitServer***
 ***
 declare Integer G_LastUpdate = 0;
 ***
 
-***MB_Private_StartServer***
+***Match_StartServer***
 ***
++++LoadHud+++
+SM::SetupDefaultVisibility();
+
 Spectators::ForceCamera(Spectators::Camera_FirstPerson());
 ObsUI::SetNextMapVotingRatio(S_NextMapVotingRatio);
 Items::Init();
@@ -134,19 +140,20 @@ CreateUI();
 API::Init(S_RecordsPerTick, S_RecordsTickDelay);
 ***
 
-***MB_Private_InitMap***
+***Match_InitMap***
 ***
 declare Integer PrevTimeLimit = -1;
 declare Boolean PrevPvPWeapons = S_PvPWeapons;
 declare Text PrevRecordsWidgetTitle = S_RecordsWidgetTitle;
+declare LastUpdate = -1;
 ***
 
-***MB_Private_StartMap***
+***Match_StartMap***
 ***
 // map is invalid
 if(!Obstacle::PrepareMap())
 {
-	MB_Private_StopMap();
+	MB_StopMap();
 }
 
 API::StartMap(S_RecordsPerTick, S_RecordsTickDelay);
@@ -168,24 +175,17 @@ if (S_TimeLimit > 0) {
 } else {
 	EndTime = (StartTime + C_DefaultTimeLimit * 1000 * 60);
 }
-
 ***
 
-***MB_Private_PlayLoop***
+***Match_PlayLoop***
 ***
 
-// Initalize player who joins as spectator 
-foreach(Player in Spectators) { 
-  if(!Player::isInitialized(Player)) { 
-    Obstacle::NewPlayer(Player); 
-  } 
-} 
 
 API::Loop();
 
 if (Now > EndTime) {
 	Message::SendBigMessage(_("Time limit reached"),	2000, 3, CUIConfig::EUISound::Silence, 0);
-	MB_Private_StopMatch();
+	MB_StopMatch();
 }
 
 foreach(Event in UIManager.PendingEvents) {
@@ -310,8 +310,8 @@ if (PrevPvPWeapons != S_PvPWeapons) {
 	UsePvPWeapons = S_PvPWeapons;
 }
 
-if (G_LastUpdate + 1000 < Now) {
-	G_LastUpdate = Now;
+if (LastUpdate + 1000 < Now) {
+	LastUpdate = Now;
 	
 	if(PrevRecordsWidgetTitle != S_RecordsWidgetTitle) {
 		PrevRecordsWidgetTitle = S_RecordsWidgetTitle;
@@ -324,7 +324,7 @@ if (G_LastUpdate + 1000 < Now) {
 ***
 
 
-***MB_Private_EndMap***
+***Match_EndMap***
 ***
 Items::Destroy();
 EndTime = -1;
@@ -339,7 +339,7 @@ if (BestPlayerScore != Null) {
 }
 ***
 
-***MB_Private_BeforeCloseLadder***
+***Match_BeforeCloseLadder***
 ***
 declare Unranked = CSmScore[];
 
@@ -361,12 +361,12 @@ foreach(Score in Unranked) {
 }
 ***
 
-***MB_Private_AfterCloseLadder***
+***Match_AfterCloseLadder***
 ***
 DoNothing();
 ***
 
-***MB_Private_EndServer***
+***Match_EndServer***
 ***
 SpawnScreen::DestroyRules();
 SpawnScreen::DestroyMapInfo();
