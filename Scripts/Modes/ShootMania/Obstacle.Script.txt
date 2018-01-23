@@ -25,6 +25,7 @@
 #Include "Libs/smokegun/RecordsUI.Script.txt" as RecordsUI
 #Include "Libs/smokegun/Items.Script.txt" as Items
 #Include "Libs/smokegun/ObstacleRecords.Script.txt" as API
+#Include "Libs/smokegun/Weapons.Script.txt" as Weapons
 
 #Include "Libs/smokegun/CPTimes.Script.txt" as CPTimes
 
@@ -269,6 +270,14 @@ foreach (Player in Players) {
 		}
 		
 		case CSmPlayer::ESpawnStatus::Spawned: {
+			declare PlayerHasRespawned for Player = False;
+			if(PlayerHasRespawned) {
+				if(S_FullAmmoSpawn) {
+					Weapons::FillUpPlayerAmmo(Player);
+				}
+			}
+		
+		
 			// Manage item effects
 			declare ItemBuff = Player::getBuffTimes(Player);
 			foreach (Name => Time in ItemBuff) {

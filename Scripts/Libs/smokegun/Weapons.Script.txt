@@ -88,9 +88,13 @@ Void ApplyWeaponForCheckpointType(CSmPlayer _Player, Integer _Type) {
 }
 
 Void FillUpPlayerAmmo(CSmPlayer _Player) {
-	declare Real AmmoItemBuffDuration for _Player;
-	declare Real AmmoItemBuffAmount for _Player;				
-	AmmoItemBuffDuration = 0.1;
-	AmmoItemBuffAmount = 10.;
-	Player::setBuffTime(_Player, "Obstacle\\Ammo.Item.gbx", Now + 3570);
+	if (_Player == Null || _Player.SpawnStatus != CSmPlayer::ESpawnStatus::Spawned) {
+		declare PlayerHasRespawned for _Player = False;
+		PlayerHasRespawned = True;
+	} else {
+		SetPlayerAmmo(_Player, CSmMode::EWeapon::Rocket, 10);
+		SetPlayerAmmo(_Player, CSmMode::EWeapon::Laser, 10);
+		SetPlayerAmmo(_Player, CSmMode::EWeapon::Nucleus, 10);
+		SetPlayerAmmo(_Player, CSmMode::EWeapon::Arrow, 10);
+	}
 }

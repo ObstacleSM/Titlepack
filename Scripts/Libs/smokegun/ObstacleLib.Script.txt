@@ -403,12 +403,9 @@ Void RespawnPlayer(CSmPlayer _Player, Boolean _forceRestart) {
 
 	Player::clearBuffTimes(_Player);
 	
-	// TODO: Make it works with full restart too
-	/*
 	if (G_FullAmmoSpawn) {
 		Weapons::FillUpPlayerAmmo(_Player);
 	}
-	*/
 }
 
 /**
@@ -501,7 +498,7 @@ Void JumpToCheckpoint(CSmPlayer _Player, Integer _Target) {
 	
 	// TODO: Below is copy pasted in common behaviour after respawn
 	Player::clearBuffTimes(_Player);
-	// TODO: Make it works with full restart too
+	
 	if (G_FullAmmoSpawn) {
 		Weapons::FillUpPlayerAmmo(_Player);
 	}
