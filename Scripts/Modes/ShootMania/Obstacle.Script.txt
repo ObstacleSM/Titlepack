@@ -1,4 +1,3 @@
-//#Extends "Modes/ShootMania/Base/ModeShootmania.Script.txt"
 #Extends "Modes/ShootMania/Base/CustomBase.Script.txt"
 
 #Const CompatibleMapTypes		"ObstacleArena,ObstacleTitleArena,TimeAttackArena"
