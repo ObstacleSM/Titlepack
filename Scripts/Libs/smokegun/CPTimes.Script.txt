@@ -267,7 +267,7 @@ Void UpdatePlayer(CSmPlayer _Player) {
 
 		if(rank > 5) return;
 	
-		if(Net_CPTimes_RecordsName.count < 6) {
+		if(Net_CPTimes_RecordsName[Idx].count < 6) {
 			// Add the player's time at the end
 			Net_CPTimes_RecordsName[Idx].add(_Player.User.Name);
 			Net_CPTimes_RecordsTime[Idx].add(Time);
