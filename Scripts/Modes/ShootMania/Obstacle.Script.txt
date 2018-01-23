@@ -1,4 +1,5 @@
-#Extends "Modes/ShootMania/Base/ModeShootmania.Script.txt"
+//#Extends "Modes/ShootMania/Base/ModeShootmania.Script.txt"
+#Extends "Modes/ShootMania/Base/CustomBase.Script.txt"
 
 #Const CompatibleMapTypes		"ObstacleArena,ObstacleTitleArena,TimeAttackArena"
 #Const	Version							"1.2"
@@ -53,16 +54,15 @@
 #Const Description _("Finish map as fast as possible !")
 #Const C_DefaultTimeLimit 30
 
-***Match_LogVersions***
+***MB_Private_LogVersions***
 ***
 Log::RegisterScript(ScriptName, Version);
 ***
 
-***Match_Settings***
+***MB_Private_Settings***
 ***
 MB_Settings_UseDefaultHud = False;
 MB_Settings_UseDefaultTimer = False;
-MB_Private_UseMatchmaking = False;
 
 UsePvPCollisions = False;
 UseClans = False;
@@ -70,7 +70,7 @@ UseSameWallJump = True;
 UsePvPWeapons = S_PvPWeapons;
 ***
 
-***Match_Rules***
+***MB_Private_Rules***
 ***
 ModeInfo::SetName("Obstacle");
 ModeInfo::SetType(ModeInfo::Type_FreeForAll());
@@ -101,7 +101,7 @@ ModeInfo::SetRules(ModeRules);
 ModeInfo::SetStatusMessage(_("Finish the map as fast as possible."));
 ***
 
-***Match_LoadHud***
+***MB_Private_LoadHud***
 ***
 Hud_Load(C_HudModulePath);
 if (Hud != Null && Hud.ScoresTable != Null) {
@@ -118,7 +118,7 @@ if (Hud != Null && Hud.ScoresTable != Null) {
 }
 ***
 
-***Match_SpawnScreen***
+***MB_Private_SpawnScreen***
 ***
 SpawnScreen::CreateScores("Score.Points");
 ***
@@ -128,7 +128,7 @@ SpawnScreen::CreateScores("Score.Points");
 declare Integer G_LastUpdate = 0;
 ***
 
-***Match_StartServer***
+***MB_Private_StartServer***
 ***
 +++LoadHud+++
 SM::SetupDefaultVisibility();
@@ -140,7 +140,7 @@ CreateUI();
 API::Init(S_RecordsPerTick, S_RecordsTickDelay);
 ***
 
-***Match_InitMap***
+***MB_Private_InitMap***
 ***
 declare Integer PrevTimeLimit = -1;
 declare Boolean PrevPvPWeapons = S_PvPWeapons;
@@ -148,12 +148,12 @@ declare Text PrevRecordsWidgetTitle = S_RecordsWidgetTitle;
 declare LastUpdate = -1;
 ***
 
-***Match_StartMap***
+***MB_Private_StartMap***
 ***
 // map is invalid
 if(!Obstacle::PrepareMap())
 {
-	MB_StopMap();
+	MB_Private_StopMap();
 }
 
 API::StartMap(S_RecordsPerTick, S_RecordsTickDelay);
@@ -177,7 +177,7 @@ if (S_TimeLimit > 0) {
 }
 ***
 
-***Match_PlayLoop***
+***MB_Private_PlayLoop***
 ***
 
 
@@ -185,7 +185,7 @@ API::Loop();
 
 if (Now > EndTime) {
 	Message::SendBigMessage(_("Time limit reached"),	2000, 3, CUIConfig::EUISound::Silence, 0);
-	MB_StopMatch();
+	MB_Private_StopMatch();
 }
 
 foreach(Event in UIManager.PendingEvents) {
@@ -324,7 +324,7 @@ if (LastUpdate + 1000 < Now) {
 ***
 
 
-***Match_EndMap***
+***MB_Private_EndMap***
 ***
 Items::Destroy();
 EndTime = -1;
@@ -339,7 +339,7 @@ if (BestPlayerScore != Null) {
 }
 ***
 
-***Match_BeforeCloseLadder***
+***MB_Private_BeforeCloseLadder***
 ***
 declare Unranked = CSmScore[];
 
@@ -361,12 +361,12 @@ foreach(Score in Unranked) {
 }
 ***
 
-***Match_AfterCloseLadder***
+***MB_Private_AfterCloseLadder***
 ***
 DoNothing();
 ***
 
-***Match_EndServer***
+***MB_Private_EndServer***
 ***
 SpawnScreen::DestroyRules();
 SpawnScreen::DestroyMapInfo();
