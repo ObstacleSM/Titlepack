@@ -275,6 +275,8 @@ foreach (Player in Players) {
 				if(S_FullAmmoSpawn) {
 					Weapons::FillUpPlayerAmmo(Player);
 				}
+				
+				PlayerHasRespawned = False;
 			}
 		
 		
