@@ -31,7 +31,7 @@
 	</menu>
 	<menu_style name=""/>
 	<solo>
-		<mode name="Modes\ShootMania\ObstacleSolo.Script.txt"/>
+		<mode name="Modes\ShootMania\Obstacle.Script.txt"/>
 		<datapack name=""/>
 		<default_maprecord_type>2</default_maprecord_type>
 		<score_context>
@@ -46,7 +46,7 @@
 			<name>AscendingScore</name>
 			<maprecord_type>0</maprecord_type>
 			<medals_enabled>true</medals_enabled>
-			<compute_medals_from_maprecord>true</compute_medals_from_maprecord>
+			<compute_medals_from_maprecord>false</compute_medals_from_maprecord>
 			<author_medals_enabled>true</author_medals_enabled>
 			<skillpoints_enabled>true</skillpoints_enabled>
 		</score_context>
@@ -54,7 +54,7 @@
 			<name>DescendingScore</name>
 			<maprecord_type>1</maprecord_type>
 			<medals_enabled>true</medals_enabled>
-			<compute_medals_from_maprecord>true</compute_medals_from_maprecord>
+			<compute_medals_from_maprecord>false</compute_medals_from_maprecord>
 			<author_medals_enabled>true</author_medals_enabled>
 			<skillpoints_enabled>true</skillpoints_enabled>
 		</score_context>
@@ -62,7 +62,7 @@
 			<name>NumberOfRespawns</name>
 			<maprecord_type>3</maprecord_type>
 			<medals_enabled>true</medals_enabled>
-			<compute_medals_from_maprecord>true</compute_medals_from_maprecord>
+			<compute_medals_from_maprecord>false</compute_medals_from_maprecord>
 			<author_medals_enabled>true</author_medals_enabled>
 			<skillpoints_enabled>true</skillpoints_enabled>
 		</score_context>
@@ -76,7 +76,7 @@
 		</campaign>
 	</solo>
 	<network>
-		<mode name="Modes\ShootMania\ObstacleBeta.Script.txt"/>
+		<mode name="Modes\ShootMania\Obstacle.Script.txt"/>
 		<playlist name=""/>
 	</network>
 	<splitscreen>
