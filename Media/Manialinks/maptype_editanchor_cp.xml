@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<frame>
+<stylesheet>
+	<style class="text" bgcolor="FFFF" textfont="Oswald" style="TextTitle3" focusareacolor1="0000" focusareacolor2="0000" textcolor="FFFFFFFF"/>
+	<style class="entry" focusareacolor1="595959AA" focusareacolor2="393939AA"/>
+</stylesheet>
+<frame z-index="1">
+	<label pos="0 40" size="75 10" class="text" text="Edit checkpoint" textsize="5" halign="center" valign="center2"/>
+	<label pos="77.5 42.5" z-index="0" size="5 5" text="❌" valign="center" halign="center" focusareacolor2="FF0000FF" scriptevents="1" textsize="2" focusareacolor1="0000" id="Close"/>
+	<label pos="0 -41" size="20 7" text="SAVE" halign="center" valign="center" focusareacolor1="595959AA" focusareacolor2="393939AA" scriptevents="1" textfont="Oswald" textcolor="FFFFFFFF"/>
+	<frame pos="0 40">
+		<label id="Enable" pos="-10 -8.5" size="20 5" text="enable" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
+		<label id="Disable" pos="10 -8.5" size="20 5" text="disable" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
+		<quad id="Selector" pos="-20 -6" size="20 5" bgcolor="393939AA"/>
+		<quad pos="0 -5.5" size="41 6" bgcolor="595959AA" halign="center"/>
+	</frame>
+</frame>
+<frame id="properties" z-index="1" scale="0.75" pos="0 10">
+	<frame pos="-45 0">
+		<frame pos="0 20">
+			<label pos="0 0" size="20 5" class="text" text="Type" halign="center" textsize="3"/>
+			<label id="Checkpoint" pos="-10 -8.5" size="20 5" class="text" text="checkpoint" halign="center" valign="center" textsize="2"/>
+			<label id="Portal" pos="10 -8.5" size="20 5" class="text" text="portal" halign="center" valign="center" textsize="2"/>
+			<quad id="Selector" pos="-20 -6" size="20 5" bgcolor="393939AA"/>
+			<quad pos="0 -5.5" size="41 6" bgcolor="595959AA" halign="center"/>
+		</frame>
+		<frame pos="0 3">
+			<label pos="0 0" size="20 5" class="text" text="Order" valign="center2" halign="center" textsize="3"/>
+			<label pos="18 -3.5" size="6 3.5" class="text" text="⏶" scriptevents="1" halign="center" valign="top"/>
+			<label pos="18 -10.5" size="6 3.5" class="text" text="⏷" scriptevents="1" halign="center" valign="bottom"/>
+			<entry id="Entry_Order" pos="0 -7"size="40 7" class="entry" default="0" textfont="Oswald" halign="center" valign="center2"/>
+			<quad pos="0 -7" size="41 8" bgcolor="595959AA" halign="center" valign="center"/>
+		</frame>
+	</frame>
+	<frame pos="35">
+		<frame>
+			<label pos="0 18" z-index="1" size="75 10" class="text" text="Weapon" textsize="4" halign="center" valign="center2"/>
+			<frame pos="0 20">
+				<label id="Laser" pos="-30 -8.5" size="20 5" text="Laser" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
+				<label id="Rocket" pos="-10 -8.5" size="20 5" text="Rocket" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
+				<label id="Nucleus" pos="10 -8.5" size="20 5" text="Nucleus" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
+				<label id="Arrow" pos="30 -8.5" size="20 5" text="Arrow" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
+				<quad id="Selector" pos="-20 -6" size="20 5" bgcolor="393939AA"/>
+				<quad pos="0 -5.5" size="81 6" bgcolor="595959AA" halign="center"/>
+			</frame>
+			<frame pos="-22.5 3">
+				<label pos="0 0" size="20 5" class="text" text="Gain" valign="center2" halign="center" textsize="3"/>
+				<label pos="18 -3.5" size="6 3.5" class="text" text="⏶" scriptevents="1" halign="center" valign="top"/>
+				<label pos="18 -10.5" size="6 3.5" class="text" text="⏷" scriptevents="1" halign="center" valign="bottom"/>
+				<entry id="Entry_Weapon_Gain" pos="0 -7" size="40 7" class="entry" default="100" textfont="Oswald" halign="center" valign="center2"/>
+				<quad pos="0 -7" size="41 8" bgcolor="595959AA" halign="center" valign="center"/>
+			</frame>
+			<frame pos="22.5 3">
+				<label pos="0 0" size="20 5" class="text" text="Amount" valign="center2" halign="center" textsize="3"/>
+				<label pos="18 -3.5" size="6 3.5" class="text" text="⏶" scriptevents="1" halign="center" valign="top"/>
+				<label pos="18 -10.5" size="6 3.5" class="text" text="⏷" scriptevents="1" halign="center" valign="bottom"/>
+				<entry id="Entry_Weapon_Amount" pos="0 -7" size="40 7" class="entry" default="4" textfont="Oswald" halign="center" valign="center2"/>
+			<quad pos="0 -7" size="41 8" bgcolor="595959AA" halign="center" valign="center"/>
+			</frame>
+		</frame>
+		<frame pos="0 -33">
+			<label pos="0 18" z-index="1" size="75 10" class="text" text="Stamina" textsize="4" halign="center" valign="center2"/>
+			<frame pos="0 20">
+				<label id="Normal" pos="-20 -8.5" size="20 5" text="Normal" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
+				<label id="Custom" pos="0 -8.5" size="20 5" text="Custom" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
+				<label id="Unlimited" pos="20 -8.5" size="20 5" text="Unlimited" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
+				<quad id="Selector" pos="-30 -6" size="20 5" bgcolor="393939AA"/>
+				<quad pos="0 -5.5" size="61 6" bgcolor="595959AA" halign="center"/>
+			</frame>
+			<frame pos="-22.5 3">
+				<label pos="0 0" size="20 5" class="text" text="Gain" valign="center2" halign="center" textsize="3"/>
+				<label pos="18 -3.5" size="6 3.5" class="text" text="⏶" scriptevents="1" halign="center" valign="top"/>
+				<label pos="18 -10.5" size="6 3.5" class="text" text="⏷" scriptevents="1" halign="center" valign="bottom"/>
+				<entry id="Entry_Stamina_Gain" pos="0 -7"size="40 7" class="entry" default="100" textfont="Oswald" halign="center" valign="center2"/>
+			<quad pos="0 -7" size="41 8" bgcolor="595959AA" halign="center" valign="center"/>
+			</frame>
+			<frame pos="22.5 3">
+				<label pos="0 0" size="20 5" class="text" text="Amount" valign="center2" halign="center" textsize="3"/>
+				<label pos="18 -3.5" size="6 3.5" class="text" text="⏶" scriptevents="1" halign="center" valign="top"/>
+				<label pos="18 -10.5" size="6 3.5" class="text" text="⏷" scriptevents="1" halign="center" valign="bottom"/>
+				<entry id="Entry_Stamina_Amount" pos="0 -7"size="40 7" class="entry" default="100" textfont="Oswald" halign="center" valign="center2"/>
+				<quad pos="0 -7" size="41 8" bgcolor="595959AA" halign="center" valign="center"/>
+			</frame>
+		</frame>
+	</frame>
+</frame>
+<quad pos="-80 45" z-index="1" size="160 90" bgcolor="000000AA" scriptevents="1"/>
+</frame>

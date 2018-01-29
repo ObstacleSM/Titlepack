@@ -1,0 +1,943 @@
+/********************************************
+*	MapType for Obstacle Title Pack Maps	*
+*	Author:		steeffeen					*
+*	Contact:	mail@steeffeen.com			*
+********************************************/
+
+#Extends "MapTypes/ShootMania/MapTypeBase.Script.txt"
+
+/***************************************************
+	INCLUDES
+***************************************************/
+
+#Include "MathLib" as MathLib
+#Include "TextLib" as TextLib
+#Include "Libs/Nadeo/Anchor.Script.txt" as Anchor
+#Include "Libs/Nadeo/MapType.Script.txt" as MapType
+
+/***************************************************
+	CONSTANTS
+***************************************************/
+
+#Const	ScriptName	"ObstacleTitleArena.Script.txt"
+#Const	Version		"4.0 (2018-07-08)"
+
+/***************************************************
+	GLOBALES
+***************************************************/
+
+declare Ident		G_StartSpawnId;
+declare Ident[]		G_KnownIds;
+
+/***************************************************
+	LABELS
+***************************************************/
+
+***LogVersion***
+***
+log(ScriptName^" loaded!");
+log("Version: "^Version);
+***
+
+***StartScript***
+***
+MapType::SetVersion(2);
+
+CustomEditAnchorData = True;
+
+{
+declare metadata Text ScriptVersion for Map;
+ScriptVersion = Version;
+}
+
+declare LayerHelp <=> UILayerCreate();
+LayerHelp.ManialinkPage = GetHelpLayerManialink();
+
+declare LayerObjectives <=> UILayerCreate();
+LayerObjectives.ManialinkPage = GetObjectivesLayerManialink();
+
+InitAnchors();	
+UpdateValidability();
+***
+
+***Loop***
+***
+UpdateObjectivesLayer(LayerObjectives);
+
+foreach (Event in PendingEvents) {
+	switch (Event.Type) {
+		case CPluginEvent::Type::MapModified: {
+			UpdateAnchors();
+			UpdateValidability();
+		}
+		case CPluginEvent::Type::EditAnchor: {
+			EditAnchorData(Event.EditedAnchorDataId);
+		}
+		case CPluginEvent::Type::StartValidation: {
+			StartTestMapWithMode("Obstacle.Script.txt");
+		}
+		case CPluginEvent::Type::EditObjectives: {
+			declare Integer ShowObjectives for LayerObjectives.LocalPage;
+			ShowObjectives = Now;
+		}
+	}
+}
+***
+
+***EndScript***
+***
+UILayerDestroyAll();
+***
+
+/***************************************************
+	FUNCTIONS
+***************************************************/
+
+// Save default tag in the anchor's metadata
+Void SaveAnchorMetadata(CAnchorData _Anchor) {
+	if (_Anchor == Null) return;
+	
+	declare metadata DefaultTag for _Anchor = "";
+	DefaultTag = _Anchor.DefaultTag;
+}
+
+// Initialize the anchors
+Void InitAnchors() {
+	G_StartSpawnId = NullId;
+	G_KnownIds.clear();
+	foreach (Data in AnchorData) {
+		switch (Data.DefaultTag) {
+			case "Spawn": {
+				if (G_StartSpawnId == NullId && TextLib::SubString(Data.Tag, 0, 5) == "Spawn") {
+					G_StartSpawnId = Data.Id;
+				}
+			}
+		}
+		G_KnownIds.add(Data.Id);
+		SaveAnchorMetadata(Data);
+	}
+}
+
+// Check if the map is valid
+Void UpdateValidability() {
+	Anchor::UpdateAnchorCounts();
+	
+	// Local anchors
+	declare AnchorDataTags = Text[];
+	foreach (Data in AnchorData) {
+		AnchorDataTags.add(Data.Tag);
+	}
+	
+	// Exactly one spawn
+	declare SpawnTags = ["Spawn", "SpawnType1", "SpawnType2"];
+	declare SpawnExists = 0;
+	foreach (Tag in AnchorDataTags) {
+		if (SpawnTags.exists(Tag)) {
+			SpawnExists += 1;
+		}
+	}
+	if (SpawnExists != 1) {
+		ValidationStatus = CSmMapType::ValidationStatus::NotValidable;
+		ValidabilityRequirementsMessage = _("You must place exactly one start Spawn.");
+		return;
+	}
+	
+	// At least one goal
+	if (!Anchor::HasAtLeastOneAnchor("Goal", 0, _("You must place at least one Goal."))) return;
+	
+	// Check checkpoint order
+	declare CheckpointOrders = Integer[Integer];
+	declare CheckpointCount = 0;
+	foreach (Anchor in AnchorData) {
+		if (TextLib::SubText(Anchor.Tag, 0, 10) == "Checkpoint") {
+			CheckpointCount += 1;
+			if (Anchor.Order <= 0) {
+				ValidationStatus = CSmMapType::ValidationStatus::NotValidable;
+				ValidabilityRequirementsMessage = _("At least one Checkpoint is missing its correct Order.");
+				return;
+			}
+			if (!CheckpointOrders.existskey(Anchor.Order)) {
+				CheckpointOrders[Anchor.Order] = 1;
+			} else {
+				CheckpointOrders[Anchor.Order] += 1;
+			}
+		}
+	}
+	
+	// Update validation status
+	ValidationStatus = CSmMapType::ValidationStatus::Validated;
+}
+
+// Checks for new anchors and sets initial tags
+Void UpdateAnchors() {
+	// Check if known anchors has been deleted
+	declare Ident[] DeletedIds;
+	foreach (Id in G_KnownIds) {
+		if (!AnchorData.existskey(Id)) {
+			DeletedIds.add(Id);
+		}
+	}
+	declare Boolean Removed;
+	foreach (Id in DeletedIds) {
+		Removed = G_KnownIds.remove(Id);
+	}
+	
+	// Check if former start spawn has been deleted or modified
+	if (G_StartSpawnId != NullId) {
+		declare StartSpawnSet = False;
+		foreach (Data in AnchorData) {
+			if (Data.Id == G_StartSpawnId) {
+				if (Data.Tag == "Spawn") {
+					StartSpawnSet = True;
+				}
+				break;
+			}
+		}
+		if (!StartSpawnSet) {
+			G_StartSpawnId = NullId;
+		}
+	}
+	
+	// Assign new initial tag if necessary
+	foreach (Data in AnchorData) {
+		// Only touch new anchors
+		if (!G_KnownIds.exists(Data.Id)) {
+			switch (Data.DefaultTag) {
+				case "Spawn": {
+					if (G_StartSpawnId == NullId) {
+						G_StartSpawnId = Data.Id;
+					} else {
+						Data.Tag = "CPSpawn";
+					}
+				}
+				case "Goal": {
+					Data.Tag = "Checkpoint";
+				}
+			}
+			G_KnownIds.add(Data.Id);
+		}
+		
+		SaveAnchorMetadata(Data);
+	}
+}
+
+// Edit goal anchors
+Void EditGoalAnchor(CAnchorData _Anchor) {
+	declare Integer Finish for ManialinkPage;
+	declare Text AnchorTag for ManialinkPage;
+	declare Text AnchorOrder for ManialinkPage;
+
+	AnchorTag = _Anchor.Tag;
+	AnchorOrder = TextLib::ToText(_Anchor.Order);
+	
+	ManialinkText = """
+<manialink version="1" name="ObstacleArena_EditGoalAnchor">
+	<script><!--
+		main() {
+			declare Buttons = [
+				(Page.GetFirstChild("No-Function") as CMlLabel),
+				(Page.GetFirstChild("Portal") as CMlLabel),
+				(Page.GetFirstChild("Goal") as CMlLabel),
+				(Page.GetFirstChild("Checkpoint") as CMlLabel),
+				(Page.GetFirstChild("CheckpointType1") as CMlLabel),
+				(Page.GetFirstChild("CheckpointType2") as CMlLabel),
+				(Page.GetFirstChild("CheckpointType3") as CMlLabel)];
+			
+			declare OrderEntry <=> (Page.GetFirstChild("OrderEntry") as CMlEntry);
+			
+			declare Integer Finish for Page;
+			declare Text AnchorTag for Page;
+			declare Text AnchorOrder for Page;
+			
+			OrderEntry.Value = AnchorOrder;
+			
+			Finish = 0;	
+			while (Finish == 0) {
+				yield;
+				
+				foreach(Button in Buttons) {
+					if (AnchorTag == Button.ControlId) {
+						Button.Value = "$090"^Button.ControlId;
+					} else {
+						Button.Value = "$fff"^Button.ControlId;
+					}
+				}
+				
+				foreach (Event in PendingEvents) {
+					switch(Event.Type){
+						case CMlEvent::Type::MouseClick: {
+							switch (Event.ControlId) {
+								case "Cancel": {
+									Finish = -1;
+								}
+								default: {
+									AnchorTag = Event.ControlId;
+									switch (AnchorTag) {
+										case "Goal": {
+											AnchorOrder = ""^0;
+										}
+										default: {
+											AnchorOrder = OrderEntry.Value;
+										}
+									}
+									Finish = 1;
+								}
+							}
+						}	
+					}
+				}
+			}
+		}			
+	--></script>
+	<frame posn="120 40">
+		<quad posn="0 13 2" sizen="74 12" halign="center" valign="center2" style="Bgs1InRace" substyle="BgTitle3_5"/>
+		<label posn="0 13 3" sizen="70 12" style="TextTitle3" translate="1" textprefix="$fff" text="Edit Goal or Checkpoint"
+			halign="center" valign="center2"/>
+		
+		<quad posn="0 8 -1" sizen="70 56" halign="center" valign="top" style="Bgs1" substyle="BgWindow2"/>
+		<frame posn="0 -4">
+			<label id="No-Function" posn="0 8" scale="1.4" halign="center" style="TextButtonMedium" ScriptEvents="1"/>
+			<label id="Portal" posn="0 2" scale="1.4" halign="center" style="TextButtonMedium" ScriptEvents="1"/>
+			<label id="Goal" posn="0 -4" scale="1.4" halign="center" style="TextButtonMedium" ScriptEvents="1"/>
+			<label id="Checkpoint" posn="0 -10" scale="1.4" halign="center" style="TextButtonMedium" ScriptEvents="1"/>
+			<label id="CheckpointType1" posn="-31 -16" scale="0.8" halign="left" style="TextButtonMedium" ScriptEvents="1"/>
+			<label id="CheckpointType2" posn="33 -16" scale="0.8" halign="right" style="TextButtonMedium" ScriptEvents="1"/>
+			<label id="CheckpointType3" posn="0 -20" scale="0.8" halign="center" style="TextButtonMedium" ScriptEvents="1"/>
+			<format textcolor="55fc" textemboss="1" />
+			<label posn="-11 -27" text="Order:" translate="1" valign="center"/>
+			<entry id="OrderEntry" posn="15 -27.5" sizen="10 4.7" halign="right" valign="center" default="0" ScriptEvents="1"/>
+		</frame>
+		<label id="Cancel" text="Cancel" posn="0 -38" halign="center" style="CardButtonSmall" translate="1" ScriptEvents="1"/>
+    </frame>
+</manialink>""";
+	
+	Finish = 0;
+	while (Finish == 0) {
+		yield;
+	}
+	if (Finish < 0) return;
+	
+	_Anchor.Tag = AnchorTag;
+	_Anchor.Order = TextLib::ToInteger(AnchorOrder);
+	
+	UpdateValidability();
+}
+
+// Edit spawn anchors
+Void EditSpawnAnchor(CAnchorData _Anchor) {
+	declare Integer Finish for ManialinkPage;
+	declare Text AnchorTag for ManialinkPage;
+	declare Text AnchorOrder for ManialinkPage;
+
+	AnchorTag = _Anchor.Tag;
+	AnchorOrder = TextLib::ToText(_Anchor.Order);
+	
+	ManialinkText = """
+<manialink version="1" name="ObstacleArena_EditSpawnAnchor">
+	<script><!--
+		main() {
+			declare Buttons = [
+				(Page.GetFirstChild("No-Function") as CMlLabel),
+				(Page.GetFirstChild("CPSpawn") as CMlLabel),
+				(Page.GetFirstChild("Spawn") as CMlLabel),
+				(Page.GetFirstChild("SpawnType1") as CMlLabel),
+				(Page.GetFirstChild("SpawnType2") as CMlLabel)];
+			
+			declare OrderEntry <=> (Page.GetFirstChild("OrderEntry") as CMlEntry);
+			
+			declare Integer Finish for Page;
+			declare Text AnchorTag for Page;
+			declare Text AnchorOrder for Page;
+			
+			OrderEntry.Value = AnchorOrder;
+			
+			Finish = 0;	
+			while (Finish == 0) {
+				yield;
+				
+				foreach (Button in Buttons) {
+					if (AnchorTag == Button.ControlId) {
+						Button.Value = "$090"^Button.ControlId;
+					} else {
+						Button.Value = "$fff"^Button.ControlId;
+					}
+				}
+				
+				foreach (Event in PendingEvents) {
+					switch (Event.Type){
+						case CMlEvent::Type::MouseClick: {
+							switch (Event.ControlId) {
+								case "Cancel": {
+									Finish = -1;
+								}
+								default: {
+									AnchorTag = Event.ControlId;
+									switch (AnchorTag) {
+										case "CPSpawn": {
+											AnchorOrder = OrderEntry.Value;
+										}
+										default: {
+											AnchorOrder = ""^0;
+										}
+									}
+									Finish = 1;
+								}
+							}
+						}	
+					}
+				}
+			}
+		}			
+	--></script>
+	<frame posn="120 45">
+		<quad posn="0 13 2" sizen="74 12" halign="center" valign="center2" style="Bgs1InRace" substyle="BgTitle3_5"/>
+		<label posn="0 13 3" sizen="70 12" halign="center" valign="center2" style="TextTitle3" translate="1" textprefix="$fff" text="Edit Spawn"/>
+		
+		<quad posn="0 8 -1" sizen="70 52" halign="center" valign="top" style="Bgs1" substyle="BgWindow2"/>
+		<frame posn="0 -4">
+			<label id="No-Function" posn="0 8" scale="1.4" halign="center" style="TextButtonMedium" ScriptEvents="1"/>
+			<label id="CPSpawn" posn="0 1" scale="1.4" halign="center" style="TextButtonMedium" ScriptEvents="1"/>
+			<label id="Spawn" posn="0 -6" scale="1.4" halign="center" style="TextButtonMedium" ScriptEvents="1"/>
+			<label id="SpawnType1" posn="-5 -14" scale="0.8" halign="right" style="TextButtonMedium" ScriptEvents="1"/>
+			<label id="SpawnType2" posn="5 -14" scale="0.8" halign="left" style="TextButtonMedium" ScriptEvents="1"/>
+			<format textcolor="55fc" textemboss="1" />
+			<label posn="-11 -22" text="Order:" translate="1" valign="center"/>
+			<entry id="OrderEntry" posn="15 -22.5" sizen="10 4.7" halign="right" valign="center" default="0" ScriptEvents="1"/>
+		</frame>
+		<label id="Cancel" text="Cancel" posn="0 -34" halign="center" style="CardButtonSmall" translate="1" ScriptEvents="1"/>
+    </frame>
+</manialink>""";
+	
+	Finish = 0;
+	while (Finish == 0) {
+		yield;
+	}
+	if (Finish < 0) return;
+	
+	_Anchor.Tag = AnchorTag;
+	_Anchor.Order = TextLib::ToInteger(AnchorOrder);
+	
+	UpdateValidability();
+}
+
+// Edit ammo item anchors
+Void EditAmmoItemAnchor(CAnchorData _Anchor) {
+	declare Integer Finish for ManialinkPage;
+	declare Real Duration for ManialinkPage;
+	declare Real Amount for ManialinkPage;
+	
+	declare metadata Meta_GrantAmmoDuration for _Anchor = 0.;
+	declare metadata Meta_GrantAmmoAmount for _Anchor = 1.;
+	Duration = Meta_GrantAmmoDuration;
+	Amount = Meta_GrantAmmoAmount;
+	
+	ManialinkText = """
+<manialink version="1" name="ObstacleArena_EditAmmoItemAnchor">
+	<script><!--
+		#Include "TextLib" as TextLib
+		
+		main() {
+			declare Label_Instant <=> (Page.GetFirstChild("Label_Instant") as CMlLabel);
+			declare Label_OverTime <=> (Page.GetFirstChild("Label_OverTime") as CMlLabel);
+			
+			declare Text_Active = "$090";
+			declare Text_Instantly = _("Instantly");
+			declare Text_OverTime = _("Over Time");
+				
+			declare Frame_Duration <=> (Page.GetFirstChild("Frame_Duration") as CMlFrame);
+			declare Entry_Duration <=> (Frame_Duration.GetFirstChild("Entry_Duration") as CMlEntry);
+			declare Entry_Amount <=> (Page.GetFirstChild("Entry_Amount") as CMlEntry);
+			
+			declare Integer Finish for Page;
+			declare Real Duration for Page;
+			declare Real Amount for Page;
+			
+			declare Instant = (Duration <= 0.);
+			Entry_Duration.Value = TextLib::ToText(Duration);
+			Entry_Amount.Value = TextLib::ToText(Amount);
+			
+			Finish = 0;	
+			while (Finish == 0) {
+				yield;
+			
+				if (Instant) {
+					Label_Instant.Value = TextLib::Compose("%1%2", Text_Active, Text_Instantly);
+					Label_OverTime.Value = TextLib::Compose("%1%2", "$fff", Text_OverTime);
+				} else {
+					Label_Instant.Value = TextLib::Compose("%1%2", "$fff", Text_Instantly);
+					Label_OverTime.Value = TextLib::Compose("%1%2", Text_Active, Text_OverTime);
+				}
+				Frame_Duration.Visible = !Instant;
+				
+				foreach (Event in PendingEvents) {
+					switch (Event.Type){
+						case CMlEvent::Type::MouseClick: {
+							switch (Event.ControlId) {
+								case "Label_Okay": {
+									declare InputAmount = TextLib::ToReal(Entry_Amount.Value);
+									if (InputAmount <= 0.) {
+										Entry_Amount.Value = TextLib::ToText(Amount);
+										continue;
+									}
+									Amount = InputAmount;
+									declare InputDuration = TextLib::ToReal(Entry_Duration.Value);
+									if (InputDuration <= 0.) {
+										Instant = True;
+									}
+									if (Instant) {
+										Duration = 0.;
+									} else {
+										Duration = InputDuration;
+									}
+									Finish = 1;
+								}
+								case "Label_Cancel": {
+									Finish = -1;
+								}
+								case "Label_Instant": {
+									Instant = True;
+								}
+								case "Label_OverTime": {
+									Instant = False;
+								}
+							}
+						}	
+					}
+				}
+			}
+		}			
+	--></script>
+	<frame posn="120 45">
+		<quad posn="0 13 2" sizen="74 13" halign="center" valign="center2" style="Bgs1InRace" substyle="BgTitle3_5"/>
+		<label posn="0 13 3" sizen="70 12" style="TextTitle3" translate="1" textprefix="$fff" textsize="4" text="Edit Ammo Item"
+			halign="center" valign="center2"/>
+		
+		<quad posn="0 8 -1" sizen="70 52" halign="center" valign="top" style="Bgs1" substyle="BgWindow2"/>
+		<frame posn="0 -4">
+			<label id="Label_Instant" posn="0 6" scale="1.4" translate="1" style="TextButtonMedium" scriptevents="1"
+				halign="center" valign="center2"/>
+			<label id="Label_OverTime" posn="0 -1" scale="1.4" translate="1" style="TextButtonMedium" scriptevents="1"
+				halign="center" valign="center2"/>
+			
+			<frame id="Frame_Duration" posn="0 -9">
+				<label posn="-4 0" text="Duration:" translate="1" halign="right" valign="center2"/>
+				<entry id="Entry_Duration" posn="19 0" sizen="16 4.7" halign="right" valign="center2" scriptevents="1"/>
+				<label posn="19.6 0" text="|Seconds|s" translate="1" halign="left" valign="center2"/>
+			</frame>
+			
+			<frame id="Frame_Amount" posn="0 -16">
+				<label posn="-4 0" text="Amount:" translate="1" halign="right" valign="center2"/>
+				<entry id="Entry_Amount" posn="19 0" sizen="16 4.7" halign="right" valign="center2" scriptevents="1"/>
+			</frame>
+		</frame>
+		<label id="Label_Okay" text="Okay" posn="0 -30" style="CardButtonSmall" translate="1" scriptevents="1" halign="center" valign="center2"/>
+		<label id="Label_Cancel" text="Cancel" posn="0 -37" style="CardButtonSmall" translate="1" scriptevents="1" halign="center" valign="center2"/>
+    </frame>
+</manialink>""";
+	
+	Finish = 0;
+	while (Finish == 0) {
+		yield;
+	}
+	if (Finish < 0) return;
+	
+	Meta_GrantAmmoDuration = Duration;
+	Meta_GrantAmmoAmount = Amount;
+}
+
+// Edit offzone shield item anchors
+Void EditOffzoneShieldItemAnchor(CAnchorData _Anchor) {
+	declare Integer Finish for ManialinkPage;
+	declare Real Duration for ManialinkPage;
+	
+	declare metadata Meta_BuffDuration for _Anchor = 5.;
+	Duration = Meta_BuffDuration;
+	
+	ManialinkText = """
+<manialink version="1" name="ObstacleArena_EditOffzoneShieldItemAnchor">
+	<script><!--
+		#Include "TextLib" as TextLib
+		
+		main() {
+			declare Entry_Duration <=> (Page.GetFirstChild("Entry_Duration") as CMlEntry);
+			
+			declare Integer Finish for Page;
+			declare Real Duration for Page;
+			
+			Entry_Duration.Value = TextLib::ToText(Duration);
+			
+			Finish = 0;	
+			while (Finish == 0) {
+				yield;
+				
+				foreach (Event in PendingEvents) {
+					switch (Event.Type){
+						case CMlEvent::Type::MouseClick: {
+							switch (Event.ControlId) {
+								case "Label_Okay": {
+									declare InputDuration = TextLib::ToReal(Entry_Duration.Value);
+									if (InputDuration <= 0.) {
+										Entry_Duration.Value = TextLib::ToText(Duration);
+										continue;
+									}
+									Duration = InputDuration;
+									Finish = 1;
+								}
+								case "Label_Cancel": {
+									Finish = -1;
+								}
+							}
+						}	
+					}
+				}
+			}
+		}			
+	--></script>
+	<frame posn="120 40">
+		<quad posn="0 13 2" sizen="74 13" halign="center" valign="center2" style="Bgs1InRace" substyle="BgTitle3_5"/>
+		<label posn="0 13 3" sizen="70 12" style="TextTitle3" translate="1" textprefix="$fff" textsize="4" text="Edit Offzone Shield"
+			halign="center" valign="center2"/>
+		
+		<quad posn="0 8 -1" sizen="70 34" halign="center" valign="top" style="Bgs1" substyle="BgWindow2"/>
+		<frame posn="0 -1">
+			<label posn="-4 0" textsize="4" text="Duration:" translate="1" halign="right" valign="center2"/>
+			<entry id="Entry_Duration" posn="19 0" sizen="17 5.6" textsize="4" halign="right" valign="center2" scriptevents="1"/>
+			<label posn="19.6 0" textsize="4" text="|Seconds|s" translate="1" halign="left" valign="center2"/>
+		</frame>
+		<label id="Label_Okay" text="Okay" posn="0 -12" style="CardButtonSmall" translate="1" scriptevents="1" halign="center" valign="center2"/>
+		<label id="Label_Cancel" text="Cancel" posn="0 -19" style="CardButtonSmall" translate="1" scriptevents="1" halign="center" valign="center2"/>
+    </frame>
+</manialink>""";
+	
+	Finish = 0;
+	while (Finish == 0) {
+		yield;
+	}
+	if (Finish < 0) return;
+	
+	Meta_BuffDuration = Duration;
+}
+
+// Show the anchor editing manialink
+Void EditAnchorData(Ident _AnchorDataId) {
+	if (!AnchorData.existskey(_AnchorDataId)) return;
+	declare Anchor <=> AnchorData[_AnchorDataId];
+	
+	switch (Anchor.DefaultTag) {
+		case "Goal": {
+			EditGoalAnchor(Anchor);
+		}
+		case "Checkpoint": {
+			EditGoalAnchor(Anchor);
+		}
+		case "Spawn": {
+			EditSpawnAnchor(Anchor);
+		}
+		case "Ammo": {
+			EditAmmoItemAnchor(Anchor);
+		}
+		case "OffzoneShield": {
+			EditOffzoneShieldItemAnchor(Anchor);
+		}
+		default: {
+			return;
+		}
+	}
+	
+	ManialinkText = "";
+}
+
+// Create manialink with mapping helps
+Text GetHelpLayerManialink() {
+	declare ObjectsHelp = TextLib::Compose("%1\n\n\n%2\n%3\n%4",
+		_("You can rotate Custom $oBlocks$o with the Arrow Keys and +/- on the Numpad."),
+		_("The OffZone $oItem$o can be picked up to be able to walk through OffZone for 5 seconds."),
+		_("The Items don't disappear, so they can be picked up as often as the player wants."),
+		_("Placing more than 200 Items on your Map will make it unplayable. Don't do that!"));
+	declare SpawnsHelp = TextLib::Compose("%1\n%2\n\n%3\n\n%4",
+		_("You must place $<$f00exactly one $oSpawn$> and you can place $<$00fas much $oCPSpawns$o as you want$>."),
+		_("CPSpawns should be placed close to their Checkpoints."),
+		"$<$0ddSpecial Spawns:$>\n$<$066SpawnType1:$> Nucleus\n$<$066SpawnType2:$> No Ammunition",
+		_("You are able to assign an Order to CPSpawns so that Players spawn at these specific ones after reaching a Checkpoint with the same Order."));
+	declare PolesHelp = TextLib::Compose("%1\n\n%2\n\n%3\n\n%4",
+		_("You have to place $<$f00at least one $oGoal$> and $<$00fas much $oCheckpoints$o as you want$>."),
+		"$<$0ddSpecial Checkpoints:$>\n$<$066CheckpointType1:$> No Ammunition\n$<$066CheckpointType2:$> Endless Ammunition\n$<$066CheckpointType3:$> Portal Checkpoint\n(Standard Checkpoints will reset the Ammunition to default.)",
+		_("Portals don't have to be reached and teleport Players to the next Spawn."),
+		_("You have to set the Order of each Checkpoint.\nThere can be multiple Poles (and ways) for a Checkpoint though."));
+	declare ValidationHelp = TextLib::Compose("%1\n%2\n\n%3",
+		_("You can test-run your Map by clicking on the Flag in the bottom right."),
+		_("ShootMania doesn't support validating a Map by running it so please make sure that your Map is playable."),
+		_("You can enter Medal Times via the Tools Menu. $i(Set Map Objectives)$i"));
+	
+	declare Manialink = """
+<manialink version="1" name="ObstacleArena_HelpLayer">
+	<script><!--
+		#Include "TextLib" as TextLib
+		
+		#Const	C_Pages	[ _("Objects and Items"), _("Spawns"), _("Goals and Checkpoints"), _("Validation") ]
+		
+		declare Integer	G_CurrentPage;
+		
+		Void UpdateHelp(Integer _Add) {
+			G_CurrentPage += _Add;
+			while (!C_Pages.existskey(G_CurrentPage)) {
+				if (G_CurrentPage < 0) {
+					G_CurrentPage += C_Pages.count;
+				} else {
+					G_CurrentPage -= C_Pages.count;
+				}
+			}
+			declare Label_Header <=> (Page.GetFirstChild("Label_Header") as CMlLabel);
+			Label_Header.Value = C_Pages[G_CurrentPage];
+			for (Index, 0, C_Pages.count-1) {
+				declare Frame_Page <=> (Page.GetFirstChild("Frame_Page"^Index) as CMlFrame);
+				Frame_Page.Visible = (Index == G_CurrentPage);
+			}
+		}
+		
+		main() {
+			declare Frame_Help <=> (Page.GetFirstChild("Frame_Help") as CMlFrame);
+			declare Label_Help <=> (Page.GetFirstChild("Label_Help") as CMlLabel);
+			
+			Label_Help.Value = _("Click here to show the Help.");
+			
+			G_CurrentPage = 0;
+			UpdateHelp(0);
+			
+			while (True) {
+				yield;
+				
+				foreach (Event in PendingEvents) {
+					switch (Event.Type) {
+						case CMlEvent::Type::MouseClick: {
+							switch (Event.ControlId) {
+								case "Label_Help": {
+									Frame_Help.Visible = !Frame_Help.Visible;
+									if (Frame_Help.Visible) {
+										Label_Help.Value = _("Click here to hide the Help.");
+										declare Integer HideObjectives for Page;
+										HideObjectives = Now;
+									} else {
+										Label_Help.Value = _("Click here to show the Help.");
+									}
+								}
+								case "Quad_Prev": {
+									UpdateHelp(-1);
+								}
+								case "Quad_Next": {
+									UpdateHelp(1);
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	--></script>
+	<label id="Label_Help" posn="-159 69" translate="1" style="TextCardSmall" scriptevents="1" halign="left" valign="center2"/>
+	<frame id="Frame_Help" posn="-10 60" hidden="1">
+		<quad sizen="88 15" style="Bgs1InRace" substyle="BgTitle3_5" halign="center" valign="center2"/>
+		<quad posn="0 -10 -1" sizen="173 74" style="Bgs1" substyle="BgWindow3" halign="center" valign="top"/>
+		<quad id="Quad_Prev" posn="-47 0" sizen="10 10" style="Icons64x64_1" substyle="ArrowPrev" scriptevents="1" halign="center" valign="center2"/>
+		<quad id="Quad_Next" posn="47 0" sizen="10 10" style="Icons64x64_1" substyle="ArrowNext" scriptevents="1" halign="center" valign="center2"/>
+		<label id="Label_Header" textsize="4" style="TextTitle1" translate="1" halign="center" valign="center2"/>
+		
+		<frame id="Frame_Page0" hidden="1">
+			<label posn="0 -15" sizen="160 0" textsize="3" autonewline="1" translate="1" text="{{{ObjectsHelp}}}" halign="center" valign="top"/>
+		</frame>
+		<frame id="Frame_Page1" hidden="1">
+			<label posn="0 -15" sizen="160 0" textsize="3" autonewline="1" translate="1" text="{{{SpawnsHelp}}}" halign="center" valign="top"/>
+		</frame>
+		<frame id="Frame_Page2" hidden="1">
+			<label posn="0 -15" sizen="165 0" textsize="3" autonewline="1" translate="1" text="{{{PolesHelp}}}" halign="center" valign="top"/>
+		</frame>
+		<frame id="Frame_Page3" hidden="1">
+			<label posn="0 -15" sizen="160 0" textsize="3" autonewline="1" translate="1" text="{{{ValidationHelp}}}" halign="center" valign="top"/>
+		</frame>
+	</frame>
+</manialink>""";
+	return Manialink;
+}
+
+// Create manialink for editing map objectives
+Text GetObjectivesLayerManialink() {
+	declare metadata ObjectiveAuthor for Map = 0;
+	declare metadata ObjectiveGold for Map = 0;
+	declare metadata ObjectiveSilver for Map = 0;
+	declare metadata ObjectiveBronze for Map = 0;
+	
+	declare Entries = [	"Author"	=> ObjectiveAuthor,
+						"Gold"		=> ObjectiveGold,
+						"Silver"	=> ObjectiveSilver,
+						"Bronze"	=> ObjectiveBronze];
+	declare Integer[Text] Minutes;
+	declare Real[Text] Seconds;
+	
+	foreach (Key => Value in Entries) {
+		Minutes[Key] = Value / 60000;
+		if (Minutes[Key] < 0) Minutes[Key] = 0;
+		Seconds[Key] = (Value - Minutes[Key] * 60000.) / 1000.;
+	}
+	
+	declare Manialink = """
+<manialink version="1" name="ObstacleArena_Objectives">
+	<script><!--
+		#Include "MathLib" as MathLib
+		#Include "TextLib" as TextLib
+		
+		#Const	C_TimeTypes		["Author", "Gold", "Silver", "Bronze"]
+		
+		declare CMlEntry[Text]	G_Entries_Min;
+		declare CMlEntry[Text]	G_Entries_Sec;
+		
+		Boolean CheckValues() {
+			declare Integer[Text] Times;
+			foreach (TimeType in C_TimeTypes) {
+				declare Minutes = TextLib::ToInteger(G_Entries_Min[TimeType].Value);
+				if (Minutes < 0) return False;
+				declare Seconds = TextLib::ToReal(G_Entries_Sec[TimeType].Value);
+				if (Seconds < 0) return False;
+				Times[TimeType] = Minutes * 60000 + MathLib::NearestInteger(Seconds * 1000.);
+			}
+			for (Index, 0, C_TimeTypes.count-1) {
+				if (!C_TimeTypes.existskey(Index-1)) {
+					if (Times[C_TimeTypes[Index]] <= 0) return False;
+				} else {
+					if (Times[C_TimeTypes[Index]] <= Times[C_TimeTypes[Index-1]]) return False;
+				}
+			}
+			
+			declare Integer AuthorTime for Page;
+			declare Integer GoldTime for Page;
+			declare Integer SilverTime for Page;
+			declare Integer BronzeTime for Page;
+			AuthorTime = Times[C_TimeTypes[0]];
+			GoldTime = Times[C_TimeTypes[1]];
+			SilverTime = Times[C_TimeTypes[2]];
+			BronzeTime = Times[C_TimeTypes[3]];
+			
+			return True;
+		}
+		
+		main () {
+			declare Frame_Objectives <=> (Page.GetFirstChild("Frame_Objectives") as CMlFrame);
+			declare Label_Okay <=> (Frame_Objectives.GetFirstChild("Label_Okay") as CMlLabel);
+			foreach (TimeType in C_TimeTypes) {
+				G_Entries_Min[TimeType] <=> (Frame_Objectives.GetFirstChild("Entry_"^TimeType^"_Min") as CMlEntry);
+				G_Entries_Sec[TimeType] <=> (Frame_Objectives.GetFirstChild("Entry_"^TimeType^"_Sec") as CMlEntry);
+			}
+			
+			declare Integer ShowObjectives for Page;
+			declare LastShowObjectives = -1;
+			ShowObjectives = LastShowObjectives;
+			
+			declare Integer HideObjectives for Page;
+			declare LastHideObjectives = -1;
+			HideObjectives = LastHideObjectives;
+			
+			declare KeepChecking = False;
+			log(This);
+			
+			while (True) {
+				yield;
+				
+				if (LastShowObjectives != ShowObjectives) {
+					LastShowObjectives = ShowObjectives;
+					Frame_Objectives.Visible = True;
+				}
+				if (LastHideObjectives != HideObjectives) {
+					LastHideObjectives = HideObjectives;
+					Frame_Objectives.Visible = False;
+				}
+				
+				foreach (Event in PendingEvents) {
+					switch (Event.Type) {
+						case CMlEvent::Type::MouseClick: {
+							switch (Event.ControlId) {
+								case "Label_Okay": {
+									declare Okay = CheckValues();
+									if (Okay) {
+										declare Integer ObjectivesUpdated for Page;
+										ObjectivesUpdated = Now;
+										Frame_Objectives.Visible = False;
+									} else {
+										KeepChecking = True;
+										Label_Okay.Value = TextLib::Compose("$f00%1", _("Invalid Values"));
+									}
+								}
+								case "Label_Cancel": {
+									Frame_Objectives.Visible = False;
+								}
+							}
+						}
+					}
+				}
+				
+				if (!Frame_Objectives.Visible || !KeepChecking) continue;
+				declare Okay = CheckValues();
+				if (Okay) {
+					KeepChecking = False;
+					Label_Okay.Value = _("Okay");
+				}
+			}
+		}
+	--></script>
+	<frame id="Frame_Objectives" posn="0 60" hidden="1">
+		<quad sizen="90 14 -1" style="Bgs1InRace" substyle="BgTitle3_5" halign="center" valign="center2"/>
+		<quad posn="0 -10 -1" sizen="140 72" style="Bgs1InRace" substyle="BgWindow2" halign="center" valign="top"/>
+		<label style="TextTitle1" textsize="6" translate="1" text="Map Objectives" halign="center" valign="center2"/>
+		<format textcolor="000"/>""";
+	declare Y = -23.;
+	foreach (Key => Value in Entries) {
+		Manialink ^= """
+			<frame posn="0 {{{Y}}}">
+				<label posn="-52 0" translate="1" text="{{{Key}}}:" textsize="4" halign="left" valign="center2"/>
+				<entry id="Entry_{{{Key}}}_Min" posn="16 0" sizen="20 6" default="{{{Minutes[Key]}}}" halign="right" valign="center2"/>
+				<label posn="18 0" text="min" textsize="4" halign="left" valign="center2"/>
+				<entry id="Entry_{{{Key}}}_Sec" posn="49 0" sizen="15 6" default="{{{Seconds[Key]}}}" halign="right" valign="center2"/>
+				<label posn="51 0" text="sec" textsize="4" halign="left" valign="center2"/>
+			</frame>""";
+		Y -= 12.;
+	}
+	Manialink ^= """
+		<label id="Label_Okay" posn="-10 -74 1" style="CardButtonMedium" translate="1" text="Okay" scriptevents="1" halign="right" valign="center2"/>
+		<label id="Label_Cancel" posn="10 -74 1" style="CardButtonMedium" translate="1" text="Cancel" scriptevents="1" halign="left" valign="center2"/>
+	</frame>
+</manialink>""";
+	return Manialink;
+}
+
+// Save edited medal times
+Void UpdateObjectivesLayer(CUILayer _Layer) {
+	if (_Layer == Null || _Layer.LocalPage == Null) return;
+	
+	declare ObjectivesUpdated for _Layer.LocalPage = -1;
+	declare LastUpdated for _Layer.LocalPage = -1;
+	if (LastUpdated == ObjectivesUpdated) return;
+	LastUpdated = ObjectivesUpdated;
+	
+	declare AuthorTime for _Layer.LocalPage = 0;
+	declare GoldTime for _Layer.LocalPage = 0;
+	declare SilverTime for _Layer.LocalPage = 0;
+	declare BronzeTime for _Layer.LocalPage = 0;
+	
+	if (BronzeTime <= SilverTime || SilverTime <= GoldTime || GoldTime <= AuthorTime || AuthorTime <= 0) {
+		log("Error: Invalid Map Objectives!");
+		return;
+	}
+	
+	declare metadata Integer ObjectiveAuthor for Map;
+	declare metadata Integer ObjectiveGold for Map;
+	declare metadata Integer ObjectiveSilver for Map;
+	declare metadata Integer ObjectiveBronze for Map;
+
+	ObjectiveAuthor	= AuthorTime;
+	ObjectiveGold	= GoldTime;
+	ObjectiveSilver	= SilverTime;
+	ObjectiveBronze	= BronzeTime;
+	
+	Map.ObjectiveTextAuthor	= TextLib::TimeToText(ObjectiveAuthor);
+	Map.ObjectiveTextGold	= TextLib::TimeToText(ObjectiveGold);
+	Map.ObjectiveTextSilver	= TextLib::TimeToText(ObjectiveSilver);
+	Map.ObjectiveTextBronze	= TextLib::TimeToText(ObjectiveBronze);
+}

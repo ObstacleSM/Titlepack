@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<manialink version="3">
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+	<manialink version="3">
+		<stylesheet>
+			<style class="text" bgcolor="FFFF" textfont="Oswald" style="TextTitle3" focusareacolor1="0000" focusareacolor2="0000" textcolor="FFFFFFFF"/>
+			<style class="entry" focusareacolor1="595959AA" focusareacolor2="393939AA"/>
+		</stylesheet>
+		<frame z-index="1">
+			<label pos="0 40" size="75 10" class="text" text="Edit goal" textsize="5" halign="center"  valign="center2"/>
+			<label pos="77.5 42.5" z-index="0" size="5 5" text="❌" valign="center" halign="center" focusareacolor2="FF0000FF" scriptevents="1" textsize="2" focusareacolor1="0000" id="Close"/>
+			<label pos="0 -41" size="20 7" text="SAVE" halign="center" valign="center" focusareacolor1="595959AA" focusareacolor2="393939AA" scriptevents="1" textfont="Oswald" textcolor="FFFFFFFF"/>
+			<frame pos="0 40">
+				<label  id="Enable" pos="-10 -8.5" size="20 5" text="enable" halign="center" valign="center" textsize="2" class="text"  scriptevents="1"/>
+				<label id="Disable" pos="10 -8.5"  size="20 5" text="disable" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
+				<quad pos="-20 -6" id="Selector" size="20 5" bgcolor="393939AA"/>
+				<quad pos="0 -5.5" size="41 6" bgcolor="595959AA" halign="center"/>
+			</frame>
+		</frame>
+		<frame id="properties" z-index="1" scale="0.75" pos="0 10">
+		</frame>
+		<quad pos="-80 45" z-index="1" size="160 90" bgcolor="000000AA" scriptevents="1"/>
+	</manialink>
+</manialink>
