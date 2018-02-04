@@ -270,6 +270,13 @@ foreach (Player in Players) {
 		}
 		
 		case CSmPlayer::ESpawnStatus::Spawned: {
+			// Unlimited stam
+			declare StaminaUnlimited for Player = False;
+			if(StaminaUnlimited && Player.Stamina < 7500) {
+				Player.Stamina = 10800;
+			}
+		
+			// Effects on respawn
 			declare PlayerHasRespawned for Player = False;
 			if(PlayerHasRespawned) {
 				if(S_FullAmmoSpawn) {
@@ -277,8 +284,7 @@ foreach (Player in Players) {
 				}
 				
 				PlayerHasRespawned = False;
-			}
-		
+			}		
 		
 			// Manage item effects
 			declare ItemBuff = Player::getBuffTimes(Player);

@@ -291,6 +291,34 @@ Void Private_UpdatePlayerRsCounter(CSmPlayer _Player) {
 /////////////////////   RESPAWN LOGIC   /////////////////////////
 /////////////////////////////////////////////////////////////////
 
+Void Private_RestartEffect(CSmPlayer _Player, Ident _SpawnId) {
+	declare MapVersion = Map::GetMapTypeVersion();
+	declare Spawn <=> MapLandmarks[_SpawnId];
+			
+	if(MapVersion <= 2) {
+		declare WeaponType = Tools::GetWeaponTypeFromSpawn(Spawn);
+		Weapons::ApplyWeaponForCheckpointType(_Player, WeaponType);
+	} else {
+    declare metadata Meta_Weapon for Spawn = 1;
+    declare metadata Meta_Weapon_Gain for Spawn = 1.0;
+    declare metadata Meta_Weapon_Amount for Spawn = 4;
+    declare metadata Meta_Stamina for Spawn = 0;
+    declare metadata Meta_Stamina_Gain for Spawn = 1.0;
+    declare metadata Meta_Stamina_Amount for Spawn = 1.0;
+
+		Weapons::SetWeapon(_Player, Meta_Weapon, Meta_Weapon_Gain, Meta_Weapon_Amount);
+		_Player.StaminaMax = Meta_Stamina_Amount;
+		_Player.StaminaGain = Meta_Stamina_Gain;
+		
+		declare StaminaUnlimited for _Player = False;
+		StaminaUnlimited = Meta_Stamina == 2;
+		if(StaminaUnlimited) {
+			_Player.StaminaMax = 3.;
+			_Player.StaminaGain = 1.;
+		}
+	}
+}
+
 /**
  * Logic to respawn a player when he already have checkpoints and doesnt want to restart from the beginning
  *
@@ -344,11 +372,10 @@ Void Private_CpRestart(	CSmPlayer _Player, Integer _Delay, Ident _LastCheckpoint
  */
 Void Private_FullRestart(CSmPlayer _Player, Integer _Delay) {
 	declare Spawn <=> MapLandmarks_PlayerSpawn[G_StartSpawnId];
-
-	declare WeaponType = Tools::GetWeaponTypeFromSpawn(Spawn);
-	Weapons::ApplyWeaponForCheckpointType(_Player, WeaponType);
-
+	
 	SM::SpawnNoLadder(_Player, 0, Spawn.PlayerSpawn, Now + _Delay);
+
+	Private_RestartEffect(_Player, Spawn.Id);
 
 	// Update values
 	Player::setStartTime(_Player, _Player.StartTime);
@@ -592,15 +619,23 @@ Void Private_CheckpointEffect(CSmPlayer _Player, Ident _CheckpointId) {
 			Weapons::ApplyWeaponForCheckpointType(_Player, 0);
 		}
 	} else {
-		declare metadata AmmoType for Checkpoint = Weapons::C_Weapon_Rocket;
-		declare metadata AmmoGain for Checkpoint = 1.0;
-		declare metadata AmmoCount for Checkpoint = 4;
-		declare metadata StaminaAmount for Checkpoint = 1.0;
-		declare metadata StaminaGain for Checkpoint = 1.0;
+		declare metadata Meta_IsPortal for Checkpoint = False;
+    declare metadata Meta_Weapon for Checkpoint = 1;
+    declare metadata Meta_Weapon_Gain for Checkpoint = 1.0;
+    declare metadata Meta_Weapon_Amount for Checkpoint = 4;
+    declare metadata Meta_Stamina for Checkpoint = 0;
+    declare metadata Meta_Stamina_Gain for Checkpoint = 1.0;
+    declare metadata Meta_Stamina_Amount for Checkpoint = 1.0;
+
+		Weapons::SetWeapon(_Player, Meta_Weapon, Meta_Weapon_Gain, Meta_Weapon_Amount);
+		_Player.StaminaMax = Meta_Stamina_Amount;
+		_Player.StaminaGain = Meta_Stamina_Gain;
 		
-		Weapons::SetWeapon(_Player, AmmoType, AmmoGain, AmmoCount);
-		_Player.StaminaMax = StaminaAmount;
-		_Player.StaminaGain = StaminaGain;
+		declare StaminaUnlimited for _Player = False;
+		StaminaUnlimited = Meta_Stamina == 2;
+		
+		if(Meta_IsPortal)
+			Private_UsePortal(_Player, _CheckpointId);
 	}
 }
 
@@ -620,7 +655,7 @@ Void Private_HandleCheckpoint(CSmPlayer _Player, Ident _CheckpointId) {
 	Player::setLastCPTimes(_Player, _CheckpointId, time);
 	
 	// lazy fix might not fix cp progress completely
-	if(Player::usedJump(_Player))
+	if(Player::usedJump(_Player) && Checkpoint.Order != 0)
 		Player::setCpProgress(_Player, Checkpoint.Order);
 	else
 		Player::setCpProgress(_Player, LastCPTimes.count + 1);
@@ -655,47 +690,32 @@ Void Private_HandleCheckpoint(CSmPlayer _Player, Ident _CheckpointId) {
  */
 Void HandleCapture(CSmPlayer _Player) {
 	declare Landmark <=> _Player.CapturedLandmark;
+	declare MapVersion = Map::GetMapTypeVersion();
 	declare CpProgress = Player::getCpProgress(_Player);
 	declare HasJumped = Player::usedJump(_Player);
 	declare MessageToShow = "";
-
-	switch (Landmark.Tag) {
 	
-		case "Goal": {
-			if (HasJumped) {
-				MessageToShow =  _("You used a Jump! Your Time is invalid.");
-			} else {
-				declare CpMissing = G_CheckpointsTotal - CpProgress;
-				if (CpMissing == 0) {
-					Private_HandleFinish(_Player, Landmark.Id);
-				} else {
-					MessageToShow = "Missing "^CpMissing^" checkpoint(s)!";					
-				}
+	if(!Tools::IsEnabled(Landmark)) {
+			MessageToShow = _("Inactive Pole!");		
+	} else if(Tools::IsGoal(Landmark)) {
+		if (HasJumped) {
+			MessageToShow =  _("You used a Jump! Your Time is invalid.");
+		} else {				
+			declare CpMissing = G_CheckpointsTotal - CpProgress;					
+			if (CpMissing == 0)
+				Private_HandleFinish(_Player, Landmark.Id);
+			else
+				MessageToShow = "Missing "^CpMissing^" checkpoint(s)!";
+		}
+	} else if(Tools::IsPortal(Landmark)) {
+				Private_UsePortal(_Player, Landmark.Id);
+	} else if(Tools::IsCheckpoint(Landmark)) {
+		// Take any checkpoints if player jumped
+		if(HasJumped) {
+			if(Landmark.Order != CpProgress) {
+				Private_HandleCheckpoint(_Player, Landmark.Id);
 			}
-		}
-		
-		case "No-Function": {
-			MessageToShow = _("Inactive Pole!");
-		}
-		
-		case "Portal": {
-			Private_UsePortal(_Player, Landmark.Id);
-		}
-		
-		// case "Checkpoint" is not possible here
-		// because tags are "CheckpointTypeXX" or just "Checkpoint"
-		default: {
-			if(!Tools::IsCheckpoint(Landmark))
-				return;
-		
-			// Take any checkpoints if player jumped
-			if(HasJumped) {
-				if(Landmark.Order != CpProgress) {
-					Private_HandleCheckpoint(_Player, Landmark.Id);
-				}
-				return;
-			}
-			
+		} else {
 			declare LastCpTimes = Player::getLastCPTimes(_Player);
 			declare LastCheckpoint = Player::getLastCheckpoint(_Player);
 			
@@ -709,10 +729,9 @@ Void HandleCapture(CSmPlayer _Player) {
 			
 			if(isNextCp)
 				Private_HandleCheckpoint(_Player, Landmark.Id);
-			else if (Landmark.Id != LastCheckpoint)
+			else if(Landmark.Id != LastCheckpoint)
 				MessageToShow = "Wrong checkpoint !";
 		}
-		
 	}
 
 	// TODO: Change this to a separate function (in Tools or Player?)

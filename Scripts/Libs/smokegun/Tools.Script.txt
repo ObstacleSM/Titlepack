@@ -7,6 +7,7 @@
 
 #Include "TextLib" as TextLib
 #Include "MathLib" as MathLib
+#Include "Libs/Nadeo/ShootMania/Map.Script.txt" as Map
 
 /***************************************
 	CONSTANTS
@@ -25,6 +26,45 @@ Text GetPosn(Vec3 _Posn) {
 
 Text GetPosn(Vec2 _Posn) {
 	return _Posn.X^" "^_Posn.Y;
+}
+
+Boolean IsGoal(CSmMapLandmark _Landmark) {
+	return _Landmark.Tag == "Goal";
+}
+
+Boolean IsEnabled(CSmMapLandmark _Landmark) {
+	if(Map::GetMapTypeVersion() <= 2)
+		return _Landmark.Tag != "No-Function";
+	declare metadata Meta_IsEnabled for _Landmark = True;
+	return Meta_IsEnabled;
+}
+
+Boolean IsCheckpoint(CSmMapLandmark _Landmark) {
+	if(Map::GetMapTypeVersion() <= 2)
+		return "Checkpoint" == TextLib::SubText(_Landmark.Tag, 0, 10);
+	
+	return _Landmark.Tag == "Checkpoint";
+}
+
+Boolean IsPortal(CSmMapLandmark _Landmark) {
+	if(Map::GetMapTypeVersion() <= 2)
+		return _Landmark.Tag == "Portal" || _Landmark.Tag == "CheckpointType3";
+	declare metadata Meta_IsPortal for _Landmark = False;
+	return Meta_IsPortal;
+}
+
+Boolean IsCpSpawn(CSmMapLandmark _Landmark) {
+	if(Map::GetMapTypeVersion() <= 2)
+		return _Landmark.Tag == "CPSpawn";
+	declare metadata Meta_IsCpSpawn for _Landmark = False;
+	return Meta_IsCpSpawn;	
+}
+
+Boolean IsSpawn(CSmMapLandmark _Landmark) {
+	if(Map::GetMapTypeVersion() <= 2)
+		return TextLib::SubString(_Landmark.Tag, 0, 5) == "Spawn";
+	declare metadata Meta_IsCpSpawn for _Landmark = False;
+	return !Meta_IsCpSpawn;
 }
 
 Integer GetWeaponTypeFromSpawn(CSmMapLandmark SpawnLandmark) {
@@ -62,7 +102,7 @@ Ident GetClosestSpawn(Ident _CheckPointId) {
 	declare SpawnIds = Ident[];
 
 	foreach (Spawn in MapLandmarks_PlayerSpawn) {
-		if (Spawn.Tag == "CPSpawn" && (Checkpoint.Order == 0 || Checkpoint.Order == Spawn.Order))
+		if (IsCpSpawn(Spawn) && (Checkpoint.Order == 0 || Checkpoint.Order == Spawn.Order))
 			SpawnIds.add(Spawn.Id);
 	}
 	
@@ -72,23 +112,11 @@ Ident GetClosestSpawn(Ident _CheckPointId) {
 	// If there is no spawn for the current checkpoint
 	// Search for previous spawns
 	foreach (Spawn in MapLandmarks_PlayerSpawn) {
-		if (Spawn.Tag == "CPSpawn" && Checkpoint.Order > Spawn.Order)
+		if (IsCpSpawn(Spawn) && Checkpoint.Order > Spawn.Order)
 			SpawnIds.add(Spawn.Id);
 	}
 	
 	return Private_GetClosestSpawn(_CheckPointId, SpawnIds);
-}
-
-Boolean IsCheckpoint(CSmMapLandmark _Landmark) {
-	return "Checkpoint" == TextLib::SubText(_Landmark.Tag, 0, 10);
-}
-
-Boolean IsPortal(CSmMapLandmark _Landmark) {
-	return _Landmark.Tag == "Portal" || _Landmark.Tag == "CheckpointType3";
-}
-
-Boolean IsSpawn(CSmMapLandmark _Landmark) {
-	return TextLib::SubString(_Landmark.Tag, 0, 5) == "Spawn";
 }
 
 Integer GetPlayerRank(CSmPlayer _Player) {

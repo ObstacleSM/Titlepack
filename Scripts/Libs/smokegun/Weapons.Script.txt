@@ -16,8 +16,8 @@
 #Const	Version		"2017-07-10"
 #Const	ScriptName	"Weapons.Script.txt"
 
-#Const C_Weapon_Rocket 0
-#Const C_Weapon_Laser 1
+#Const C_Weapon_Laser 0
+#Const C_Weapon_Rocket 1
 #Const C_Weapon_Nucleus 2
 #Const C_Weapon_Arrow 3
 

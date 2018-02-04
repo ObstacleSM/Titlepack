@@ -167,7 +167,7 @@ Text Get_EditSpawn() {
         {{{Private_WeaponML()}}}
 	</frame>
 	<quad pos="-45 45" z-index="0" size="90 115" bgcolor="000000AA" scriptevents="1"/>
-</frame>   
+</frame>
     """;
 }
 
@@ -206,6 +206,7 @@ Void Unload() {
 Void Init() {
     MapType::SetVersion(3);
     CustomEditAnchorData = True;
+    ValidationStatus = CMapType::ValidationStatus::Validated;
 }
 
 Void InitBasePageVariables(CAnchorData _Anchor) {
@@ -243,7 +244,6 @@ Void InitWeaponPageVariables(CAnchorData _Anchor) {
     Stamina = Meta_Stamina;
     Stamina_Gain = Meta_Stamina_Gain;
     Stamina_Amount = Meta_Stamina_Amount;
-
 }
 
 Void SaveWeaponPageVariables(CAnchorData _Anchor) {
@@ -334,7 +334,7 @@ Void EditGoal(CAnchorData _Goal) {
 }
 
 Void EditCheckpoint(CAnchorData _Checkpoint) {
-    InitBasePageVariables(_Checkpoint);    
+    InitBasePageVariables(_Checkpoint);
 
     declare Integer Order for ManialinkPage;
     declare Boolean IsPortal for ManialinkPage;
@@ -344,7 +344,7 @@ Void EditCheckpoint(CAnchorData _Checkpoint) {
     IsPortal = Meta_IsPortal;
 
     InitWeaponPageVariables(_Checkpoint);
-   
+
     ManialinkText = """
     <manialink version="3" name="Obstacle:EditCheckpoint">
     {{{Get_EditCheckpoint()}}}
@@ -355,7 +355,7 @@ Void EditCheckpoint(CAnchorData _Checkpoint) {
         declare Boolean Enabled for Page;
         declare Boolean IsPortal for Page;
         declare Integer Order for Page;
-        
+
         declare Quad_Enabled_Selector <=> (Page.GetFirstChild("Enabled_Selector") as CMlQuad);
         declare Frame_Properties <=> (Page.GetFirstChild("properties") as CMlFrame);
         declare Quad_Type_Selector <=> (Frame_Properties.GetFirstChild("Type_Selector") as CMlQuad);
@@ -643,6 +643,10 @@ Void SaveCheckpointSettings() {
     declare Integer Order for ManialinkPage;
     Anchor.Order = Order;
 
+    declare Boolean IsPortal for ManialinkPage;
+    declare metadata Meta_IsPortal for Anchor = False;
+    Meta_IsPortal = IsPortal;
+
     SaveBasePageVariables(Anchor);
     SaveWeaponPageVariables(Anchor);
 }
@@ -652,6 +656,10 @@ Void SaveSpawnSettings() {
 
     declare Anchor <=> AnchorData[LastAnchorId];
     if(Anchor.Tag != "Spawn") return;
+
+    declare Boolean IsCpSpawn for ManialinkPage;
+    declare metadata Meta_IsCpSpawn for Anchor = False;
+    Meta_IsCpSpawn = IsCpSpawn;
 
     SaveBasePageVariables(Anchor);
     SaveWeaponPageVariables(Anchor);
