@@ -19,7 +19,7 @@ Text Private_WeaponML() {
 				<quad id="Weapon_Selector" pos="-20 0" size="20 5" bgcolor="393939AA"/>
 				<quad pos="0 0.5" size="81 6" bgcolor="595959AA" halign="center"/>
 			</frame>
-			<label pos="-12 5.5" size="20 5" class="text" text="Gain (0.1%-1000%)" valign="center2" halign="center" textsize="2"/>
+			<label pos="-12 5.5" size="20 5" class="text" text="Gain (10%-1000%)" valign="center2" halign="center" textsize="2"/>
 			<frame pos="-12 0">
 				<label pos="9 0" size="6 3.5" class="text" text="" scriptevents="1" halign="center" valign="bottom" textsize="1"/>
 				<label pos="9 0" size="6 3.5" class="text" text="" scriptevents="1" halign="center" valign="top" textsize="1"/>
@@ -43,14 +43,14 @@ Text Private_WeaponML() {
 				<quad id="Stamina_Selector" pos="-30 0" size="20 5" bgcolor="393939AA"/>
 				<quad pos="0 0.5" size="61 6" bgcolor="595959AA" halign="center"/>
 			</frame>
-			<label pos="-12 5.5" size="20 5" class="text" text="Gain (0.1%-300%)" valign="center2" halign="center" textsize="2"/>
+			<label pos="-12 5.5" size="20 5" class="text" text="Gain (10%-300%)" valign="center2" halign="center" textsize="2"/>
 			<frame pos="-12 0">
 				<label pos="9 0" size="6 3.5" class="text" text="" scriptevents="1" halign="center" valign="bottom" textsize="1"/>
 				<label pos="9 0" size="6 3.5" class="text" text="" scriptevents="1" halign="center" valign="top" textsize="1"/>
 				<entry id="Entry_Stamina_Gain" pos="0 0"size="20 5" class="entry" default="100" textfont="Oswald" halign="center" valign="center2"/>
 				<quad pos="0 0" size="21 6" bgcolor="595959AA" halign="center" valign="center"/>
 			</frame>
-			<label pos="12 5.5" size="20 5" class="text" text="Amount (0.1%-100%)" valign="center2" halign="center" textsize="2"/>
+			<label pos="12 5.5" size="20 5" class="text" text="Amount (10%-100%)" valign="center2" halign="center" textsize="2"/>
 			<frame pos="12 0">
 				<label pos="9 0" size="6 3.5" class="text" text="" scriptevents="1" halign="center" valign="bottom" textsize="1"/>
 				<label pos="9 0" size="6 3.5" class="text" text="" scriptevents="1" halign="center" valign="top" textsize="1"/>
@@ -656,6 +656,9 @@ Void SaveSpawnSettings() {
 
     declare Anchor <=> AnchorData[LastAnchorId];
     if(Anchor.Tag != "Spawn") return;
+
+    declare Integer Order for ManialinkPage;
+    Anchor.Order = Order;
 
     declare Boolean IsCpSpawn for ManialinkPage;
     declare metadata Meta_IsCpSpawn for Anchor = False;
