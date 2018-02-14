@@ -68,6 +68,8 @@ UsePvPCollisions = False;
 UseClans = False;
 UseSameWallJump = True;
 UsePvPWeapons = S_PvPWeapons;
+
+UIManager.UIAll.OverlayHide321Go = True;
 ***
 
 ***MB_Private_Rules***
