@@ -1,8 +1,8 @@
 /************************************************
-*	Obstacle Library								              *
-*	Author:		smokegun  						              *
-*												*
-*	Weapons related functions.			            	*
+*   Obstacle Library                            *
+*   Author:     smokegun                        *
+*                                               *
+*   Weapons related functions.                  *
 ************************************************/
 
 #Include "Libs/Nadeo/Message.Script.txt" as Message
@@ -13,8 +13,8 @@
     CONSTANTS
 ***************************************/
 
-#Const	Version		"2017-07-10"
-#Const	ScriptName	"Weapons.Script.txt"
+#Const  Version     "2017-07-10"
+#Const  ScriptName  "Weapons.Script.txt"
 
 #Const C_Weapon_Laser 0
 #Const C_Weapon_Rocket 1
@@ -35,7 +35,7 @@ Void ResetWeapon(CSmPlayer _Player) {
 
 Void SetWeapon(CSmPlayer _Player, Integer _WeaponType, Real _Gain, Integer _Count) {
     ResetWeapon(_Player);
-    
+
     declare Weapon = CSmMode::EWeapon::Rocket;
     switch(_WeaponType) {
         case C_Weapon_Laser: {
@@ -65,7 +65,7 @@ Void ApplyEffects(CSmPlayer _Player, CSmMapLandmark _Anchor) {
     SetWeapon(_Player, Meta_Weapon, Meta_Weapon_Gain, Meta_Weapon_Amount);
     _Player.StaminaMax = Meta_Stamina_Amount;
     _Player.StaminaGain = Meta_Stamina_Gain;
-    
+
     declare StaminaUnlimited for _Player = False;
     StaminaUnlimited = Meta_Stamina == 2;
     if(StaminaUnlimited) {
@@ -79,27 +79,27 @@ Void ApplyEffects(CSmPlayer _Player, CSmMapLandmark _Anchor) {
  */
 Void ApplyWeaponForCheckpointType(CSmPlayer _Player, Integer _Type) {
     declare Text UIMessage;
-    
+
     switch (_Type) {
         // No ammunition gain
         case 1: {
             SetWeapon(_Player, C_Weapon_Rocket, 0.0, 0);
             UIMessage = _("No Ammunition!");
         }
-        
+
         // Endless ammunition
         case 2: {
             SetWeapon(_Player, C_Weapon_Rocket, 10.0, 10);
             UIMessage = ("Endless Ammunition!");
         }
-        
+
         default: {
             // Default values
             ResetWeapon(_Player);
             UIMessage = ("Normal Ammunition!");
         }
     }
-    
+
     declare LastWeaponType for _Player = 0;
     if (LastWeaponType != _Type) {
         Message::SendStatusMessage(_Player, UIMessage, 3000, 1);

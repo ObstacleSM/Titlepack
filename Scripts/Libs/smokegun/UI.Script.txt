@@ -1,8 +1,8 @@
 /************************************************
-*	Obstacle Library								              *
-*	Author:		smokegun  						              *
-*																								*
-*	UI related functions.			            			*
+*   Obstacle Library                            *
+*   Author:     smokegun                        *
+*                                               *
+*   UI related functions.                       *
 ************************************************/
 
 #Include "TextLib" as TextLib
@@ -14,666 +14,666 @@
 #Include "Libs/Nadeo/CustomUI.Script.txt" as CustomUI
 
 /***************************************
-	CONSTANTS
+    CONSTANTS
 ***************************************/
 
-#Const	Version		"2017-07-10"
-#Const	ScriptName	"UI.Script.txt"
+#Const  Version     "2017-07-10"
+#Const  ScriptName  "UI.Script.txt"
 
-#Const	C_Module_NextMapVoting		"Obstacle_NextMapVoting"
-#Const	C_Module_Chrono				"Chrono"
-#Const	C_Module_TimeDiff			"TimeDiff"
-#Const	C_Module_CPProgress			"CPProgress"
-#Const	C_Module_RespawnBehavior	"RespawnBehavior"
+#Const  C_Module_NextMapVoting      "Obstacle_NextMapVoting"
+#Const  C_Module_Chrono             "Chrono"
+#Const  C_Module_TimeDiff           "TimeDiff"
+#Const  C_Module_CPProgress         "CPProgress"
+#Const  C_Module_RespawnBehavior    "RespawnBehavior"
 #Const  C_Module_RestartLock "RestartLock"
-#Const	C_Module_SpectateCount		"SpectateCount"
-#Const	C_PortalImageUrl	"file://Media/Images/Obstacle/Script/PortalGreen.png"
+#Const  C_Module_SpectateCount      "SpectateCount"
+#Const  C_PortalImageUrl    "file://Media/Images/Obstacle/Script/PortalGreen.png"
 
-declare Text		G_DefaultMarkers;			// Set of default markers
-declare Text		G_DefaultMarkerFrames;		// Set of default marker frames
+declare Text        G_DefaultMarkers;           // Set of default markers
+declare Text        G_DefaultMarkerFrames;      // Set of default marker frames
 declare Real G_NextMapVotingRatio; // Setting
 
 
 Void SetNextMapVotingRatio(Real newValue) {
-	G_NextMapVotingRatio = newValue;
+    G_NextMapVotingRatio = newValue;
 }
 
 // Parse 3char hex color to 6char hex color
 Text GetColorizeColor(Vec3 _Color) {
-	declare ColorText = Color::RgbToHex(_Color);
-	declare Colorize = "";
-	for (Index, 0, TextLib::Length(ColorText)) {
-		declare Char = TextLib::SubString(ColorText, Index, 1);
-		Colorize ^= Char^Char;
-	}
-	return Colorize;
+    declare ColorText = Color::RgbToHex(_Color);
+    declare Colorize = "";
+    for (Index, 0, TextLib::Length(ColorText)) {
+        declare Char = TextLib::SubString(ColorText, Index, 1);
+        Colorize ^= Char^Char;
+    }
+    return Colorize;
 }
 
 // Darken a given color by a given factor
 Vec3 DarkenColor(Vec3 _Color, Real _Factor) {
-	declare Color = _Color;
-	for (Index, 0, 2) {
-		Color[Index] *= _Factor;
-	}
-	return Color;
+    declare Color = _Color;
+    for (Index, 0, 2) {
+        Color[Index] *= _Factor;
+    }
+    return Color;
 }
 
 // Upscale a given color
 Vec3 UpscaleColor(Vec3 _Color) {
-	declare Factor = -1.0;
-	for (Index, 0, 2) {
-		if (_Color[Index] > 0.0) {
-			declare ChannelFactor = 1.0 / _Color[Index];
-			if (ChannelFactor < Factor || Factor < 0) {
-				Factor = ChannelFactor;
-			}
-		}
-	}
-	declare Color = _Color;
-	for (Index, 0, 2) {
-		Color[Index] *= Factor;
-	}
-	return Color;
+    declare Factor = -1.0;
+    for (Index, 0, 2) {
+        if (_Color[Index] > 0.0) {
+            declare ChannelFactor = 1.0 / _Color[Index];
+            if (ChannelFactor < Factor || Factor < 0) {
+                Factor = ChannelFactor;
+            }
+        }
+    }
+    declare Color = _Color;
+    for (Index, 0, 2) {
+        Color[Index] *= Factor;
+    }
+    return Color;
 }
 
-Void PrepareMarkers(CSmMapLandmark _Portal) {	
-	declare SpawnId = Tools::GetClosestSpawn(_Portal.Id);
-	if (!MapLandmarks_PlayerSpawn.existskey(SpawnId))
-		return;
-	
-	declare Spawn <=> MapLandmarks_PlayerSpawn[SpawnId];
-	
-	declare Color	= UpscaleColor(Color::GetNewColor());
-	declare Color1	= GetColorizeColor(Color);
-	declare Color2	= GetColorizeColor(DarkenColor(Color, 0.9));
-	
-	G_DefaultMarkers ^= """
-<marker box="0 1 0" visibility="WhenVisible" manialinkframeid="Frame_Portal_{{{_Portal.Id}}}"
-	pos="{{{Tools::GetPosn(_Portal.Position + <0., 1., 0.>)}}}"/>
-<marker box="0 0.5 0" visibility="WhenVisible" manialinkframeid="Frame_Portal__{{{_Portal.Id}}}"
-	pos="{{{Tools::GetPosn(Spawn.Position + <2. , 3., 0.>)}}}"/>""";
+Void PrepareMarkers(CSmMapLandmark _Portal) {
+    declare SpawnId = Tools::GetClosestSpawn(_Portal.Id);
+    if (!MapLandmarks_PlayerSpawn.existskey(SpawnId))
+        return;
 
-		G_DefaultMarkerFrames ^= """
+    declare Spawn <=> MapLandmarks_PlayerSpawn[SpawnId];
+
+    declare Color   = UpscaleColor(Color::GetNewColor());
+    declare Color1  = GetColorizeColor(Color);
+    declare Color2  = GetColorizeColor(DarkenColor(Color, 0.9));
+
+    G_DefaultMarkers ^= """
+<marker box="0 1 0" visibility="WhenVisible" manialinkframeid="Frame_Portal_{{{_Portal.Id}}}"
+    pos="{{{Tools::GetPosn(_Portal.Position + <0., 1., 0.>)}}}"/>
+<marker box="0 0.5 0" visibility="WhenVisible" manialinkframeid="Frame_Portal__{{{_Portal.Id}}}"
+    pos="{{{Tools::GetPosn(Spawn.Position + <2. , 3., 0.>)}}}"/>""";
+
+        G_DefaultMarkerFrames ^= """
 <frame id="Frame_Portal_{{{_Portal.Id}}}" hidden="1">
-	<frame id="Content" hidden="1">
-		<quad sizen="5.5 9" colorize="{{{Color1}}}" halign="center" valign="center2" image="{{{C_PortalImageUrl}}}"/>
-	</frame>
+    <frame id="Content" hidden="1">
+        <quad sizen="5.5 9" colorize="{{{Color1}}}" halign="center" valign="center2" image="{{{C_PortalImageUrl}}}"/>
+    </frame>
 </frame>
 <frame id="Frame_Portal__{{{_Portal.Id}}}" hidden="1">
-	<frame id="Content" hidden="1">
-		<quad sizen="5.5 9" colorize="{{{Color2}}}" halign="center" valign="center2" image="{{{C_PortalImageUrl}}}"/>
-	</frame>
+    <frame id="Content" hidden="1">
+        <quad sizen="5.5 9" colorize="{{{Color2}}}" halign="center" valign="center2" image="{{{C_PortalImageUrl}}}"/>
+    </frame>
 </frame>""";
 }
 
 Text CreateLayerInfo() {
-	return """
+    return """
 <manialink version="1" name="Obstacle_LayerInfo">
-	<script><!--
-		#Include "TextLib" as TextLib
+    <script><!--
+        #Include "TextLib" as TextLib
 
-		// Get the current time of a player
-		Integer GetTime(CPlayer _Player) {
-			if (_Player == Null) return 0;
-			declare netread Net_StartTime for _Player = 0;
-			return GameTime - Net_StartTime;
-		}
+        // Get the current time of a player
+        Integer GetTime(CPlayer _Player) {
+            if (_Player == Null) return 0;
+            declare netread Net_StartTime for _Player = 0;
+            return GameTime - Net_StartTime;
+        }
 
-		main() {
-			wait(InputPlayer != Null && Page != Null);
+        main() {
+            wait(InputPlayer != Null && Page != Null);
 
-			declare Frame_Chrono		<=> (Page.GetFirstChild("Frame_Chrono") as CMlFrame);
-			declare Label_Chrono		<=> (Frame_Chrono.GetFirstChild("Label_Chrono") as CMlLabel);
-			Frame_Chrono.Visible = True;
+            declare Frame_Chrono        <=> (Page.GetFirstChild("Frame_Chrono") as CMlFrame);
+            declare Label_Chrono        <=> (Frame_Chrono.GetFirstChild("Label_Chrono") as CMlLabel);
+            Frame_Chrono.Visible = True;
 
-			declare LastUpdate = 0;
-			declare PrevUsedJump = False;
+            declare LastUpdate = 0;
+            declare PrevUsedJump = False;
 
-			{{{CustomUI::InjectMLInit()}}}
+            {{{CustomUI::InjectMLInit()}}}
 
-			while (True) {
-				yield;
-				if (!PageIsVisible) continue;
+            while (True) {
+                yield;
+                if (!PageIsVisible) continue;
 
-				declare LocalPlayer <=> InputPlayer;
-				if (GUIPlayer != Null) LocalPlayer <=> GUIPlayer;
+                declare LocalPlayer <=> InputPlayer;
+                if (GUIPlayer != Null) LocalPlayer <=> GUIPlayer;
 
-				declare netread Net_UsedJump for LocalPlayer = False;
-				if (PrevUsedJump != Net_UsedJump) {
-					PrevUsedJump = Net_UsedJump;
+                declare netread Net_UsedJump for LocalPlayer = False;
+                if (PrevUsedJump != Net_UsedJump) {
+                    PrevUsedJump = Net_UsedJump;
 
-					if (Net_UsedJump) Label_Chrono.TextColor = <0.7, 0., 0.>;
-					else Label_Chrono.TextColor = <1., 1., 1.>;
-				}
+                    if (Net_UsedJump) Label_Chrono.TextColor = <0.7, 0., 0.>;
+                    else Label_Chrono.TextColor = <1., 1., 1.>;
+                }
 
-				// Chrono
-				declare netread Net_StartTime for LocalPlayer = -1;
-				declare LastStartTime for LocalPlayer = -1;
-				if (Net_StartTime > 0) {
-					Frame_Chrono.Visible = True;
-					declare netread Net_CurrentTime for LocalPlayer = -1;
-					if (Net_CurrentTime > 0 && LastStartTime == Net_StartTime) {
-						Label_Chrono.Value = TextLib::TimeToText(Net_CurrentTime, True);
-					} else {
-						Label_Chrono.Value = TextLib::TimeToText(GetTime(LocalPlayer), True);
-						if (Net_CurrentTime < 0) {
-							LastStartTime = Net_StartTime;
-						}
-					}
-				} else {
-					Frame_Chrono.Visible = False;
-				}
+                // Chrono
+                declare netread Net_StartTime for LocalPlayer = -1;
+                declare LastStartTime for LocalPlayer = -1;
+                if (Net_StartTime > 0) {
+                    Frame_Chrono.Visible = True;
+                    declare netread Net_CurrentTime for LocalPlayer = -1;
+                    if (Net_CurrentTime > 0 && LastStartTime == Net_StartTime) {
+                        Label_Chrono.Value = TextLib::TimeToText(Net_CurrentTime, True);
+                    } else {
+                        Label_Chrono.Value = TextLib::TimeToText(GetTime(LocalPlayer), True);
+                        if (Net_CurrentTime < 0) {
+                            LastStartTime = Net_StartTime;
+                        }
+                    }
+                } else {
+                    Frame_Chrono.Visible = False;
+                }
 
-				if (LastUpdate + 250 > Now) continue;
-				LastUpdate = Now;
+                if (LastUpdate + 250 > Now) continue;
+                LastUpdate = Now;
 
-				{{{CustomUI::InjectMLLoop()}}}
-			}
-		}
-	--></script>
+                {{{CustomUI::InjectMLLoop()}}}
+            }
+        }
+    --></script>
 
-	<frame id="{{{C_Module_Chrono}}}" class="LibCustomUI_Module">
-		<frame id="Frame_Chrono" posn="50 -73" hidden="1">
-			<label id="Label_Chrono" posn="0 -0.9 1" sizen="40 10" style="TextRaceChrono" halign="center" valign="center2"/>
-			<quad posn="0 0" sizen="40 10" style="BgsPlayerCard" substyle="BgPlayerCard" halign="center" valign="center2"/>
-		</frame>
-	</frame>
+    <frame id="{{{C_Module_Chrono}}}" class="LibCustomUI_Module">
+        <frame id="Frame_Chrono" posn="50 -73" hidden="1">
+            <label id="Label_Chrono" posn="0 -0.9 1" sizen="40 10" style="TextRaceChrono" halign="center" valign="center2"/>
+            <quad posn="0 0" sizen="40 10" style="BgsPlayerCard" substyle="BgPlayerCard" halign="center" valign="center2"/>
+        </frame>
+    </frame>
 </manialink>""";
 }
 
 Text CreateLayerTimeDiff() {
-	return """
+    return """
 <manialink version="1" name="Obstacle_LayerTimeDiff">
-	<script><!--
-		#Include "TextLib" as TextLib
+    <script><!--
+        #Include "TextLib" as TextLib
 
-		main() {
-			wait(InputPlayer != Null);
+        main() {
+            wait(InputPlayer != Null);
 
-			declare Frame_TimeDiff <=> (Page.GetFirstChild("Frame_TimeDiff") as CMlFrame);
-			declare Label_Time <=> (Frame_TimeDiff.GetFirstChild("Label_Time") as CMlLabel);
-			declare Label_Diff <=> (Frame_TimeDiff.GetFirstChild("Label_Diff") as CMlLabel);
-			declare Label_Rank <=> (Frame_TimeDiff.GetFirstChild("Label_Rank") as CMlLabel);
-			
-			declare LayerTimeDiffUpdated = 0;
-			declare ShowTimeDiff = False;
+            declare Frame_TimeDiff <=> (Page.GetFirstChild("Frame_TimeDiff") as CMlFrame);
+            declare Label_Time <=> (Frame_TimeDiff.GetFirstChild("Label_Time") as CMlLabel);
+            declare Label_Diff <=> (Frame_TimeDiff.GetFirstChild("Label_Diff") as CMlLabel);
+            declare Label_Rank <=> (Frame_TimeDiff.GetFirstChild("Label_Rank") as CMlLabel);
 
-			while (True) {
-				yield;
+            declare LayerTimeDiffUpdated = 0;
+            declare ShowTimeDiff = False;
 
-				declare LocalPlayer <=> InputPlayer;
-				if (GUIPlayer != Null) LocalPlayer <=> GUIPlayer;
-				
-				declare netread Net_LayerTimeDiffUpdated for LocalPlayer = 0;
-				declare netread Net_Time1 for LocalPlayer = 0;
-				declare netread Net_Time2 for LocalPlayer = 0;
-				declare netread Net_CheckpointRank for LocalPlayer = 0;
-				
-				if (!PageIsVisible) continue;
+            while (True) {
+                yield;
 
-				// Hide after 3 sec
-				if (ShowTimeDiff && LayerTimeDiffUpdated + 3000 < ArenaNow) {
-					ShowTimeDiff = False;
-					Frame_TimeDiff.Hide();
-				}
+                declare LocalPlayer <=> InputPlayer;
+                if (GUIPlayer != Null) LocalPlayer <=> GUIPlayer;
 
-				if (Net_LayerTimeDiffUpdated != LayerTimeDiffUpdated) {
-					LayerTimeDiffUpdated = Net_LayerTimeDiffUpdated;
+                declare netread Net_LayerTimeDiffUpdated for LocalPlayer = 0;
+                declare netread Net_Time1 for LocalPlayer = 0;
+                declare netread Net_Time2 for LocalPlayer = 0;
+                declare netread Net_CheckpointRank for LocalPlayer = 0;
 
-					declare DiffString = "";
-					declare Diff = 0;
-					declare TimeString = TextLib::TimeToText(Net_Time1, True);
+                if (!PageIsVisible) continue;
 
-					if (Net_Time1 < 0 || Net_Time2 < 0) {
-						Diff = 0;
-					} else {
-						Diff = Net_Time1 - Net_Time2;
-					}
+                // Hide after 3 sec
+                if (ShowTimeDiff && LayerTimeDiffUpdated + 3000 < ArenaNow) {
+                    ShowTimeDiff = False;
+                    Frame_TimeDiff.Hide();
+                }
 
-					if (Diff < 0) {
-						DiffString = "$s$33f" ^ TextLib::TimeToText(Diff, True);
-					} else if (Diff == 0) {
-						DiffString = "$s$3f3 (00:00.00)";
-					} else if (Diff > 0) {
-						DiffString = "$s$f33+" ^ TextLib::TimeToText(Diff, True);
-					}
+                if (Net_LayerTimeDiffUpdated != LayerTimeDiffUpdated) {
+                    LayerTimeDiffUpdated = Net_LayerTimeDiffUpdated;
 
-					Label_Diff.SetText(DiffString);
-					Label_Time.SetText("$s"^TimeString);
+                    declare DiffString = "";
+                    declare Diff = 0;
+                    declare TimeString = TextLib::TimeToText(Net_Time1, True);
 
-					if (Net_CheckpointRank == 1) {
-						Label_Rank.Value = "{{{_("1st")}}}";
-					} else if (Net_CheckpointRank == 2) {
-						Label_Rank.Value = "{{{_("2nd")}}}";
-					} else if (Net_CheckpointRank == 3) {
-						Label_Rank.Value = "{{{_("3rd")}}}";
-					} else if (Net_CheckpointRank > 3) {
-						Label_Rank.Value = TextLib::Compose("{{{_("%1th")}}}", TextLib::ToText(Net_CheckpointRank));
-					} else {
-						Label_Rank.Value = "";
-					}
+                    if (Net_Time1 < 0 || Net_Time2 < 0) {
+                        Diff = 0;
+                    } else {
+                        Diff = Net_Time1 - Net_Time2;
+                    }
 
-					ShowTimeDiff = True;
-					Frame_TimeDiff.Show();
-				}
-			}
-		}
-	--></script>
-	<frame id="{{{C_Module_TimeDiff}}}" class="LibCustomUI_Module">
-		<frame id="Frame_TimeDiff" posn="0 65 10">
-			<label id="Label_Rank" posn="0 6" halign="center" valign="center2" textemboss="1"/>
-			<label id="Label_Time" posn="-0.5 0" scale="1.5" halign="right" valign="center2"/>
-			<label id="Label_Diff" posn="0.5 0" scale="1.1" halign="left" valign="center2"/>
-		</frame>
-	</frame>
+                    if (Diff < 0) {
+                        DiffString = "$s$33f" ^ TextLib::TimeToText(Diff, True);
+                    } else if (Diff == 0) {
+                        DiffString = "$s$3f3 (00:00.00)";
+                    } else if (Diff > 0) {
+                        DiffString = "$s$f33+" ^ TextLib::TimeToText(Diff, True);
+                    }
+
+                    Label_Diff.SetText(DiffString);
+                    Label_Time.SetText("$s"^TimeString);
+
+                    if (Net_CheckpointRank == 1) {
+                        Label_Rank.Value = "{{{_("1st")}}}";
+                    } else if (Net_CheckpointRank == 2) {
+                        Label_Rank.Value = "{{{_("2nd")}}}";
+                    } else if (Net_CheckpointRank == 3) {
+                        Label_Rank.Value = "{{{_("3rd")}}}";
+                    } else if (Net_CheckpointRank > 3) {
+                        Label_Rank.Value = TextLib::Compose("{{{_("%1th")}}}", TextLib::ToText(Net_CheckpointRank));
+                    } else {
+                        Label_Rank.Value = "";
+                    }
+
+                    ShowTimeDiff = True;
+                    Frame_TimeDiff.Show();
+                }
+            }
+        }
+    --></script>
+    <frame id="{{{C_Module_TimeDiff}}}" class="LibCustomUI_Module">
+        <frame id="Frame_TimeDiff" posn="0 65 10">
+            <label id="Label_Rank" posn="0 6" halign="center" valign="center2" textemboss="1"/>
+            <label id="Label_Time" posn="-0.5 0" scale="1.5" halign="right" valign="center2"/>
+            <label id="Label_Diff" posn="0.5 0" scale="1.1" halign="left" valign="center2"/>
+        </frame>
+    </frame>
 </manialink>""";
 }
 
 Text CreateLayerUtilities() {
-	declare Manialink = """
+    declare Manialink = """
 <manialink version="1" name="Obstacle_LayerUtilities">
-	<script><!--
-		#Include "TextLib" as TextLib
+    <script><!--
+        #Include "TextLib" as TextLib
 
-		#Const	C_UseNextMapVoting	{{{(G_NextMapVotingRatio > 0.0 && G_NextMapVotingRatio <= 1.0)}}}
-		
-		main() {
-			wait(InputPlayer != Null && UI != Null && Page != Null);
+        #Const  C_UseNextMapVoting  {{{(G_NextMapVotingRatio > 0.0 && G_NextMapVotingRatio <= 1.0)}}}
 
-			declare Frame_SpectateCount <=> (Page.GetFirstChild("Frame_SpectateCount") as CMlFrame);
-			declare Label_SpectateCount <=> (Frame_SpectateCount.GetFirstChild("Label_SpectateCount") as CMlLabel);
+        main() {
+            wait(InputPlayer != Null && UI != Null && Page != Null);
 
-			declare Label_NextMapVoting <=> (Page.GetFirstChild("Label_NextMapVoting") as CMlLabel);
-			declare Label_Jumped <=> (Page.GetFirstChild("Label_Jumped") as CMlLabel);
-			declare Label_CPProgress <=> (Page.GetFirstChild("Label_CPProgress") as CMlLabel);
-			declare Label_RespawnBehavior <=> (Page.GetFirstChild("Label_RespawnBehavior") as CMlLabel);
-			declare Label_RestartLock <=> (Page.GetFirstChild("Label_RestartLock") as CMlLabel);
-			Label_Jumped.Value = _("You used a Jump! Your Time is invalid.");
+            declare Frame_SpectateCount <=> (Page.GetFirstChild("Frame_SpectateCount") as CMlFrame);
+            declare Label_SpectateCount <=> (Frame_SpectateCount.GetFirstChild("Label_SpectateCount") as CMlLabel);
 
-			// CP count
-			declare netread Net_CheckpointsTotal for Teams[0] = -1;
+            declare Label_NextMapVoting <=> (Page.GetFirstChild("Label_NextMapVoting") as CMlLabel);
+            declare Label_Jumped <=> (Page.GetFirstChild("Label_Jumped") as CMlLabel);
+            declare Label_CPProgress <=> (Page.GetFirstChild("Label_CPProgress") as CMlLabel);
+            declare Label_RespawnBehavior <=> (Page.GetFirstChild("Label_RespawnBehavior") as CMlLabel);
+            declare Label_RestartLock <=> (Page.GetFirstChild("Label_RestartLock") as CMlLabel);
+            Label_Jumped.Value = _("You used a Jump! Your Time is invalid.");
 
-			// Respawn behavior
-			declare netwrite Net_PlayerWantsRestart for UI = False;
-			declare netwrite Net_PlayerLockedRestart for UI = False;
+            // CP count
+            declare netread Net_CheckpointsTotal for Teams[0] = -1;
 
-			Label_RespawnBehavior.Value = TextLib::Compose("$f00%1", _("Respawning deactivated!"));
-			Label_RestartLock.Value = TextLib::Compose("$f00%1", _("Restart is locked!"));
+            // Respawn behavior
+            declare netwrite Net_PlayerWantsRestart for UI = False;
+            declare netwrite Net_PlayerLockedRestart for UI = False;
 
-			// Next map voting
-			// Values: 1 - Next, 0 - Stay
-			declare netwrite Net_NextMapVote for UI = 0;
+            Label_RespawnBehavior.Value = TextLib::Compose("$f00%1", _("Respawning deactivated!"));
+            Label_RestartLock.Value = TextLib::Compose("$f00%1", _("Restart is locked!"));
 
-			declare netread Net_NextMapVotingReset for UI = 0;
-			declare LastNextMapVotingReset = -1;
-			
-			declare netread Net_PlayersVotingNext for Teams[0] = 0;
-			declare netread Net_PlayersTotal for Teams[0] = 0;
-			declare netread Net_PlayersVotingRemaining for Teams[0] = 0;
+            // Next map voting
+            // Values: 1 - Next, 0 - Stay
+            declare netwrite Net_NextMapVote for UI = 0;
 
-			// Spec target
-			declare netwrite Net_SpeccedTargetLogin for UI = "";
+            declare netread Net_NextMapVotingReset for UI = 0;
+            declare LastNextMapVotingReset = -1;
 
+            declare netread Net_PlayersVotingNext for Teams[0] = 0;
+            declare netread Net_PlayersTotal for Teams[0] = 0;
+            declare netread Net_PlayersVotingRemaining for Teams[0] = 0;
 
-			declare LastUIUpdate = 0;
-
-			{{{CustomUI::InjectMLInit()}}}
-
-			while (True) {
-				yield;
-
-				declare LocalPlayer <=> InputPlayer;
-				if (GUIPlayer != Null) LocalPlayer <=> GUIPlayer;
+            // Spec target
+            declare netwrite Net_SpeccedTargetLogin for UI = "";
 
 
-				// Spec count
-				declare netread Net_NbSpectating for LocalPlayer = 0;
-				Label_SpectateCount.Value = TextLib::ToText(Net_NbSpectating);
+            declare LastUIUpdate = 0;
 
-				// Check for next map voting reset
-				if (Net_NextMapVotingReset != LastNextMapVotingReset) {
-					Net_NextMapVote = 0;
-					LastNextMapVotingReset = Net_NextMapVotingReset;
-				}
+            {{{CustomUI::InjectMLInit()}}}
 
-				// Process events
-				foreach (Event in PendingEvents) {
-					switch (Event.Type) {
-						case CMlEvent::Type::KeyPress: {
-							switch (Event.CharPressed) {
-								case "2621440": {
-									// F3 - Change next map vote
-									if (C_UseNextMapVoting) {
-										if (Net_NextMapVote == 1) {
-											Net_NextMapVote = 0;
-										} else {
-											Net_NextMapVote = 1;
-										}
-									}
-								}
-								case "2686976": {
-									// F4 - Change respawn behavior
-									Net_PlayerWantsRestart = !Net_PlayerWantsRestart;
-								}
-								case "2752512": {
-									// F5 - Change respawn lock
-									Net_PlayerLockedRestart = !Net_PlayerLockedRestart;
-								}
-							}
-						}
-					}
-				}
+            while (True) {
+                yield;
 
-				if (LastUIUpdate + 400 > Now) continue;
-				LastUIUpdate = Now;
+                declare LocalPlayer <=> InputPlayer;
+                if (GUIPlayer != Null) LocalPlayer <=> GUIPlayer;
 
-				// Jumped label
-				declare netread Net_UsedJump for LocalPlayer = False;
-				Label_Jumped.Visible = Net_UsedJump;
 
-				// CP progress
-				declare netread Net_StartTime for LocalPlayer = -1;
-				declare netread Net_CpProgress for LocalPlayer = -1;
-				if (Net_CpProgress < 0 || Net_CheckpointsTotal < 0 || Net_StartTime < 0) {
-					Label_CPProgress.Visible = False;
-				} else {
-					Label_CPProgress.Visible = True;
-					Label_CPProgress.Value = TextLib::Compose("%1: %2/%3",
-						_("|Progress on checkpoints|CP Progress"),
-						TextLib::ToText(Net_CpProgress),
-						TextLib::ToText(Net_CheckpointsTotal)
-						);
-				}
+                // Spec count
+                declare netread Net_NbSpectating for LocalPlayer = 0;
+                Label_SpectateCount.Value = TextLib::ToText(Net_NbSpectating);
 
-				// Respawn behavior
-				if (LocalPlayer != InputPlayer &&
-				 		InputPlayer.SpawnStatus == CSmPlayer::ESpawnStatus::NotSpawned
-				) {
-					declare netread Net_ShowRespawnBehavior for LocalPlayer = False;
-					Label_RespawnBehavior.Visible = Net_ShowRespawnBehavior;
-				} else {
-					Label_RespawnBehavior.Visible = Net_PlayerWantsRestart;
-				}
-				Label_RestartLock.Visible = Net_PlayerLockedRestart;
+                // Check for next map voting reset
+                if (Net_NextMapVotingReset != LastNextMapVotingReset) {
+                    Net_NextMapVote = 0;
+                    LastNextMapVotingReset = Net_NextMapVotingReset;
+                }
 
-				// Spec target
-				if (LocalPlayer.Login != InputPlayer.Login) {
-					Net_SpeccedTargetLogin = LocalPlayer.Login;
-				} else {
-					Net_SpeccedTargetLogin = "";
-				}
-				
-				// Next map voting label
-				if (C_UseNextMapVoting) {
-					Label_NextMapVoting.Visible = True;
-					declare Text Color;
-					declare Text VotingText;
-					if (Net_NextMapVote == 1) {
-						Color = "$0C0";
-						VotingText = _("Press F3 for keeping the map");
-					} else {
-						Color = "$080";
-						VotingText = _("Press F3 to vote for the next map");
-					}
+                // Process events
+                foreach (Event in PendingEvents) {
+                    switch (Event.Type) {
+                        case CMlEvent::Type::KeyPress: {
+                            switch (Event.CharPressed) {
+                                case "2621440": {
+                                    // F3 - Change next map vote
+                                    if (C_UseNextMapVoting) {
+                                        if (Net_NextMapVote == 1) {
+                                            Net_NextMapVote = 0;
+                                        } else {
+                                            Net_NextMapVote = 1;
+                                        }
+                                    }
+                                }
+                                case "2686976": {
+                                    // F4 - Change respawn behavior
+                                    Net_PlayerWantsRestart = !Net_PlayerWantsRestart;
+                                }
+                                case "2752512": {
+                                    // F5 - Change respawn lock
+                                    Net_PlayerLockedRestart = !Net_PlayerLockedRestart;
+                                }
+                            }
+                        }
+                    }
+                }
 
-					declare Remaining = Net_PlayersVotingNext^"/"^Net_PlayersTotal;
-					if (Net_PlayersVotingRemaining > 0) {
-						Remaining ^= " (-"^Net_PlayersVotingRemaining^")";
-					}
+                if (LastUIUpdate + 400 > Now) continue;
+                LastUIUpdate = Now;
 
-					Label_NextMapVoting.Value = TextLib::Compose("%1%2: %3", Color, VotingText, Remaining);
-				} else {
-					Label_NextMapVoting.Visible = False;
-				}
+                // Jumped label
+                declare netread Net_UsedJump for LocalPlayer = False;
+                Label_Jumped.Visible = Net_UsedJump;
 
-				{{{CustomUI::InjectMLLoop()}}}
-			}
-		}
-	--></script>
-	<label id="Label_Jumped" posn="50 -66" textsize="1" textprefix="$f00" translate="1" halign="center" valign="center2" hidden="1"/>
-	<frame id="{{{C_Module_CPProgress}}}" class="LibCustomUI_Module">
-		<label id="Label_CPProgress" posn="-47 -78" sizen="40 5" textsize="1" translate="1" halign="center" valign="center2" hidden="1"/>
-	</frame>
-	<frame id="CustomUI_Info" class="LibCustomUI_Module">
-		<label posn="-80 88" sizen="40 8" textsize="2" translate="1" halign="right" valign="center2" text="Press F8 to customize HUD"/>
-	</frame>
-	<frame id="{{{C_Module_RespawnBehavior}}}" class="LibCustomUI_Module">
-		<label id="Label_RespawnBehavior" posn="-30 88" sizen="40 8" textsize="2" translate="1" halign="right" valign="center2" hidden="1"/>
-	</frame>
-	<frame id="{{{C_Module_RestartLock}}}" class="LibCustomUI_Module">
-		<label id="Label_RestartLock" posn="60 88" sizen="40 8" textsize="2" translate="1" halign="right" valign="center2" hidden="1"/>
-	</frame>
-		<frame id="{{{C_Module_NextMapVoting}}}" class="LibCustomUI_Module">
-		<label id="Label_NextMapVoting" posn="-30 75" sizen="60 4" textsize="1" translate="1" halign="left" valign="center2" hidden="1"/>
-	</frame>
-	<frame id="{{{C_Module_SpectateCount}}}" class="LibCustomUI_Module">
-		<frame id="Frame_SpectateCount" posn="159 -63">
-			<quad sizen="8 8" style="BgRaceScore2" substyle="Tv" halign="right" valign="center2"/>
-			<label id="Label_SpectateCount" posn="-9 0" sizen="15 8" style="TextTitle1" textsize="3" text="0" halign="right" valign="center2"/>
-		</frame>
-	</frame>
+                // CP progress
+                declare netread Net_StartTime for LocalPlayer = -1;
+                declare netread Net_CpProgress for LocalPlayer = -1;
+                if (Net_CpProgress < 0 || Net_CheckpointsTotal < 0 || Net_StartTime < 0) {
+                    Label_CPProgress.Visible = False;
+                } else {
+                    Label_CPProgress.Visible = True;
+                    Label_CPProgress.Value = TextLib::Compose("%1: %2/%3",
+                        _("|Progress on checkpoints|CP Progress"),
+                        TextLib::ToText(Net_CpProgress),
+                        TextLib::ToText(Net_CheckpointsTotal)
+                        );
+                }
+
+                // Respawn behavior
+                if (LocalPlayer != InputPlayer &&
+                        InputPlayer.SpawnStatus == CSmPlayer::ESpawnStatus::NotSpawned
+                ) {
+                    declare netread Net_ShowRespawnBehavior for LocalPlayer = False;
+                    Label_RespawnBehavior.Visible = Net_ShowRespawnBehavior;
+                } else {
+                    Label_RespawnBehavior.Visible = Net_PlayerWantsRestart;
+                }
+                Label_RestartLock.Visible = Net_PlayerLockedRestart;
+
+                // Spec target
+                if (LocalPlayer.Login != InputPlayer.Login) {
+                    Net_SpeccedTargetLogin = LocalPlayer.Login;
+                } else {
+                    Net_SpeccedTargetLogin = "";
+                }
+
+                // Next map voting label
+                if (C_UseNextMapVoting) {
+                    Label_NextMapVoting.Visible = True;
+                    declare Text Color;
+                    declare Text VotingText;
+                    if (Net_NextMapVote == 1) {
+                        Color = "$0C0";
+                        VotingText = _("Press F3 for keeping the map");
+                    } else {
+                        Color = "$080";
+                        VotingText = _("Press F3 to vote for the next map");
+                    }
+
+                    declare Remaining = Net_PlayersVotingNext^"/"^Net_PlayersTotal;
+                    if (Net_PlayersVotingRemaining > 0) {
+                        Remaining ^= " (-"^Net_PlayersVotingRemaining^")";
+                    }
+
+                    Label_NextMapVoting.Value = TextLib::Compose("%1%2: %3", Color, VotingText, Remaining);
+                } else {
+                    Label_NextMapVoting.Visible = False;
+                }
+
+                {{{CustomUI::InjectMLLoop()}}}
+            }
+        }
+    --></script>
+    <label id="Label_Jumped" posn="50 -66" textsize="1" textprefix="$f00" translate="1" halign="center" valign="center2" hidden="1"/>
+    <frame id="{{{C_Module_CPProgress}}}" class="LibCustomUI_Module">
+        <label id="Label_CPProgress" posn="-47 -78" sizen="40 5" textsize="1" translate="1" halign="center" valign="center2" hidden="1"/>
+    </frame>
+    <frame id="CustomUI_Info" class="LibCustomUI_Module">
+        <label posn="-80 88" sizen="40 8" textsize="2" translate="1" halign="right" valign="center2" text="Press F8 to customize HUD"/>
+    </frame>
+    <frame id="{{{C_Module_RespawnBehavior}}}" class="LibCustomUI_Module">
+        <label id="Label_RespawnBehavior" posn="-30 88" sizen="40 8" textsize="2" translate="1" halign="right" valign="center2" hidden="1"/>
+    </frame>
+    <frame id="{{{C_Module_RestartLock}}}" class="LibCustomUI_Module">
+        <label id="Label_RestartLock" posn="60 88" sizen="40 8" textsize="2" translate="1" halign="right" valign="center2" hidden="1"/>
+    </frame>
+        <frame id="{{{C_Module_NextMapVoting}}}" class="LibCustomUI_Module">
+        <label id="Label_NextMapVoting" posn="-30 75" sizen="60 4" textsize="1" translate="1" halign="left" valign="center2" hidden="1"/>
+    </frame>
+    <frame id="{{{C_Module_SpectateCount}}}" class="LibCustomUI_Module">
+        <frame id="Frame_SpectateCount" posn="159 -63">
+            <quad sizen="8 8" style="BgRaceScore2" substyle="Tv" halign="right" valign="center2"/>
+            <label id="Label_SpectateCount" posn="-9 0" sizen="15 8" style="TextTitle1" textsize="3" text="0" halign="right" valign="center2"/>
+        </frame>
+    </frame>
 </manialink>""";
-	return Manialink;
+    return Manialink;
 }
 
 
 // Create markers layer manialink
 Text CreateLayerMarkers() {
-	declare Manialink = """
+    declare Manialink = """
 <manialink version="1" name="Obstacle_LayerMarkers">
-	<now value="{{{Now}}}"/>
-	<script><!--
-		#Include "TextLib" as TextLib
+    <now value="{{{Now}}}"/>
+    <script><!--
+        #Include "TextLib" as TextLib
 
-		CSmScriptBlockPole GetPole(Text _Id) {
-			foreach (Pole in BlockPoles) {
-				if (_Id != ""^Pole.Id) continue;
-				return Pole;
-			}
-			return Null;
-		}
+        CSmScriptBlockPole GetPole(Text _Id) {
+            foreach (Pole in BlockPoles) {
+                if (_Id != ""^Pole.Id) continue;
+                return Pole;
+            }
+            return Null;
+        }
 
-		main() {
-			wait(InputPlayer != Null);
+        main() {
+            wait(InputPlayer != Null);
 
-			declare LastUIUpdate = 0;
-			declare LastPoleIds = "-";
-			declare LastCheckpointCount = -1;
+            declare LastUIUpdate = 0;
+            declare LastPoleIds = "-";
+            declare LastCheckpointCount = -1;
 
-			declare MainFrame = Page.MainFrame;
-			if (MainFrame.Controls.count == 1 && MainFrame.Controls.existskey(0)) MainFrame = (MainFrame.Controls[0] as CMlFrame);
+            declare MainFrame = Page.MainFrame;
+            if (MainFrame.Controls.count == 1 && MainFrame.Controls.existskey(0)) MainFrame = (MainFrame.Controls[0] as CMlFrame);
 
-			while (True) {
-				yield;
+            while (True) {
+                yield;
 
-				if (LastUIUpdate + 200 > Now || !PageIsVisible) continue;
-				LastUIUpdate = Now;
+                if (LastUIUpdate + 200 > Now || !PageIsVisible) continue;
+                LastUIUpdate = Now;
 
-				declare LocalPlayer <=> InputPlayer;
-				if (GUIPlayer != Null) LocalPlayer <=> GUIPlayer;
+                declare LocalPlayer <=> InputPlayer;
+                if (GUIPlayer != Null) LocalPlayer <=> GUIPlayer;
 
-				declare netread Net_CpProgress for LocalPlayer = -1;
-				declare netread Net_PoleIds for LocalPlayer = "";
-				if (LastCheckpointCount == Net_CpProgress && LastPoleIds == Net_PoleIds) continue;
-				LastCheckpointCount = Net_CpProgress;
-				LastPoleIds = Net_PoleIds;
+                declare netread Net_CpProgress for LocalPlayer = -1;
+                declare netread Net_PoleIds for LocalPlayer = "";
+                if (LastCheckpointCount == Net_CpProgress && LastPoleIds == Net_PoleIds) continue;
+                LastCheckpointCount = Net_CpProgress;
+                LastPoleIds = Net_PoleIds;
 
-				declare PoleIds = TextLib::Split(",", Net_PoleIds);
+                declare PoleIds = TextLib::Split(",", Net_PoleIds);
 
-				foreach (Control in MainFrame.Controls) {
-					declare Frame <=> (Control as CMlFrame);
-					declare Frame_Content <=> (Frame.GetFirstChild("Content") as CMlFrame);
-					if (Frame_Content == Null) continue;
-					Frame_Content.Visible = False;
-				}
+                foreach (Control in MainFrame.Controls) {
+                    declare Frame <=> (Control as CMlFrame);
+                    declare Frame_Content <=> (Frame.GetFirstChild("Content") as CMlFrame);
+                    if (Frame_Content == Null) continue;
+                    Frame_Content.Visible = False;
+                }
 
-				foreach (PoleId in PoleIds) {
-					declare Frame_Portal <=> (MainFrame.GetFirstChild("Frame_Portal_"^PoleId) as CMlFrame);
-					if (Frame_Portal != Null) {
-						Frame_Portal <=> (Frame_Portal.GetFirstChild("Content") as CMlFrame);
-						declare Frame_Portal2 <=> (MainFrame.GetFirstChild("Frame_Portal__"^PoleId) as CMlFrame);
-						Frame_Portal2 <=> (Frame_Portal2.GetFirstChild("Content") as CMlFrame);
-						if (Frame_Portal != Null && Frame_Portal2 != Null) {
-							Frame_Portal.Visible = True;
-							Frame_Portal2.Visible = True;
-						}
-						continue;
-					}
+                foreach (PoleId in PoleIds) {
+                    declare Frame_Portal <=> (MainFrame.GetFirstChild("Frame_Portal_"^PoleId) as CMlFrame);
+                    if (Frame_Portal != Null) {
+                        Frame_Portal <=> (Frame_Portal.GetFirstChild("Content") as CMlFrame);
+                        declare Frame_Portal2 <=> (MainFrame.GetFirstChild("Frame_Portal__"^PoleId) as CMlFrame);
+                        Frame_Portal2 <=> (Frame_Portal2.GetFirstChild("Content") as CMlFrame);
+                        if (Frame_Portal != Null && Frame_Portal2 != Null) {
+                            Frame_Portal.Visible = True;
+                            Frame_Portal2.Visible = True;
+                        }
+                        continue;
+                    }
 
-					declare Frame <=> (MainFrame.GetFirstChild("Frame_Marker"^PoleId) as CMlFrame);
-					if (Frame == Null) continue;
-					declare Frame_Content <=> (Frame.GetFirstChild("Content") as CMlFrame);
-					if (Frame_Content == Null) continue;
+                    declare Frame <=> (MainFrame.GetFirstChild("Frame_Marker"^PoleId) as CMlFrame);
+                    if (Frame == Null) continue;
+                    declare Frame_Content <=> (Frame.GetFirstChild("Content") as CMlFrame);
+                    if (Frame_Content == Null) continue;
 
-					declare Pole <=> GetPole(PoleId);
-					if (Pole == Null) {
-						// Not a valid marker
-						Frame_Content.Visible = False;
-					} else {
-						// Pole marker
-						Frame_Content.Visible = True;
-						declare Label_Text <=> (Frame_Content.GetFirstChild("Label_Text") as CMlLabel);
-						if (Label_Text == Null) continue;
-						if (Pole.Tag == "Goal") {
-							// Goal
-							Label_Text.Value = _("|Finish|Goal");
-						} else {
-							// Checkpoint
-							declare Text Message;
-							if (Net_CpProgress < 0) {
-								Message = _("|Checkpoint|CP");
-							} else {
-								Message = TextLib::Compose("%1 %2", _("|Checkpoint|CP"), TextLib::ToText(Net_CpProgress+1));
-							}
-							Label_Text.Value = Message;
-						}
-					}
-				}
-			}
-		}
-	--></script>
-	<framemodel id="FrameModel_Marker">
-		<frame id="Content" hidden="1">
-			<label id="Label_Text" posn="0 2 1" textsize="1" halign="center" valign="center2"/>
-			<quad id="Quad_Background" posn="0 2 0" sizen="11 4" halign="center" valign="center2" style="BgsPlayerCard" substyle="BgMediaTracker"/>
-			<quad id="Quad_Arrow" posn="0 0 1" sizen="4 8.5" opacity="0.9" halign="center" valign="center2" colorize="1 1 1"
-				image="file://Media/Manialinks/ShootMania/Common/target.dds"/>
-		</frame>
-	</framemodel>
-	<framemodel id="FrameModel_CP">
-		<frame id="Content" hidden="1">
-			<quad posn="0 0 1" sizen="4 8.5" opacity="0.9" halign="center" valign="center2" colorize="1 1 1"
-				image="file://Media/Manialinks/ShootMania/Common/target.dds"/>
-		</frame>
-	</framemodel>""";
-	foreach (GaugeLandmark in MapLandmarks_Gauge) {
-		if (GaugeLandmark.Tag == "No-Function" || GaugeLandmark.Tag == "Gate") continue;
-		if (GaugeLandmark.Tag != "Goal" && GaugeLandmark.Order == 0) {
-			Manialink ^= """<frameinstance id="Frame_Marker{{{GaugeLandmark.Id}}}" modelid="FrameModel_CP" hidden="1"/>""";
-		} else {
-			Manialink ^= """<frameinstance id="Frame_Marker{{{GaugeLandmark.Id}}}" modelid="FrameModel_Marker" hidden="1"/>""";
-		}
-	}
-	Manialink ^= G_DefaultMarkerFrames;
-	Manialink ^= """
+                    declare Pole <=> GetPole(PoleId);
+                    if (Pole == Null) {
+                        // Not a valid marker
+                        Frame_Content.Visible = False;
+                    } else {
+                        // Pole marker
+                        Frame_Content.Visible = True;
+                        declare Label_Text <=> (Frame_Content.GetFirstChild("Label_Text") as CMlLabel);
+                        if (Label_Text == Null) continue;
+                        if (Pole.Tag == "Goal") {
+                            // Goal
+                            Label_Text.Value = _("|Finish|Goal");
+                        } else {
+                            // Checkpoint
+                            declare Text Message;
+                            if (Net_CpProgress < 0) {
+                                Message = _("|Checkpoint|CP");
+                            } else {
+                                Message = TextLib::Compose("%1 %2", _("|Checkpoint|CP"), TextLib::ToText(Net_CpProgress+1));
+                            }
+                            Label_Text.Value = Message;
+                        }
+                    }
+                }
+            }
+        }
+    --></script>
+    <framemodel id="FrameModel_Marker">
+        <frame id="Content" hidden="1">
+            <label id="Label_Text" posn="0 2 1" textsize="1" halign="center" valign="center2"/>
+            <quad id="Quad_Background" posn="0 2 0" sizen="11 4" halign="center" valign="center2" style="BgsPlayerCard" substyle="BgMediaTracker"/>
+            <quad id="Quad_Arrow" posn="0 0 1" sizen="4 8.5" opacity="0.9" halign="center" valign="center2" colorize="1 1 1"
+                image="file://Media/Manialinks/ShootMania/Common/target.dds"/>
+        </frame>
+    </framemodel>
+    <framemodel id="FrameModel_CP">
+        <frame id="Content" hidden="1">
+            <quad posn="0 0 1" sizen="4 8.5" opacity="0.9" halign="center" valign="center2" colorize="1 1 1"
+                image="file://Media/Manialinks/ShootMania/Common/target.dds"/>
+        </frame>
+    </framemodel>""";
+    foreach (GaugeLandmark in MapLandmarks_Gauge) {
+        if (GaugeLandmark.Tag == "No-Function" || GaugeLandmark.Tag == "Gate") continue;
+        if (GaugeLandmark.Tag != "Goal" && GaugeLandmark.Order == 0) {
+            Manialink ^= """<frameinstance id="Frame_Marker{{{GaugeLandmark.Id}}}" modelid="FrameModel_CP" hidden="1"/>""";
+        } else {
+            Manialink ^= """<frameinstance id="Frame_Marker{{{GaugeLandmark.Id}}}" modelid="FrameModel_Marker" hidden="1"/>""";
+        }
+    }
+    Manialink ^= G_DefaultMarkerFrames;
+    Manialink ^= """
 </manialink>""";
-	return Manialink;
+    return Manialink;
 }
 
 // Create hud3dmarkers
 Text CreateHud3dMarkers() {
-	declare Markers = """<now value="{{{Now}}}"/>""";
-	foreach (GaugeLandmark in MapLandmarks_Gauge) {
-		if (GaugeLandmark.Tag == "No-Function" || GaugeLandmark.Tag == "Gate") continue;
-		Markers ^= """<marker pos="{{{GaugeLandmark.Position.X}}} {{{GaugeLandmark.Position.Y}}} {{{GaugeLandmark.Position.Z}}}" box="0 6 0" visibility="WhenInFrustum"
-			manialinkframeid="Frame_Marker{{{GaugeLandmark.Id}}}"/>""";
-	}
-	return Markers^G_DefaultMarkers;
+    declare Markers = """<now value="{{{Now}}}"/>""";
+    foreach (GaugeLandmark in MapLandmarks_Gauge) {
+        if (GaugeLandmark.Tag == "No-Function" || GaugeLandmark.Tag == "Gate") continue;
+        Markers ^= """<marker pos="{{{GaugeLandmark.Position.X}}} {{{GaugeLandmark.Position.Y}}} {{{GaugeLandmark.Position.Z}}}" box="0 6 0" visibility="WhenInFrustum"
+            manialinkframeid="Frame_Marker{{{GaugeLandmark.Id}}}"/>""";
+    }
+    return Markers^G_DefaultMarkers;
 }
 
 Void ResetMarkers() {
-	G_DefaultMarkers = "";
+    G_DefaultMarkers = "";
 }
 
 Void UpdateLayerUtilities() {
-	declare VotingsNb = 0;
-	
-	foreach (Player in Players) {
-		// Reset spectator count
-		declare netwrite Integer Net_NbSpectating for Player;
-		Net_NbSpectating = 0;
+    declare VotingsNb = 0;
 
-		declare UI <=> UIManager.GetUI(Player);
-		if (UI == Null) continue;
+    foreach (Player in Players) {
+        // Reset spectator count
+        declare netwrite Integer Net_NbSpectating for Player;
+        Net_NbSpectating = 0;
 
-		// Publish respawn behavior
-		declare netread Net_PlayerWantsRestart for UI = False;
-		declare netwrite Net_ShowRespawnBehavior for Player = False;
-		Net_ShowRespawnBehavior = Net_PlayerWantsRestart;
+        declare UI <=> UIManager.GetUI(Player);
+        if (UI == Null) continue;
 
-		// Collect current voting
-		declare netread Net_NextMapVote for UI = 0;
-		if (Net_NextMapVote == 1) {
-			VotingsNb += 1;
-		}
-	}
-	
-	// Count spectators
-	declare SpeccedPlayers = Integer[Text];
-	foreach (Player in Spectators) {
-		declare UI <=> UIManager.GetUI(Player);
-		if (UI == Null) continue;
+        // Publish respawn behavior
+        declare netread Net_PlayerWantsRestart for UI = False;
+        declare netwrite Net_ShowRespawnBehavior for Player = False;
+        Net_ShowRespawnBehavior = Net_PlayerWantsRestart;
 
-		declare netread Net_SpeccedTargetLogin for UI = "";
-		if (Net_SpeccedTargetLogin != "") {
-			if (!SpeccedPlayers.existskey(Net_SpeccedTargetLogin)) {
-				SpeccedPlayers[Net_SpeccedTargetLogin] = 1;
-			} else {
-				SpeccedPlayers[Net_SpeccedTargetLogin] += 1;
-			}
-		}
-	}
-	
-	// Update voting values
-	declare Remaining = MathLib::CeilingInteger(Players.count * G_NextMapVotingRatio) - VotingsNb;
-	declare netwrite Integer Net_PlayersTotal for Teams[0];
-	declare netwrite Integer Net_PlayersVotingNext for Teams[0];
-	declare netwrite Integer Net_PlayersVotingRemaining for Teams[0];
-	Net_PlayersTotal = Players.count;
-	Net_PlayersVotingNext = VotingsNb;
-	Net_PlayersVotingRemaining = Remaining;
-	
-	foreach (Player in Players) {		
-		declare UI <=> UIManager.GetUI(Player);
-		if (UI == Null) continue;
-		
-		// Update spectator count if needed
-		if(SpeccedPlayers.existskey(Player.Login)) {
-			declare netwrite Integer Net_NbSpectating for Player;
-			Net_NbSpectating = SpeccedPlayers[Player.Login];
-		}
-	}
+        // Collect current voting
+        declare netread Net_NextMapVote for UI = 0;
+        if (Net_NextMapVote == 1) {
+            VotingsNb += 1;
+        }
+    }
 
-	// End map?
-	if (Players.count > 0 &&
-		  VotingsNb > 0 && 
-			Remaining <= 0 &&
-			StartTime + 15000 < Now &&
-			EndTime - 15000 > Now
-	) {
-		Message::SendStatusMessage(_("Voting has forced an End of the current Map."), 5000, 1);
-		EndTime = Now + 15000;
-	}
+    // Count spectators
+    declare SpeccedPlayers = Integer[Text];
+    foreach (Player in Spectators) {
+        declare UI <=> UIManager.GetUI(Player);
+        if (UI == Null) continue;
+
+        declare netread Net_SpeccedTargetLogin for UI = "";
+        if (Net_SpeccedTargetLogin != "") {
+            if (!SpeccedPlayers.existskey(Net_SpeccedTargetLogin)) {
+                SpeccedPlayers[Net_SpeccedTargetLogin] = 1;
+            } else {
+                SpeccedPlayers[Net_SpeccedTargetLogin] += 1;
+            }
+        }
+    }
+
+    // Update voting values
+    declare Remaining = MathLib::CeilingInteger(Players.count * G_NextMapVotingRatio) - VotingsNb;
+    declare netwrite Integer Net_PlayersTotal for Teams[0];
+    declare netwrite Integer Net_PlayersVotingNext for Teams[0];
+    declare netwrite Integer Net_PlayersVotingRemaining for Teams[0];
+    Net_PlayersTotal = Players.count;
+    Net_PlayersVotingNext = VotingsNb;
+    Net_PlayersVotingRemaining = Remaining;
+
+    foreach (Player in Players) {
+        declare UI <=> UIManager.GetUI(Player);
+        if (UI == Null) continue;
+
+        // Update spectator count if needed
+        if(SpeccedPlayers.existskey(Player.Login)) {
+            declare netwrite Integer Net_NbSpectating for Player;
+            Net_NbSpectating = SpeccedPlayers[Player.Login];
+        }
+    }
+
+    // End map?
+    if (Players.count > 0 &&
+          VotingsNb > 0 &&
+            Remaining <= 0 &&
+            StartTime + 15000 < Now &&
+            EndTime - 15000 > Now
+    ) {
+        Message::SendStatusMessage(_("Voting has forced an End of the current Map."), 5000, 1);
+        EndTime = Now + 15000;
+    }
 }
 
 Void UpdateLayerTimeDiff(CSmPlayer _Player, Integer _Time1, Integer _Time2) {
-	declare netwrite Net_LayerTimeDiffUpdated for _Player = 0;
-	declare netwrite Net_Time1 for _Player = 0;
-	declare netwrite Net_Time2 for _Player = 0;
-	declare netwrite Net_CheckpointRank for _Player = 0;
-	declare netwrite Net_RespawnCount for _Player = -1;
-	Net_LayerTimeDiffUpdated = Now;
-	Net_Time1 = _Time1;
-	Net_Time2 = _Time2;
-	Net_CheckpointRank = Tools::GetPlayerRank(_Player);
+    declare netwrite Net_LayerTimeDiffUpdated for _Player = 0;
+    declare netwrite Net_Time1 for _Player = 0;
+    declare netwrite Net_Time2 for _Player = 0;
+    declare netwrite Net_CheckpointRank for _Player = 0;
+    declare netwrite Net_RespawnCount for _Player = -1;
+    Net_LayerTimeDiffUpdated = Now;
+    Net_Time1 = _Time1;
+    Net_Time2 = _Time2;
+    Net_CheckpointRank = Tools::GetPlayerRank(_Player);
 }

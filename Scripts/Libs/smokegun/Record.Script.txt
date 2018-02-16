@@ -7,8 +7,8 @@
 
 #Include "TextLib" as TL
 
-#Const	Version		"2017-07-28"
-#Const	ScriptName	"Record.Script.txt"
+#Const  Version     "2017-07-28"
+#Const  ScriptName  "Record.Script.txt"
 
 /*           STRUCTURE
 <response>
@@ -26,22 +26,22 @@
 */
 
 Text GetContent(CXmlNode _Node, Text _Field) {
-	return _Node.GetFirstChild(_Field).TextContents;
+    return _Node.GetFirstChild(_Field).TextContents;
 }
 
 CXmlNode GetPlayer(CXmlNode _Node) {
-	return _Node.GetFirstChild("player");
+    return _Node.GetFirstChild("player");
 }
 
 Text GetPlayerField(CXmlNode _Node, Text _Field) {
-	return GetContent(GetPlayer(_Node), _Field);
+    return GetContent(GetPlayer(_Node), _Field);
 }
 
 Text GetField(CXmlNode _Node, Text _Field) {
-	return GetContent(_Node, _Field);
+    return GetContent(_Node, _Field);
 }
 
 Text GetTime(CXmlNode _Node) {
-	declare time = GetField(_Node, "time");
-	return TL::TimeToText(TL::ToInteger(time), True);
+    declare time = GetField(_Node, "time");
+    return TL::TimeToText(TL::ToInteger(time), True);
 }

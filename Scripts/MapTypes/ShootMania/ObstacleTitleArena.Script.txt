@@ -711,7 +711,7 @@ Void UpdateValidability() {
         ValidabilityRequirementsMessage = _("You must place at least one Goal.");
         return;
     }
-    
+
     // Everything is fine :)
     ValidationStatus = CSmMapType::ValidationStatus::Validated;
 }
@@ -774,12 +774,12 @@ Void Loop() {
 }
 
 main() {
-  Load();
-  Init();
-  while(True) {
-    Loop();
-    yield;
-  }
-  Unload();
+    Load();
+    Init();
+    while(True) {
+        Loop();
+        yield;
+    }
+    Unload();
 }
 
