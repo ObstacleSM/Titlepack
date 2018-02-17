@@ -122,12 +122,10 @@ Void Login() {
     }
 
     // Get the first line of the file
-    declare pass = Http.CreateGet("file://Media/Private/test.txt").Result;
-    pass = TL::Split("\r\n", pass)[0];
     declare payload = """
     {
-    "username": "vincent",
-    "password": "{{{pass}}}"
+    "username": "username",
+    "password": "password"
     }""";
 
     G_LoginRequestId = MakePost("Users/Login", payload);
