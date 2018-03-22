@@ -1,21 +1,15 @@
 <maniaplanet_title version="4">
 	<id>testobstacle@smokegun</id>
 	<name>testobstacle@smokegun</name>
-	<desc>Update of steeffeen's Obstacle</desc>
+	<desc>Obstacle dev titlepack</desc>
 	<url>testobstacle@smokegun</url>
-	<download_url></download_url>
-	<title_version>0.2</title_version>
-	<allowed_client_title_version></allowed_client_title_version>
-	<maker>SMStormMaker@nadeo</maker>
+	<title_version></title_version>
 	<base>SMStorm</base>
 	<player_model>ArenaPlayer</player_model>
 	<scriptcloud_enabled>false</scriptcloud_enabled>
-	<limit_camera_fov>false</limit_camera_fov>
-	<use_hmd>false</use_hmd>
-	<unlock_features>0</unlock_features>
 	<packaging>
-		<image name="Media\Images\Logos\PackImage.jpg"/>
-		<logos name="Media\Images\Logos\Logos.png"/>
+		<image name="Media\MenuBg.jpg"/>
+		<logos name="Media\Logos.png"/>
 		<collection></collection>
 		<sortindex>100</sortindex>
 		<station_manialink url=""/>
@@ -23,13 +17,15 @@
 		<boxcase_manialink url=""/>
 	</packaging>
 	<menu>
-		<background_img name="Media\Images\Logos\PackImage.webm"/>
+		<background_img name="MenuBg.jpg"/>
 		<background_replay name=""/>
-		<header name=""/>
+		<header name="MenuHeader.png"/>
 		<music name=""/>
 		<manialink url="Media/Apps/MainMenuLagoon.Script.txt"/>
 	</menu>
 	<menu_style name=""/>
+	<music folder=""/>
+	<mod name=""/>
 	<solo>
 		<mode name="Modes\ShootMania\Obstacle.Script.txt"/>
 		<datapack name=""/>
@@ -46,7 +42,7 @@
 			<name>AscendingScore</name>
 			<maprecord_type>0</maprecord_type>
 			<medals_enabled>true</medals_enabled>
-			<compute_medals_from_maprecord>true</compute_medals_from_maprecord>
+			<compute_medals_from_maprecord>false</compute_medals_from_maprecord>
 			<author_medals_enabled>true</author_medals_enabled>
 			<skillpoints_enabled>true</skillpoints_enabled>
 		</score_context>
@@ -54,7 +50,7 @@
 			<name>DescendingScore</name>
 			<maprecord_type>1</maprecord_type>
 			<medals_enabled>true</medals_enabled>
-			<compute_medals_from_maprecord>true</compute_medals_from_maprecord>
+			<compute_medals_from_maprecord>false</compute_medals_from_maprecord>
 			<author_medals_enabled>true</author_medals_enabled>
 			<skillpoints_enabled>true</skillpoints_enabled>
 		</score_context>
@@ -62,14 +58,14 @@
 			<name>NumberOfRespawns</name>
 			<maprecord_type>3</maprecord_type>
 			<medals_enabled>true</medals_enabled>
-			<compute_medals_from_maprecord>true</compute_medals_from_maprecord>
+			<compute_medals_from_maprecord>false</compute_medals_from_maprecord>
 			<author_medals_enabled>true</author_medals_enabled>
 			<skillpoints_enabled>true</skillpoints_enabled>
 		</score_context>
 		<campaign num="0">
 			<playlist name=""/>
 			<mode name=""/>
-			<score_context>AscendingScore</score_context>
+			<score_context></score_context>
 			<official_record_enabled>true</official_record_enabled>
 			<disable_unlock_system>false</disable_unlock_system>
 			<maps folder="Campaigns\"/>
@@ -88,9 +84,13 @@
 		<simple_editor_map name=""/>
 		<internalitems/>
 	</editor>
-	<music folder=""/>
-	<mod name=""/>
-	<hud3dfont name=""/>
 	<files/>
 	<folders/>
+	<allowed_client_title_version></allowed_client_title_version>
+	<maker>SMStormMaker@nadeo</maker>
+	<limit_camera_fov>false</limit_camera_fov>
+	<use_hmd>false</use_hmd>
+	<unlock_features>0</unlock_features>
+	<hud3dfont name=""/>
+	<download_url></download_url>
 </maniaplanet_title>
