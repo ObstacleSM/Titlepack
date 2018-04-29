@@ -1,6 +1,7 @@
-# Obstacle titlepack script
+# Obstacle titlepack sources
 - Download the SMStormMaker station
 - Clone this repository inside Documents/Maniaplanet/WorkTitles/testobstacle@smokegun
+- Download the items and blocks https://1drv.ms/f/s!AipA2tng0sAu23R89etbU6hYRS4R
 - You can edit the script using the Game Mode Editor in Storm Maker
 
 # TODO
