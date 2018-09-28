@@ -1,9 +1,9 @@
 /************************************************
-*   Obstacle Library                            *
-*   Author:     smokegun                        *
-*                                               *
-*   Getters and setters for players             *
-************************************************/
+ *   Obstacle Library                            *
+ *   Author:     smokegun                        *
+ *                                               *
+ *   Getters and setters for players             *
+ ************************************************/
 
 #Include "TextLib" as TextLib
 #Include "MathLib" as MathLib
@@ -11,87 +11,87 @@
 #Include "Libs/Nadeo/Json2.Script.txt" as Json
 
 /*********************************************
-    CONSTANTS
-*********************************************/
+  CONSTANTS
+ *********************************************/
 
 #Const  Version     "2017-11-25"
 #Const  ScriptName  "Player.Script.txt"
 
 /*********************************************
-    FUNCTIONS
-*********************************************/
+  FUNCTIONS
+ *********************************************/
 
 Boolean isInitialized(CSmPlayer _Player) {
-  declare Boolean isInitialized for _Player = False;
-  return isInitialized;
+    declare Boolean isInitialized for _Player = False;
+    return isInitialized;
 }
 
 Boolean setInitialized(CSmPlayer _Player, Boolean _Value) {
-  declare Boolean isInitialized for _Player = False;
-  isInitialized = _Value;
-  return isInitialized;
+    declare Boolean isInitialized for _Player = False;
+    isInitialized = _Value;
+    return isInitialized;
 }
 
 Integer getStartTime(CSmPlayer _Player) {
     declare netwrite Integer Net_StartTime for _Player;
-  return Net_StartTime;
+    return Net_StartTime;
 }
 
 Integer setStartTime(CSmPlayer _Player, Integer _Value) {
     declare netwrite Integer Net_StartTime for _Player;
-  Net_StartTime = _Value;
-  return Net_StartTime;
+    Net_StartTime = _Value;
+    return Net_StartTime;
 }
 
 Integer getCpProgress(CSmPlayer _Player) {
     declare netwrite Integer Net_CpProgress for _Player;
-  return Net_CpProgress;
+    return Net_CpProgress;
 }
 
 Integer setCpProgress(CSmPlayer _Player, Integer _Value) {
     declare netwrite Integer Net_CpProgress for _Player;
-  Net_CpProgress = _Value;
-  return Net_CpProgress;
+    Net_CpProgress = _Value;
+    return Net_CpProgress;
 }
 
 Boolean usedJump(CSmPlayer _Player) {
-  declare netwrite Boolean Net_UsedJump for _Player = False;
-  return Net_UsedJump;
+    declare netwrite Boolean Net_UsedJump for _Player = False;
+    return Net_UsedJump;
 }
 
 Boolean setUsedJump(CSmPlayer _Player, Boolean _Value) {
-  declare netwrite Boolean Net_UsedJump for _Player = False;
-  Net_UsedJump = _Value;
-  return Net_UsedJump;
+    declare netwrite Boolean Net_UsedJump for _Player = False;
+    Net_UsedJump = _Value;
+    return Net_UsedJump;
 }
 
 Ident getLastCheckpoint(CSmPlayer _Player) {
-  declare Ident LastCheckpointId for _Player;
-  return LastCheckpointId;
+    declare Ident LastCheckpointId for _Player;
+    return LastCheckpointId;
 }
 
 Ident setLastCheckpoint(CSmPlayer _Player, Ident _Value) {
-  declare Ident LastCheckpointId for _Player;
+    declare Ident LastCheckpointId for _Player;
     LastCheckpointId = _Value;
-  return LastCheckpointId;
+    return LastCheckpointId;
 }
 
 Integer[Text] getBuffTimes(CSmPlayer _Player) {
     declare netwrite ItemBuffTimes for _Player = Integer[Text];
-  return ItemBuffTimes;
+    return ItemBuffTimes;
 }
 
 Integer[Text] setBuffTime(CSmPlayer _Player, Text _Key, Integer _Value) {
     declare netwrite ItemBuffTimes for _Player = Integer[Text];
     ItemBuffTimes[_Key] = _Value;
-  return ItemBuffTimes;
+    return ItemBuffTimes;
 
 }
 
 Integer[Text] clearBuffTimes(CSmPlayer _Player) {
     declare netwrite ItemBuffTimes for _Player = Integer[Text];
     ItemBuffTimes.clear();
-  return ItemBuffTimes;
+    return ItemBuffTimes;
 }
 
 Integer getBestRun(CSmPlayer _Player) {
@@ -146,7 +146,7 @@ Integer[Ident] setBestCPTimes(CSmPlayer _Player, Integer[Ident] _Value) {
 
 Integer[Ident] clearBestCPTimes(CSmPlayer _Player) {
     declare Integer[Ident] CheckpointsTimeBest for _Player.Score;
-  CheckpointsTimeBest.clear();
+    CheckpointsTimeBest.clear();
     return CheckpointsTimeBest;
 }
 
@@ -170,7 +170,7 @@ Integer[Ident] setLastCPTimes(CSmPlayer _Player, Ident _Key, Integer _Value) {
 
 Integer[Ident] clearLastCPTimes(CSmPlayer _Player) {
     declare Integer[Ident] CheckpointsTimeLast for _Player.Score;
-  CheckpointsTimeLast.clear();
+    CheckpointsTimeLast.clear();
     return CheckpointsTimeLast;
 }
 
@@ -178,10 +178,10 @@ Integer[Ident] clearLastCPTimes(CSmPlayer _Player) {
 Void InitPlayer(CSmPlayer _Player) {
     if (_Player == Null || isInitialized(_Player)) return;
 
-  setInitialized(_Player, True);
-  setStartTime(_Player, 0);
-  setCpProgress(_Player, 0);
-  setUsedJump(_Player, False);
+    setInitialized(_Player, True);
+    setStartTime(_Player, 0);
+    setCpProgress(_Player, 0);
+    setUsedJump(_Player, False);
     setLastCheckpoint(_Player, NullId);
     clearBuffTimes(_Player);
 
@@ -225,21 +225,21 @@ Text Private_CPTimesToJSON(Integer[Ident] _Times) {
 
 Text ToJSON(CSmPlayer _Player) {
     return """
-{
-    "Player" : {
-        "Login" : {{{Json::GetText(_Player.User.Login)}}},
-        "Name" : {{{Json::GetText(_Player.User.Name)}}}
-    },
-    "Run" : {
-        "Time" : {{{Json::GetInteger(getTime(_Player))}}},
-        "RespawnCount" : {{{Json::GetInteger(getRespawnCount(_Player))}}},
-        "LastRun" : {{{Json::GetInteger(getLastRun(_Player))}}},
-        "BestRun" : {{{Json::GetInteger(getBestRun(_Player))}}},
-        "LastCheckpoinId" : {{{Json::GetIdent(getLastCheckpoint(_Player))}}},
-        "UsedJump" : {{{Json::GetBoolean(usedJump(_Player))}}},
-        "CpProgess" : {{{Json::GetInteger(getCpProgress(_Player))}}},
-        "LastCPTimes" : {{{Private_CPTimesToJSON(getLastCPTimes(_Player))}}},
-        "BestCPTimes" : {{{Private_CPTimesToJSON(getBestCPTimes(_Player))}}}
-    }
-}""";
+    {
+        "Player" : {
+            "Login" : {{{Json::GetText(_Player.User.Login)}}},
+                "Name" : {{{Json::GetText(_Player.User.Name)}}}
+        },
+            "Run" : {
+                "Time" : {{{Json::GetInteger(getTime(_Player))}}},
+                "RespawnCount" : {{{Json::GetInteger(getRespawnCount(_Player))}}},
+                "LastRun" : {{{Json::GetInteger(getLastRun(_Player))}}},
+                "BestRun" : {{{Json::GetInteger(getBestRun(_Player))}}},
+                "LastCheckpoinId" : {{{Json::GetIdent(getLastCheckpoint(_Player))}}},
+                "UsedJump" : {{{Json::GetBoolean(usedJump(_Player))}}},
+                "CpProgess" : {{{Json::GetInteger(getCpProgress(_Player))}}},
+                "LastCPTimes" : {{{Private_CPTimesToJSON(getLastCPTimes(_Player))}}},
+                "BestCPTimes" : {{{Private_CPTimesToJSON(getBestCPTimes(_Player))}}}
+            }
+    }""";
 }

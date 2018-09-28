@@ -20,12 +20,12 @@
     FUNCTIONS
 ***************************************/
 
-Text GetPosn(Vec3 _Posn) {
-    return _Posn.X^" "^_Posn.Y^" "^_Posn.Z;
+Text GetPos(Vec3 _Pos) {
+    return _Pos.X^" "^_Pos.Y^" "^_Pos.Z;
 }
 
-Text GetPosn(Vec2 _Posn) {
-    return _Posn.X^" "^_Posn.Y;
+Text GetPos(Vec2 _Pos) {
+    return _Pos.X^" "^_Pos.Y;
 }
 
 Boolean IsGoal(CSmMapLandmark _Landmark) {

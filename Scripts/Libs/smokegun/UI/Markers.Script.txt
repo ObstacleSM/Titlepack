@@ -1,0 +1,98 @@
+#Include "TextLib" as TL
+#Include "Libs/smokegun/Tools.Script.txt" as Tools
+
+Text Private_LandmarkToText(CSmMapLandmark _Landmark)
+{
+    if (Tools::IsCheckpoint(_Landmark))
+        return "CP "^_Landmark.Order;
+    return TL::ToUpperCase(_Landmark.Tag);
+}
+
+Text GetMarkersXML() {
+    declare MarkersXML = "";
+    foreach (Landmark in MapLandmarks_Gauge) {
+        MarkersXML ^= """
+            <marker box="0 3 0" 
+                manialinkframeid="CP_Marker_{{{Landmark.Id}}}"
+                pos="{{{Tools::GetPos(Landmark.Position)}}}"
+            />
+        """;
+    }
+    return MarkersXML;
+}
+
+Text GetMarkersFrames() {
+    declare ML = """
+<manialink version="3">
+    <frame id="Checkpoints">""";
+
+    
+    foreach (Landmark in MapLandmarks_Gauge) {
+        ML ^= """
+        <frame id="CP_Marker_{{{Landmark.Id}}}">
+            <frame id="Content">
+                <label pos="0 0" z-index="0" size="20 10" 
+                    text="{{{Private_LandmarkToText(Landmark)}}}" 
+                    textfont="OswaldMono" halign="center" valign="center2"
+                    textsize="2"
+                />
+                <quad pos="0 0" z-index="0" size="10 5" bgcolor="000C"
+                    halign="center" valign="center"/>
+                <quad pos="0 -1" z-index="0" size="2 2" bgcolor="000A" rot="45"/>
+            </frame>
+        </frame>
+        """;
+    }
+
+    ML ^= """
+    </frame>
+    <script><!--
+#Include "TextLib" as TL
+
+main() {
+    wait(InputPlayer != Null && Page != Null);
+
+    declare Frame_Checkpoints = (Page.GetFirstChild("Checkpoints") as CMlFrame);
+    declare netread Integer Net_CheckpointsTotal for Teams[0];
+
+    while (True) {
+        yield;
+
+        declare LocalPlayer <=> InputPlayer;
+        if (GUIPlayer != Null) LocalPlayer <=> GUIPlayer;
+
+        declare netread Integer Net_CpProgress for LocalPlayer;
+
+        // Update the visibility of each marker
+        foreach (CP_Marker in Frame_Checkpoints.Controls) {
+            declare CP_Frame = (CP_Marker as CMlFrame);
+            declare CP_Content = CP_Frame.GetFirstChild("Content");
+            declare Text[] Parts = TL::Split("_", CP_Marker.ControlId);
+            declare CP_Id = Parts[Parts.count - 1];
+            declare CSmMapLandmark CP_Landmark;
+
+            // Find the landmark associated to the frame
+            foreach (Landmark in MapLandmarks_Gauge) {
+                if (""^Landmark.Id == CP_Id) {
+                    CP_Landmark <=> Landmark;
+                    break;
+                }
+            }
+
+            if (CP_Landmark == Null)
+                continue;
+
+            if (Net_CpProgress == Net_CheckpointsTotal) {
+                CP_Content.Visible = CP_Landmark.Tag == "Goal";
+            } else {
+                CP_Content.Visible = CP_Landmark.Order == Net_CpProgress + 1;
+            }
+        }
+    }
+}
+    --></script>
+</manialink>
+    """;
+
+    return ML;
+}

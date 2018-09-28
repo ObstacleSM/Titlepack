@@ -1,9 +1,9 @@
 /*********************************************
-* Obstacle Library                           *
-* Author:  smokegun                          *
-*                                            *
-* Obstacle functions.                        *
-*********************************************/
+ * Obstacle Library                           *
+ * Author:  smokegun                          *
+ *                                            *
+ * Obstacle functions.                        *
+ *********************************************/
 
 #Include "TextLib" as TL
 #Include "MathLib" as ML
@@ -27,19 +27,19 @@
 
 
 /*********************************************
-    CONSTANTS
-*********************************************/
+  CONSTANTS
+ *********************************************/
 
 #Const  Version     "2017-07-10"
 #Const  ScriptName  "ObstacleLib.Script.txt"
 
 
 /*********************************************
-    GLOBALES
-*********************************************/
+  GLOBALES
+ *********************************************/
 
 // Map
-declare Ident       G_StartSpawnId;
+declare Ident G_StartSpawnId;
 declare Integer G_CheckpointsTotal;
 
 // Settings
@@ -50,8 +50,8 @@ declare Boolean G_AllowJump;
 
 
 /*********************************************
-    FUNCTIONS
-*********************************************/
+  FUNCTIONS
+ *********************************************/
 
 // TODO: handle settings better
 Void SetSettings(Boolean _FullAmmoSpawn, Boolean _FastRespawn, Boolean _LegacyRespawn, Boolean _AllowJump) {
@@ -89,7 +89,6 @@ Boolean PrepareMap() {
 
     G_StartSpawnId = NullId;
     G_CheckpointsTotal = 0;
-    ObsUI::ResetMarkers();
 
     // Count checkpoints and init markers for portals
     // We save checkpoints to CheckpointOrders to count multiple checkpoints with the same order once
@@ -102,8 +101,6 @@ Boolean PrepareMap() {
                 G_CheckpointsTotal += 1;
                 CheckpointOrders.add(GaugeLandmark.Order);
             }
-        } else if (Tools::IsPortal(GaugeLandmark)) {
-            ObsUI::PrepareMarkers(GaugeLandmark);
         }
     }
 
@@ -136,38 +133,6 @@ Boolean PrepareMap() {
     return True;
 }
 
-/**
- * Update pole ids net variable for markers
- *
- * Arguments: CSmPlayer _Player the player who needs update
- */
-Void Private_UpdatePoleIds(CSmPlayer _Player) {
-    declare netwrite Text Net_PoleIds for _Player;
-    declare CpProgress = Player::getCpProgress(_Player);
-
-    declare PoleIds = Ident[];
-    foreach (GaugeLandmark in MapLandmarks_Gauge) {
-        if (GaugeLandmark.Tag == "No-Function") continue;
-        if (GaugeLandmark.Tag == "Goal" && CpProgress < G_CheckpointsTotal) continue;
-
-        if (GaugeLandmark.Tag == "Portal") {
-            declare SpawnId = Tools::GetClosestSpawn(GaugeLandmark.Id);
-            if (MapLandmarks_PlayerSpawn.existskey(SpawnId)) PoleIds.add(SpawnId);
-        }
-
-        if (GaugeLandmark.Order > 0 && GaugeLandmark.Order != CpProgress + 1) continue;
-        PoleIds.add(GaugeLandmark.Id);
-    }
-
-    declare String = "";
-    foreach (Index => PoleId in PoleIds) {
-        String ^= PoleId;
-        if (Index < PoleIds.count) String ^= ",";
-    }
-
-    Net_PoleIds = String;
-}
-
 /////////////////////////////////////////////////////////////////
 ///////////////////// XMLRPC CALLBACKS  /////////////////////////
 /////////////////////////////////////////////////////////////////
@@ -181,20 +146,20 @@ Void Private_SendXmlRpcCallback(Text _CallbackName, CSmPlayer _Player, Integer _
 
     declare LastCPTimes = Player::getLastCPTimes(_Player);
     declare JSON =
-    """{
-        "Player":
-        {
-            "Name": "{{{Json::EscapeText(_Player.User.Name)}}}",
-            "Login": "{{{Json::EscapeText(_Player.User.Login)}}}"
-        },
-        "Run":
-        {
-            "Time": {{{_RunTime}}},
-            "RespawnCount": {{{Player::getRespawnCount(_Player)}}},
-            "CheckpointIndex": {{{LastCPTimes.count - 1}}},
-            "CheckpointId": "{{{_CheckpointId}}}"
-        }
-    }""";
+        """{
+            "Player":
+            {
+                "Name": "{{{Json::EscapeText(_Player.User.Name)}}}",
+                "Login": "{{{Json::EscapeText(_Player.User.Login)}}}"
+            },
+            "Run":
+            {
+                "Time": {{{_RunTime}}},
+                "RespawnCount": {{{Player::getRespawnCount(_Player)}}},
+                "CheckpointIndex": {{{LastCPTimes.count - 1}}},
+                "CheckpointId": "{{{_CheckpointId}}}"
+            }
+        }""";
 
     XmlRpc.SendCallback(_CallbackName, JSON);
 }
@@ -368,9 +333,6 @@ Void Private_FullRestart(CSmPlayer _Player, Integer _Delay) {
     Player::setRespawnCount(_Player, 0);
     Player::setLastCheckpoint(_Player, NullId);
     Player::clearLastCPTimes(_Player);
-
-    // Update missing checkpoints
-    Private_UpdatePoleIds(_Player);
 
     // XmlRpc callback
     XmlRpc.SendCallback("OnRestart", _Player.User.Login);
@@ -564,8 +526,8 @@ Void Private_HandleFinish(CSmPlayer _Player, Ident _GoalId) {
         }
 
         UI.SendNotice(TL::Compose("%1: $<%2$> %3", _("|Goal|Finish"), Color^Time, message),
-            CUIConfig::ENoticeLevel::PlayerInfo, _Player.User, CUIConfig::EAvatarVariant::Default,
-            CUIConfig::EUISound::Finish, Variant);
+                CUIConfig::ENoticeLevel::PlayerInfo, _Player.User, CUIConfig::EAvatarVariant::Default,
+                CUIConfig::EUISound::Finish, Variant);
     }
 
     RespawnPlayer(_Player, True);
@@ -593,11 +555,11 @@ Void Private_CheckpointEffect(CSmPlayer _Player, Ident _CheckpointId) {
             declare CheckPointType = TL::ToInteger(TL::SubString(CheckpointName, 14, 1));
             switch (CheckPointType) {
                 case 3: {
-                    Private_UsePortal(_Player, _CheckpointId);
-                }
+                            Private_UsePortal(_Player, _CheckpointId);
+                        }
                 default: {
-                    Weapons::ApplyWeaponForCheckpointType(_Player, CheckPointType);
-                }
+                             Weapons::ApplyWeaponForCheckpointType(_Player, CheckPointType);
+                         }
             }
         } else {
             Weapons::ApplyWeaponForCheckpointType(_Player, 0);
@@ -638,7 +600,6 @@ Void Private_HandleCheckpoint(CSmPlayer _Player, Ident _CheckpointId) {
     XmlRpc.SendCallback("Obstacle_OnCheckpoint", Player::ToJSON(_Player));
 
     // UPDATE UI
-  Private_UpdatePoleIds(_Player);
     Private_UpdatePlayerBestTime(_Player);
 
     declare UI <=> UIManager.GetUI(_Player);
@@ -668,7 +629,7 @@ Void HandleCapture(CSmPlayer _Player) {
     declare MessageToShow = "";
 
     if(!Tools::IsEnabled(Landmark)) {
-            MessageToShow = _("Inactive Pole!");
+        MessageToShow = _("Inactive Pole!");
     } else if(Tools::IsGoal(Landmark)) {
         if (HasJumped) {
             MessageToShow =  _("You used a Jump! Your Time is invalid.");
@@ -680,7 +641,7 @@ Void HandleCapture(CSmPlayer _Player) {
                 MessageToShow = "Missing "^CpMissing^" checkpoint(s)!";
         }
     } else if(Tools::IsPortal(Landmark)) {
-                Private_UsePortal(_Player, Landmark.Id);
+        Private_UsePortal(_Player, Landmark.Id);
     } else if(Tools::IsCheckpoint(Landmark)) {
         // Take any checkpoints if player jumped
         if(HasJumped) {
@@ -710,7 +671,6 @@ Void HandleCapture(CSmPlayer _Player) {
     declare LastStatusMessage for _Player = Now;
     if(MessageToShow != "" && LastStatusMessage + 2500 < Now) {
         LastStatusMessage = Now;
-        Private_UpdatePoleIds(_Player);
         Message::SendBigMessage(_Player, MessageToShow, 2000, 0, CUIConfig::EUISound::Warning, 1);
     }
 }

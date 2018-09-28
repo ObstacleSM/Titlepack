@@ -21,7 +21,10 @@
 
 #Include "Libs/smokegun/Player.Script.txt" as Player
 #Include "Libs/smokegun/ObstacleLib.Script.txt" as Obstacle
+
 #Include "Libs/smokegun/UI.Script.txt" as ObsUI
+
+#Include "Libs/smokegun/UI/Markers.Script.txt" as UI_Markers
 #Include "Libs/smokegun/RecordsUI.Script.txt" as RecordsUI
 #Include "Libs/smokegun/Items.Script.txt" as Items
 #Include "Libs/smokegun/ObstacleRecords.Script.txt" as API
@@ -158,10 +161,14 @@ if(!Obstacle::PrepareMap())
     MB_Private_StopMap();
 }
 
-API::StartMap(S_RecordsPerTick, S_RecordsTickDelay);
+UIManager.UIAll.MarkersXML = UI_Markers::GetMarkersXML();
+Layers::Update("Markers", UI_Markers::GetMarkersFrames());
+log("===== MARKERS XML ======");
+log(UIManager.UIAll.MarkersXML);
+log("===== MARKERS ML ======");
+log(Layers::Get("Markers").ManialinkPage);
 
-UIManager.UIAll.MarkersXML = ObsUI::CreateHud3dMarkers();
-Layers::Get("Markers").ManialinkPage = ObsUI::CreateLayerMarkers();
+API::StartMap(S_RecordsPerTick, S_RecordsTickDelay);
 
 Obstacle::SetSettings(S_FullAmmoSpawn, S_FastRespawn, S_LegacyRespawn, S_AllowJump);
 Items::Place();
