@@ -6,8 +6,6 @@
 *********************************************/
 
 #Include "TextLib" as TL
-#Include "Libs/smokegun/RecordsUI.Script.txt" as RecordsUI
-#Include "Libs/smokegun/Record.Script.txt" as RecordUtils
 #Include "Libs/Nadeo/Log.Script.txt" as Log
 #Include "Libs/Nadeo/Json2.Script.txt" as Json
 #Include "Libs/Nadeo/ShootMania/SM3.Script.txt" as SM
@@ -15,7 +13,7 @@
 /*********************************************
  CONSTANTS
 *********************************************/
-#Const Version "2017-07-28"
+#Const Version "2018-10-01"
 #Const ScriptName "ObstacleRecords.Script.txt"
 
 
@@ -25,18 +23,11 @@
 
 #Const C_SIdle 0
 #Const C_SLoggingIn 1
-#Const C_SParsingRecords 2
-#Const C_SCountingRecords 3
-#Const C_SReceivingRecords 4
 
 
 /*********************************************
   GLOBALES
 *********************************************/
-// Settings
-declare Integer G_RecordsPerTick;
-declare Integer G_RecordsTickDelay;
-
 // General globals
 declare Text G_Token;
 declare Text G_PostHeaders;
@@ -54,12 +45,6 @@ declare Text[] G_ToPost_Url;
 declare Text[] G_ToPost_Data;
 declare Text[Ident] G_CurrRequest;
 
-// Records
-declare Integer G_LastParsingAttempt;
-declare Ident G_GetRequestId;
-declare Integer G_RecordsCount;
-declare Text[][] G_Records;
-
 // State (what the lib is doing)
 declare Integer G_State;
 declare Integer G_PreviousState;
@@ -74,13 +59,7 @@ Text State(Integer _State) {
             return "Idle";
         case 1:
             return "Logging in";
-        case 2:
-            return "Parsing Records";
-        case 3:
-            return "Couting Records";
-        case 4:
-            return "Receiving Records";
-    }
+        }
     return "unknow";
 }
 
@@ -92,16 +71,16 @@ Boolean Contains(Text _Text, Text _Input) {
 Ident MakePost(Text _Url, Text _Data) {
     G_LastRequestAttempt = Now;
 
-    if(Http.Requests.count >= Http.SlotsAvailable) {
+    if (Http.Requests.count >= Http.SlotsAvailable) {
         return NullId;
     }
-
+    Log::Log("Made request '"^C_HostUrl^_Url^"' with headers:\n"^G_PostHeaders);
     declare request <=> Http.CreatePost(C_HostUrl^_Url, _Data, G_PostHeaders);
     return request.Id;
 }
 
 Void SendPost(Text _Url, Text _Data) {
-    if(!G_IsLoggedIn || G_LastRequestAttempt + 500 > Now) {
+    if (!G_IsLoggedIn || G_LastRequestAttempt + 500 > Now) {
         Log::Log("Cant do req now "^_Url);
         G_ToPost_Url.add(_Url);
         G_ToPost_Data.add(_Data);
@@ -117,11 +96,10 @@ Void SendPost(Text _Url, Text _Data) {
 
 Void Login() {
     // Destroy previous login request
-    if(G_LoginRequestId != NullId && Http.Requests.existskey(G_LoginRequestId)) {
+    if (G_LoginRequestId != NullId && Http.Requests.existskey(G_LoginRequestId)) {
         Http.Destroy(Http.Requests[G_LoginRequestId]);
     }
 
-    // Get the first line of the file
     declare payload = """
     {
     "username": "username",
@@ -133,80 +111,14 @@ Void Login() {
 }
 
 Void StartMap(Integer _RecordsPerTick, Integer _RecordsTickDelay) {
-    G_RecordsPerTick = _RecordsPerTick;
-    G_RecordsTickDelay = _RecordsTickDelay;
 }
 
 // Init the API with a token
 Void Init(Integer _RecordsPerTick, Integer _RecordsTickDelay) {
-    G_PostHeaders = """Content-Type: application/json
-    Accept: application/xml""";
-    G_GetHeaders = """Accept: application/xml""";
+    G_PostHeaders = "Content-Type: application/json\nAccept: application/xml";
+    G_GetHeaders = "Accept: application/xml";
     G_HostUrlLength = TL::Length(C_HostUrl);
-
-    StartMap(_RecordsPerTick, _RecordsTickDelay);
     Login();
-}
-
-/////////////////////////////////////////////////////////////////
-/////////////////////      RECORDS      /////////////////////////
-/////////////////////////////////////////////////////////////////
-
-Void UpdateRecords() {
-    if(G_GetRequestId != NullId && Http.Requests.existskey(G_GetRequestId)) {
-        Http.Destroy(Http.Requests[G_GetRequestId]);
-    }
-    G_State = C_SCountingRecords;
-    declare request <=> Http.CreateGet(C_HostUrl^"""Records/count?where={"mapId":"{{{Map.Id}}}"}""", False, G_GetHeaders);
-
-    G_GetRequestId = request.Id;
-}
-
-Void StartParsingRecords() {
-    if(G_GetRequestId == NullId ||
-    !Http.Requests.existskey(G_GetRequestId) ||
-    Http.Requests[G_GetRequestId].IsCompleted)
-    {
-        G_State = C_SReceivingRecords;
-        declare skip = G_Records.count;
-        declare request <=> Http.CreateGet(C_HostUrl^"Records/with-player?mapId="^Map.Id^"&limit="^G_RecordsPerTick^"&skip="^skip, False, G_GetHeaders);
-
-        G_GetRequestId = request.Id;
-    }
-}
-
-Void StartReceiveRecords(Text _CountResponse) {
-    G_Records.clear();
-    declare XmlRecords = Xml.Create(_CountResponse);
-    G_RecordsCount = TL::ToInteger(XmlRecords.Root.Children[0].TextContents);
-    Xml.Destroy(XmlRecords);
-    StartParsingRecords();
-}
-
-Void ParseRecords(Text _RecordsAsText) {
-    G_State = C_SParsingRecords;
-
-    declare XmlRecords = Xml.Create(_RecordsAsText);
-
-    foreach(Idx => Record in XmlRecords.Root.Children) {
-        declare Text[] ToAdd;
-        ToAdd.add(RecordUtils::GetPlayerField(Record, "login"));
-        ToAdd.add(RecordUtils::GetPlayerField(Record, "nickname"));
-        ToAdd.add(RecordUtils::GetTime(Record));
-        ToAdd.add(RecordUtils::GetField(Record, "respawnCount"));
-        ToAdd.add(RecordUtils::GetField(Record, "tryCount"));
-        G_Records.add(ToAdd);
-    }
-    Xml.Destroy(XmlRecords);
-
-    RecordsUI::Refresh(G_Records);
-    Log::Log("Endparse ("^G_Records.count^"|"^G_RecordsCount^")");
-
-    if(G_Records.count < G_RecordsCount) {
-        StartParsingRecords();
-    } else {
-        G_State = C_SIdle;
-    }
 }
 
 /////////////////////////////////////////////////////////////////
@@ -259,12 +171,12 @@ Void PlayerFinished(CSmPlayer _Player) {
 
 Void Loop() {
 
-    if(G_PreviousState != G_State) {
+    if (G_PreviousState != G_State) {
         Log::Log(State(G_PreviousState)^" ===> "^State(G_State));
         G_PreviousState = G_State;
     }
 
-    if(G_IsLoggedIn) {
+    if (G_IsLoggedIn) {
         /*
         /** REQUESTS PROCESSING
         */
@@ -273,8 +185,8 @@ Void Loop() {
         * G_ToPost arrays act more or less like a queue
         * We execute requests saved one by one
         */
-        if(G_ToPost_Url.count > 0 && G_LastRequestAttempt + 500 < Now) {
-            if(G_ToPost_Url.count != G_ToPost_Data.count) {
+        if (G_ToPost_Url.count > 0 && G_LastRequestAttempt + 500 < Now) {
+            if (G_ToPost_Url.count != G_ToPost_Data.count) {
                 Log::Error("G_ToPost_Url and G_ToPost_Data have different sizes!");
             }
 
@@ -289,13 +201,13 @@ Void Loop() {
         */
         foreach(reqId => data in G_CurrRequest) {
             declare request <=> Http.Requests[reqId];
-            if(!request.IsCompleted) continue;
+            if (!request.IsCompleted) continue;
 
             Log::Log("Request done: ("^request.StatusCode^") "^request.Url);
             Log::Log(request.Result);
 
             // Request failed
-            if(request.StatusCode == 401) {
+            if (request.StatusCode == 401) {
                 G_IsLoggedIn = False;
                 declare ApiUrl = TL::SubString(request.Url, G_HostUrlLength, TL::Length(request.Url) - G_HostUrlLength);
                 SendPost(ApiUrl, data);
@@ -304,7 +216,7 @@ Void Loop() {
             } else {
                 declare response = Xml.Create(request.Result);
 
-                if(TL::Find("player-finished", request.Url, True, True)) {
+                if (TL::Find("player-finished", request.Url, True, True)) {
                     declare isNewBest = response.Root.GetFirstChild("newBest").TextContents == "true";
                     // TODO: Add fields to backend response
                     declare login = response.Root.GetFirstChild("login").TextContents;
@@ -312,17 +224,17 @@ Void Loop() {
                     declare new = TL::ToInteger(response.Root.GetFirstChild("new").TextContents);
 
                     declare Player = SM::GetPlayer(login);
-                    if(isNewBest) {
+                    if (isNewBest) {
                         UIManager.UIAll.SendChat("""{{{Player.User.Name}}}$z made a new record ! ({{{TL::TimeToText(new, True)}}})""");
-                    } else {
-                        if(Player != Null) {
-                            UIManager.GetUI(Player).SendChat("""$zAt least you tried, you were too late by {{{TL::TimeToText(new-old, True)}}} !""");
-                        }
+                    } else if (Player != Null) {
+                        UIManager.GetUI(Player).SendChat("""$zAt least you tried, you were too late by {{{TL::TimeToText(new-old, True)}}} !""");
                     }
+
+                    declare netwrite Net_RecordsUpdated for Teams[0] = Now;
+                    Net_RecordsUpdated = Now;
                 }
 
                 Xml.Destroy(response);
-                UpdateRecords();
             }
 
             // Destroy requests when they are done
@@ -330,55 +242,30 @@ Void Loop() {
             Http.Destroy(request);
 
         }
-
-        /*
-        * Wait for the records request
-        */
-        if(G_GetRequestId != NullId &&
-        Http.Requests.existskey(G_GetRequestId) &&
-        Http.Requests[G_GetRequestId].IsCompleted)
-        {
-            declare GetRequest <=> Http.Requests[G_GetRequestId];
-
-            if(GetRequest.StatusCode == 200)
-            {
-                if(G_State == C_SCountingRecords)
-                {
-                    StartReceiveRecords(GetRequest.Result);
-
-                    Http.Destroy(GetRequest);
-                }
-                else if (G_State == C_SReceivingRecords && G_LastParsingAttempt + G_RecordsTickDelay < Now)
-                {
-                    G_LastParsingAttempt = Now;
-                    ParseRecords(GetRequest.Result);
-
-                    Http.Destroy(GetRequest);
-                }
-            }
-        }
-
     }
     else
     {
         /*
         * Wait for the login request to finish
         */
-        if(G_State == C_SLoggingIn && Http.Requests.existskey(G_LoginRequestId))
+        if (G_State == C_SLoggingIn && Http.Requests.existskey(G_LoginRequestId))
         {
             declare LoginRequest <=> Http.Requests[G_LoginRequestId];
 
-            if(LoginRequest.IsCompleted)
+            if (LoginRequest.IsCompleted)
             {
-                if(LoginRequest.StatusCode == 200)
+                if (LoginRequest.StatusCode == 200)
                 {
                     Log::Log("Logged in: ("^LoginRequest.StatusCode^") "^LoginRequest.Result);
                     declare XmlResponse = Xml.Create(LoginRequest.Result);
-                    G_Token = XmlResponse.Root.GetFirstChild("id").TextContents;
-                    Xml.Destroy(XmlResponse);
-                    G_IsLoggedIn = True;
-                    G_PostHeaders = G_PostHeaders^"""
-                    Authorization: {{{G_Token}}}""";
+                    if (XmlResponse != Null) {
+                        if (XmlResponse.Root != Null) {
+                            G_Token = XmlResponse.Root.GetFirstChild("id").TextContents;
+                            G_IsLoggedIn = True;
+                            G_PostHeaders = "Content-Type: application/json\nAccept: application/xml\nAuthorization: "^G_Token;
+                        }
+                        Xml.Destroy(XmlResponse);
+                    }
                 }
 
                 // We are done logging in
@@ -386,7 +273,7 @@ Void Loop() {
             }
         }
         // We're not logged in and doing nothing so try to reconnect
-        else if(G_LastRequestAttempt + 1000 < Now)
+        else if (G_LastRequestAttempt + 5000 < Now)
         {
             Login();
         }
