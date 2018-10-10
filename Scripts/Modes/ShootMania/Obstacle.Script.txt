@@ -1,6 +1,6 @@
 #Extends "Modes/ShootMania/Base/CustomBase.Script.txt"
 
-#Const CompatibleMapTypes       "ObstacleArena,ObstacleTitleArena,TimeAttackArena,ObstacleBetaArena"
+#Const CompatibleMapTypes       "ObstacleArena,ObstacleTitleArena,ObstacleTitleArenaOld,TimeAttackArena,ObstacleBetaArena"
 #Const  Version                         "1.2"
 #Const  ScriptName                  "Modes/ShootMania/Obstacle.Script.txt"
 
@@ -25,7 +25,7 @@
 #Include "Libs/smokegun/UI.Script.txt" as ObsUI
 
 #Include "Libs/smokegun/UI/Markers.Script.txt" as UI_Markers
-#Include "Libs/smokegun/RecordsUI.Script.txt" as RecordsUI
+#Include "Libs/smokegun/UI/RecordsWidget.Script.txt" as RecordsWidget
 #Include "Libs/smokegun/Items.Script.txt" as Items
 #Include "Libs/smokegun/ObstacleRecords.Script.txt" as API
 #Include "Libs/smokegun/Weapons.Script.txt" as Weapons
@@ -43,7 +43,6 @@
 #Setting S_AllowJump    True as _("Enable checkpoint jumping")
 #Setting S_LegacyRespawn    False as _("LEGACY: Enable old respawn")
 
-#Setting S_RecordsWidgetTitle "Records" as "<hidden>"
 #Setting S_RecordsPerTick   100 as "<hidden>"
 #Setting S_RecordsTickDelay 50 as "<hidden>"
 #Setting S_NextMapVotingRatio   0.7     as "<hidden>"
@@ -116,7 +115,6 @@ if (Hud != Null && Hud.ScoresTable != Null) {
     declare TabsLayer <=> Tabs::CreateTabPaneLayer(
         [ "ScoresTab" => "Rankings"
         , "CPTimes" => "Race"
-        , "RecordsList" => "Rankings"
         ], 15, 7, False);
     TabsLayer.Type = CUILayer::EUILayerType::AltMenu;
     UIManager.UIAll.UILayers.add(TabsLayer);
@@ -149,7 +147,6 @@ API::Init(S_RecordsPerTick, S_RecordsTickDelay);
 ***
 declare Integer PrevTimeLimit = -1;
 declare Boolean PrevPvPWeapons = S_PvPWeapons;
-declare Text PrevRecordsWidgetTitle = S_RecordsWidgetTitle;
 declare LastUpdate = -1;
 ***
 
@@ -163,10 +160,6 @@ if(!Obstacle::PrepareMap())
 
 UIManager.UIAll.MarkersXML = UI_Markers::GetMarkersXML();
 Layers::Update("Markers", UI_Markers::GetMarkersFrames());
-log("===== MARKERS XML ======");
-log(UIManager.UIAll.MarkersXML);
-log("===== MARKERS ML ======");
-log(Layers::Get("Markers").ManialinkPage);
 
 API::StartMap(S_RecordsPerTick, S_RecordsTickDelay);
 
@@ -199,18 +192,6 @@ if (Now > EndTime) {
 foreach(Event in UIManager.PendingEvents) {
     if(Event.Type == CUIConfigEvent::EType::OnLayerCustomEvent) {
         switch(Event.CustomEventType) {
-            case "RecordsList_Prev_Page": {
-                RecordsUI::ChangePage(Event.UI, -1);
-
-                declare netwrite Net_RecordsUpdated for Event.UI = 0;
-                Net_RecordsUpdated = Now;
-            }
-            case "RecordsList_Next_Page": {
-                RecordsUI::ChangePage(Event.UI, 1);
-
-                declare netwrite Net_RecordsUpdated for Event.UI = 0;
-                Net_RecordsUpdated = Now;
-            }
             case "jump_request": {
                 declare Player = SM::GetPlayer(Event.CustomEventData[0]);
                 declare CP = TL::ToInteger(Event.CustomEventData[1]);
@@ -337,11 +318,6 @@ if (PrevPvPWeapons != S_PvPWeapons) {
 if (LastUpdate + 1000 < Now) {
     LastUpdate = Now;
 
-    if(PrevRecordsWidgetTitle != S_RecordsWidgetTitle) {
-        PrevRecordsWidgetTitle = S_RecordsWidgetTitle;
-        Layers::Update("Records", RecordsUI::CreateManialink(S_RecordsWidgetTitle));
-    }
-
     ObsUI::UpdateLayerUtilities();
     Obstacle::SetSettings(S_FullAmmoSpawn, S_FastRespawn, S_LegacyRespawn, S_AllowJump);
 }
@@ -417,7 +393,7 @@ Void CreateUI() {
     Layers::Create("Markers");
     Layers::SetType("Markers", CUILayer::EUILayerType::Markers);
     Layers::Create("Items", Items::CreateLayerItems());
-    Layers::Create("Records", RecordsUI::CreateManialink(S_RecordsWidgetTitle));
+    Layers::Create("Records", RecordsWidget::CreateManialink());
     Layers::Create("CPTimes", CPTimes::CreateManialink());
 
     Layers::Attach("Info");
