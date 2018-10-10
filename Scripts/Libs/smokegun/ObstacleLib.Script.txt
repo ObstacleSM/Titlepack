@@ -628,9 +628,16 @@ Void HandleCapture(CSmPlayer _Player) {
     declare HasJumped = Player::usedJump(_Player);
     declare MessageToShow = "";
 
-    if(!Tools::IsEnabled(Landmark)) {
-        MessageToShow = _("Inactive Pole!");
-    } else if(Tools::IsGoal(Landmark)) {
+    if(!Tools::IsEnabled(Landmark))
+        return;
+
+    declare time = Player::getTime(_Player);
+    if (time < 0) {
+        RespawnPlayer(_Player, True);
+        return;
+    }
+
+    if(Tools::IsGoal(Landmark)) {
         if (HasJumped) {
             MessageToShow =  _("You used a Jump! Your Time is invalid.");
         } else {
