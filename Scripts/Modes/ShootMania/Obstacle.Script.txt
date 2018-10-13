@@ -253,6 +253,9 @@ foreach (Player in Players) {
     switch (Player.SpawnStatus) {
 
         case CSmPlayer::ESpawnStatus::NotSpawned: {
+            if(!Player::isInitialized(Player))
+                Obstacle::NewPlayer(Player);
+
             if (!Player.RequestsSpectate) {
                 Obstacle::RespawnPlayer(Player);
             }
