@@ -54,6 +54,7 @@ main() {
 
     declare Frame_Checkpoints = (Page.GetFirstChild("Checkpoints") as CMlFrame);
     declare netread Integer Net_CheckpointsTotal for Teams[0];
+    declare LastCpProgress = -1;
 
     while (True) {
         yield;
@@ -63,29 +64,33 @@ main() {
 
         declare netread Integer Net_CpProgress for LocalPlayer;
 
-        // Update the visibility of each marker
-        foreach (CP_Marker in Frame_Checkpoints.Controls) {
-            declare CP_Frame = (CP_Marker as CMlFrame);
-            declare CP_Content = CP_Frame.GetFirstChild("Content");
-            declare Text[] Parts = TL::Split("_", CP_Marker.ControlId);
-            declare CP_Id = Parts[Parts.count - 1];
-            declare CSmMapLandmark CP_Landmark;
+        if (LastCpProgress != Net_CpProgress) {
+            LastCpProgress = Net_CpProgress;
 
-            // Find the landmark associated to the frame
-            foreach (Landmark in MapLandmarks_Gauge) {
-                if (""^Landmark.Id == CP_Id) {
-                    CP_Landmark <=> Landmark;
-                    break;
+            // Update the visibility of each marker
+            foreach (CP_Marker in Frame_Checkpoints.Controls) {
+                declare CP_Frame = (CP_Marker as CMlFrame);
+                declare CP_Content = CP_Frame.GetFirstChild("Content");
+                declare Text[] Parts = TL::Split("_", CP_Marker.ControlId);
+                declare CP_Id = Parts[Parts.count - 1];
+                declare CSmMapLandmark CP_Landmark;
+
+                // Find the landmark associated to the frame
+                foreach (Landmark in MapLandmarks_Gauge) {
+                    if (""^Landmark.Id == CP_Id) {
+                        CP_Landmark <=> Landmark;
+                        break;
+                    }
                 }
-            }
 
-            if (CP_Landmark == Null)
-                continue;
+                if (CP_Landmark == Null)
+                    continue;
 
-            if (Net_CpProgress == Net_CheckpointsTotal) {
-                CP_Content.Visible = CP_Landmark.Tag == "Goal";
-            } else {
-                CP_Content.Visible = CP_Landmark.Order == Net_CpProgress + 1;
+                if (Net_CpProgress == Net_CheckpointsTotal) {
+                    CP_Content.Visible = CP_Landmark.Tag == "Goal";
+                } else {
+                    CP_Content.Visible = CP_Landmark.Order == Net_CpProgress + 1;
+                }
             }
         }
     }
