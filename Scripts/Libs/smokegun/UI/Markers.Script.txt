@@ -30,7 +30,7 @@ Text GetMarkersFrames() {
     foreach (Landmark in MapLandmarks_Gauge) {
         ML ^= """
         <frame id="CP_Marker_{{{Landmark.Id}}}">
-            <frame id="Content">
+            <frame id="Content" hidden="1">
                 <label pos="0 0" z-index="0" size="20 10" 
                     text="{{{Private_LandmarkToText(Landmark)}}}" 
                     textfont="OswaldMono" halign="center" valign="center2"

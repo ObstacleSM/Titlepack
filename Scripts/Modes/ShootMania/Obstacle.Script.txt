@@ -329,6 +329,7 @@ if (LastUpdate + 1000 < Now) {
 Items::Destroy();
 EndTime = -1;
 
+UIManager.UIAll.MarkersXML = "";
 SM::UnspawnAllPlayers();
 
 declare BestPlayerScore <=> Scores::GetBestPlayerMapPoints(Scores::C_Order_Descending);
