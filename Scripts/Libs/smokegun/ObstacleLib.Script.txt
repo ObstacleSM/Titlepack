@@ -647,8 +647,6 @@ Void HandleCapture(CSmPlayer _Player) {
             else
                 MessageToShow = "Missing "^CpMissing^" checkpoint(s)!";
         }
-    } else if(Tools::IsPortal(Landmark)) {
-        Private_UsePortal(_Player, Landmark.Id);
     } else if(Tools::IsCheckpoint(Landmark)) {
         // Take any checkpoints if player jumped
         if(HasJumped) {
@@ -672,6 +670,8 @@ Void HandleCapture(CSmPlayer _Player) {
             else if(Landmark.Id != LastCheckpoint)
                 MessageToShow = "Wrong checkpoint !";
         }
+    } else if(Tools::IsPortal(Landmark)) {
+        Private_UsePortal(_Player, Landmark.Id);
     }
 
     // TODO: Change this to a separate function (in Tools or Player?)
