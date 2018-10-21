@@ -36,9 +36,10 @@ Text GetMarkersFrames() {
                     textfont="OswaldMono" halign="center" valign="center2"
                     textsize="2"
                 />
+
                 <quad pos="0 0" z-index="0" size="10 5" bgcolor="000C"
-                    halign="center" valign="center"/>
-                <quad pos="0 -1" z-index="0" size="2 2" bgcolor="000A" rot="45"/>
+                    halign="center" valign="center" style="Bgs1InRace"
+                    substyle="BgCardList"/>
             </frame>
         </frame>
         """;
