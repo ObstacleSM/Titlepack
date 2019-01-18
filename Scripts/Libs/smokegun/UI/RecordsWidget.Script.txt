@@ -113,7 +113,7 @@ Text Private_GetSmallRecords() {
     """;
 }
 
-Text CreateManialink() {
+Text GetLayer() {
     return """
 <manialink version="3" name="Obstacle:RecordsWidget">
 <frame>
@@ -127,9 +127,7 @@ Text CreateManialink() {
     Void UpdateRecords(Text _Login) {
         declare params = "?mapId="^Map.Id^"&playerId="^_Login;
         declare url = "https://api.obstacle.ovh/api/Records/overview"^params;
-        log(url);
         G_Req = Http.CreateGet(url, True, "Accept: application/xml");
-        log(G_Req);
     }
 
 

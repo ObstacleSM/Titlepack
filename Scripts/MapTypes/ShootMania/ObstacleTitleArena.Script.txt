@@ -108,12 +108,14 @@ Text Get_EditCheckpoint() {
     <frame id="properties" z-index="1" pos="0 10">
         <frame id="Basic" pos="0 15">
             <label pos="0 0" size="20 5" class="text" text="Type" halign="center" textsize="3"/>
-            <frame pos="0 0">
-                <label id="Checkpoint" pos="-10 -8.5" size="20 5" class="text" scriptevents="1" text="checkpoint" halign="center" valign="center" textsize="2"/>
-                <label id="Portal" pos="10 -8.5" size="20 5" class="text" scriptevents="1" text="portal" halign="center" valign="center" textsize="2"/>
-                <quad id="Type_Selector" pos="-20 -6" size="20 5" bgcolor="393939AA"/>
-                <quad pos="0 -5.5" size="41 6" bgcolor="595959AA" halign="center"/>
+            <frame pos="0 -5.5">
+                <label id="Checkpoint" pos="-20 -2.5" size="20 5" text="Checkpoint" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
+                <label id="Portal" pos="0 -2.5" size="20 5" text="Portal" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
+                <label id="Goal" pos="20 -2.5" size="20 5" text="Goal" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
+                <quad id="Type_Selector" pos="-30 0" size="20 5" bgcolor="393939AA"/>
+                <quad pos="0 0.5" size="61 6" bgcolor="595959AA" halign="center"/>
             </frame>
+
             <label pos="0 -13" size="20 5" class="text" text="Order" halign="center" textsize="3"/>
             <frame pos="0 -21">
                 <label pos="9 0" size="6 3.5" class="text" text="" scriptevents="1" halign="center" valign="bottom" textsize="1"/>
@@ -337,10 +339,13 @@ Void EditCheckpoint(CAnchorData _Checkpoint) {
     InitBasePageVariables(_Checkpoint);
 
     declare Integer Order for ManialinkPage;
+    declare Integer CPType for ManialinkPage;
     declare Boolean IsPortal for ManialinkPage;
+    declare metadata Meta_CPType for _Checkpoint = 0;
     declare metadata Meta_IsPortal for _Checkpoint = False;
 
     Order = _Checkpoint.Order;
+    CPType = Meta_CPType;
     IsPortal = Meta_IsPortal;
 
     InitWeaponPageVariables(_Checkpoint);
@@ -354,6 +359,7 @@ Void EditCheckpoint(CAnchorData _Checkpoint) {
     Void UpdateView() {
         declare Boolean Enabled for Page;
         declare Boolean IsPortal for Page;
+        declare Integer CPType for Page;
         declare Integer Order for Page;
 
         declare Quad_Enabled_Selector <=> (Page.GetFirstChild("Enabled_Selector") as CMlQuad);
@@ -369,10 +375,8 @@ Void EditCheckpoint(CAnchorData _Checkpoint) {
             Frame_Properties.ZIndex = -1.;
         }
 
-        if(!IsPortal)
-            Quad_Type_Selector.RelativePosition_V3.X = -20.;
-        else
-            Quad_Type_Selector.RelativePosition_V3.X = 0.;
+        // CP - PORTAL - GOAL
+        Quad_Type_Selector.RelativePosition_V3.X = -30 + CPType*20.;
 
         Entry_Order.SetText(TL::ToText(Order), False);
 
@@ -383,6 +387,7 @@ Void EditCheckpoint(CAnchorData _Checkpoint) {
         declare Boolean Enabled for Page;
         declare Integer Order for Page;
         declare Boolean IsPortal for Page;
+        declare Integer CPType for Page;
         declare Integer Weapon for Page;
         declare Real Weapon_Gain for Page;
         declare Integer Weapon_Amount for Page;
@@ -401,78 +406,39 @@ Void EditCheckpoint(CAnchorData _Checkpoint) {
             }
 
             foreach (Event in PendingEvents) {
-                switch (Event.Type){
+                switch (Event.Type) {
                     case CMlEvent::Type::MouseClick: {
                         switch (Event.ControlId) {
-                            case "Save" : {
-                                SendCustomEvent("Event_Save_Checkpoint", Text[]);
-                            }
-                            case "Enable" : {
-                                Enabled = True;
-                                NeedUpdate = True;
-                            }
-                            case "Disable" : {
-                                Enabled = False;
-                                NeedUpdate = True;
-                            }
-                            case "Checkpoint" : {
-                                IsPortal = False;
-                                NeedUpdate = True;
-                            }
-                            case "Portal" : {
-                                IsPortal = True;
-                                NeedUpdate = True;
-                            }
-                            case "Laser" : {
-                                Weapon = 0;
-                                NeedUpdate = True;
-                            }
-                            case "Rocket" : {
-                                Weapon = 1;
-                                NeedUpdate = True;
-                            }
-                            case "Nucleus" : {
-                                Weapon = 2;
-                                NeedUpdate = True;
-                            }
-                            case "Arrow" : {
-                                Weapon = 3;
-                                NeedUpdate = True;
-                            }
+                            case "Save" : SendCustomEvent("Event_Save_Checkpoint", Text[]);
+                            case "Enable" : Enabled = True;
+                            case "Disable" : Enabled = False;
+                            case "Checkpoint" : CPType = 0;
+                            case "Portal" : CPType = 1;
+                            case "Goal" : CPType = 2;
+                            case "Laser" : Weapon = 0;
+                            case "Rocket" : Weapon = 1;
+                            case "Nucleus" : Weapon = 2;
+                            case "Arrow" : Weapon = 3;
                             case "Normal" : {
                                 Stamina = 0;
                                 Stamina_Gain = 1.;
                                 Stamina_Amount = 1.;
-                                NeedUpdate = True;
                             }
-                            case "Custom" : {
-                                Stamina = 1;
-                                NeedUpdate = True;
-                            }
-                            case "Unlimited" : {
-                                Stamina = 2;
-                                NeedUpdate = True;
-                            }
+                            case "Custom" : Stamina = 1;
+                            case "Unlimited" : Stamina = 2;
                         }
+                        IsPortal = CPType == 1;
+                        NeedUpdate = True;
                     }
                     case CMlScriptEvent::Type::EntrySubmit: {
                         declare Entry <=> (Event.Control as CMlEntry);
+
                         switch(Entry.ControlId) {
-                            case "Entry_Order": {
-                                Order = TL::ToInteger(Entry.Value);
-                            }
-                            case "Entry_Weapon_Gain": {
-                                Weapon_Gain = TL::ToReal(Entry.Value)/100;
-                            }
-                            case "Entry_Weapon_Amount": {
-                                Weapon_Amount = TL::ToInteger(Entry.Value);
-                            }
-                            case "Entry_Stamina_Gain": {
-                                Stamina_Gain = TL::ToReal(Entry.Value)/100;
-                            }
-                            case "Entry_Stamina_Amount": {
-                                Stamina_Amount = TL::ToReal(Entry.Value)/100;
-                            }
+                            case "Entry_Order": Order = TL::ToInteger(Entry.Value);
+                            case "Entry_Weapon_Gain": Weapon_Gain = TL::ToReal(Entry.Value)/100;
+                            case "Entry_Weapon_Amount": Weapon_Amount = TL::ToInteger(Entry.Value);
+                            case "Entry_Stamina_Gain": Stamina_Gain = TL::ToReal(Entry.Value)/100;
+                            case "Entry_Stamina_Amount": Stamina_Amount = TL::ToReal(Entry.Value)/100;
                         }
                     }
                 }
@@ -542,91 +508,91 @@ Void EditSpawn(CAnchorData _Spawn) {
         declare NeedUpdate = False;
         UpdateView();
 
-        while(True) {
+        while (True) {
             yield;
 
-            if(NeedUpdate) {
+            if (NeedUpdate) {
                 UpdateView();
                 NeedUpdate = False;
             }
 
             foreach (Event in PendingEvents) {
-                switch (Event.Type){
+                switch (Event.Type) {
                     case CMlEvent::Type::MouseClick: {
                         switch (Event.ControlId) {
-                        case "Save" : {
-                            SendCustomEvent("Event_Save_Spawn", Text[]);
-                        }
-                        case "Enable" : {
-                            Enabled = True;
-                            NeedUpdate = True;
-                        }
-                        case "Disable" : {
-                            Enabled = False;
-                            NeedUpdate = True;
-                        }
-                        case "Spawn" : {
-                            IsCpSpawn = False;
-                            NeedUpdate = True;
-                        }
-                        case "CPSpawn" : {
-                            IsCpSpawn = True;
-                            NeedUpdate = True;
-                        }
-                        case "Laser" : {
-                            Weapon = 0;
-                            NeedUpdate = True;
-                        }
-                        case "Rocket" : {
-                            Weapon = 1;
-                            NeedUpdate = True;
-                        }
-                        case "Nucleus" : {
-                            Weapon = 2;
-                            NeedUpdate = True;
-                        }
-                        case "Arrow" : {
-                            Weapon = 3;
-                            NeedUpdate = True;
-                        }
-                        case "Normal" : {
-                            Stamina = 0;
-                            Stamina_Gain = 1.;
-                            Stamina_Amount = 1.;
-                            NeedUpdate = True;
-                        }
-                        case "Custom" : {
-                            Stamina = 1;
-                            NeedUpdate = True;
-                        }
-                        case "Unlimited" : {
-                            Stamina = 2;
-                            NeedUpdate = True;
+                            case "Save" : {
+                                SendCustomEvent("Event_Save_Spawn", Text[]);
+                            }
+                            case "Enable" : {
+                                Enabled = True;
+                                NeedUpdate = True;
+                            }
+                            case "Disable" : {
+                                Enabled = False;
+                                NeedUpdate = True;
+                            }
+                            case "Spawn" : {
+                                IsCpSpawn = False;
+                                NeedUpdate = True;
+                            }
+                            case "CPSpawn" : {
+                                IsCpSpawn = True;
+                                NeedUpdate = True;
+                            }
+                            case "Laser" : {
+                                Weapon = 0;
+                                NeedUpdate = True;
+                            }
+                            case "Rocket" : {
+                                Weapon = 1;
+                                NeedUpdate = True;
+                            }
+                            case "Nucleus" : {
+                                Weapon = 2;
+                                NeedUpdate = True;
+                            }
+                            case "Arrow" : {
+                                Weapon = 3;
+                                NeedUpdate = True;
+                            }
+                            case "Normal" : {
+                                Stamina = 0;
+                                Stamina_Gain = 1.;
+                                Stamina_Amount = 1.;
+                                NeedUpdate = True;
+                            }
+                            case "Custom" : {
+                                Stamina = 1;
+                                NeedUpdate = True;
+                            }
+                            case "Unlimited" : {
+                                Stamina = 2;
+                                NeedUpdate = True;
+                            }
                         }
                     }
-                }
-                case CMlScriptEvent::Type::EntrySubmit: {
-                    declare Entry <=> (Event.Control as CMlEntry);
-                    switch(Entry.ControlId) {
-                        case "Entry_Order": {
-                            Order = TL::ToInteger(Entry.Value);
-                        }
-                        case "Entry_Weapon_Gain": {
-                            Weapon_Gain = TL::ToReal(Entry.Value)/100;
-                        }
-                        case "Entry_Weapon_Amount": {
-                            Weapon_Amount = TL::ToInteger(Entry.Value);
-                        }
-                        case "Entry_Stamina_Gain": {
-                            Stamina_Gain = TL::ToReal(Entry.Value)/100;
-                        }
-                        case "Entry_Stamina_Amount": {
-                            Stamina_Amount = TL::ToReal(Entry.Value)/100;
+                    case CMlScriptEvent::Type::EntrySubmit: {
+                        declare Entry <=> (Event.Control as CMlEntry);
+                        switch(Entry.ControlId) {
+                            case "Entry_Order": {
+                                Order = TL::ToInteger(Entry.Value);
+                            }
+                            case "Entry_Weapon_Gain": {
+                                Weapon_Gain = TL::ToReal(Entry.Value)/100;
+                            }
+                            case "Entry_Weapon_Amount": {
+                                Weapon_Amount = TL::ToInteger(Entry.Value);
+                            }
+                            case "Entry_Stamina_Gain": {
+                                Stamina_Gain = TL::ToReal(Entry.Value)/100;
+                            }
+                            case "Entry_Stamina_Amount": {
+                                Stamina_Amount = TL::ToReal(Entry.Value)/100;
+                            }
                         }
                     }
                 }
             }
-        }
         }
     }
     --></script>
@@ -722,53 +688,43 @@ Void Loop() {
       case CPluginEvent::Type::MapModified: {
         UpdateValidability();
       }
+
       case CPluginEvent::Type::EditAnchor: {
-        if (!AnchorData.existskey(Event.EditedAnchorDataId)) return;
+        if (!AnchorData.existskey(Event.EditedAnchorDataId)) continue;
+
         declare Anchor <=> AnchorData[Event.EditedAnchorDataId];
         ManialinkText = "";
+
         switch (Anchor.DefaultTag) {
-          case "Goal": {
-            EditGoal(Anchor);
-          }
-          case "Checkpoint": {
-            EditCheckpoint(Anchor);
-          }
-          case "Spawn": {
-            EditSpawn(Anchor);
-          }
-          case "Ammo": {
-          }
-          case "OffzoneShield": {
-          }
-          default: {
-            return;
-          }
+          case "Goal": EditGoal(Anchor);
+          case "Checkpoint": EditCheckpoint(Anchor);
+          case "Spawn": EditSpawn(Anchor);
+          case "Ammo": {}
+          case "OffzoneShield": {}
+          default: continue;
         }
 
         G_LastAnchorId = Anchor.Id;
       }
+
       case CPluginEvent::Type::StartValidation: {
         TestMapWithMode("Obstacle.Script.txt");
       }
+
       case CPluginEvent::Type::EditObjectives: {
       }
+
       case CPluginEvent::Type::LayerCustomEvent: {
             switch(Event.CustomEventType) {
-                case "Close": {
-                    ManialinkText = "";
-                }
-                case "Event_Save_Goal": {
-                    SaveGoalSettings();
-                }
-                case "Event_Save_Checkpoint": {
-                    SaveCheckpointSettings();
-                }
-                case "Event_Save_Spawn": {
-                    SaveSpawnSettings();
-                }
+                case "Close": ManialinkText = "";
+                case "Event_Save_Goal": SaveGoalSettings();
+                case "Event_Save_Checkpoint": SaveCheckpointSettings();
+                case "Event_Save_Spawn": SaveSpawnSettings();
             }
+
             UpdateValidability();
       }
+
     }
   }
 }

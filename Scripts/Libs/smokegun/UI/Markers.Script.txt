@@ -8,11 +8,11 @@ Text Private_LandmarkToText(CSmMapLandmark _Landmark)
     return TL::ToUpperCase(_Landmark.Tag);
 }
 
-Text GetMarkersXML() {
+Text GetXML() {
     declare MarkersXML = "";
-    foreach (Landmark in MapLandmarks_Gauge) {
+    foreach (Landmark in MapLandmarks) {
         MarkersXML ^= """
-            <marker box="0 3 0" 
+            <marker box="0 3 0"
                 manialinkframeid="CP_Marker_{{{Landmark.Id}}}"
                 pos="{{{Tools::GetPos(Landmark.Position)}}}"
             />
@@ -21,18 +21,20 @@ Text GetMarkersXML() {
     return MarkersXML;
 }
 
-Text GetMarkersFrames() {
+Text GetLayer() {
     declare ML = """
-<manialink version="3">
+<manialink version="3" name="Obstacle:Markers">
     <frame id="Checkpoints">""";
 
-    
-    foreach (Landmark in MapLandmarks_Gauge) {
+
+    foreach (Landmark in MapLandmarks) {
+        if (!Tools::IsCheckpoint(Landmark) && !Tools::IsGoal(Landmark)) continue;
+
         ML ^= """
         <frame id="CP_Marker_{{{Landmark.Id}}}">
             <frame id="Content" hidden="1">
-                <label pos="0 0" z-index="0" size="20 10" 
-                    text="{{{Private_LandmarkToText(Landmark)}}}" 
+                <label pos="0 0" z-index="0" size="20 10"
+                    text="{{{Private_LandmarkToText(Landmark)}}}"
                     textfont="OswaldMono" halign="center" valign="center2"
                     textsize="2"
                 />
@@ -77,7 +79,7 @@ main() {
                 declare CSmMapLandmark CP_Landmark;
 
                 // Find the landmark associated to the frame
-                foreach (Landmark in MapLandmarks_Gauge) {
+                foreach (Landmark in MapLandmarks) {
                     if (""^Landmark.Id == CP_Id) {
                         CP_Landmark <=> Landmark;
                         break;

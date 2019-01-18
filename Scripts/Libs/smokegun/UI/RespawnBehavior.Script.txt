@@ -1,0 +1,85 @@
+#Include "MathLib" as ML
+#Include "Libs/Nadeo/Message.Script.txt" as Message
+#Include "Libs/smokegun/Constants.Script.txt" as Constants
+
+
+#Const Version "2019-01-08"
+#Const ScriptName "RespawnBehavior.Script.txt"
+
+Void Yield() {}
+
+Void UpdateLayer() {}
+
+Text GetLayer() {
+    return """
+<manialink version="3" name="Obstacle:RespawnBehavior">
+    <frame pos="-76 90"id="RespawnBehavior">
+        <label id="Label_RespawnBehavior" pos="0 -2" size="25 4" textsize="1" halign="left" valign="center2" textfont="OswaldMono"/>
+        <quad z-index="-1" pos="12.5 -2" size="27 5" style="BgRaceScore2" substyle="BgCardPlayer" halign="center" valign="center"/>
+    </frame>
+
+<script><!--
+    #Include "TextLib" as TL
+
+    Text GetRespawnText(Integer _RespawnBehavior) {
+        declare Result = "Respawn: ERROR";
+        switch (_RespawnBehavior) {
+            case {{{Constants::C_RespawnBehavior_Normal}}}: Result = "Respawn: NORMAL";
+            case {{{Constants::C_RespawnBehavior_FullRestart}}}: Result = "Respawn: $f00RESTART$z";
+            case {{{Constants::C_RespawnBehavior_FullLocked}}}: Result = "Respawn: $f00CANNOT RESTART$z";
+            default: {}
+        }
+        return Result;
+    }
+
+    main() {
+        wait(InputPlayer != Null && Page != Null);
+
+        declare Label_RespawnBehavior <=> (Page.GetFirstChild("Label_RespawnBehavior") as CMlLabel);
+
+        declare netwrite Net_RespawnBehavior for UI = {{{Constants::C_RespawnBehavior_Normal}}};
+        declare LastRespawnBehavior = -1;
+
+        while (True) {
+            yield;
+
+            declare LocalPlayer <=> InputPlayer;
+            if (GUIPlayer != Null) LocalPlayer <=> GUIPlayer;
+
+            // Toggle respawn behavior
+            if (LocalPlayer == InputPlayer) {
+                foreach (Event in PendingEvents) {
+                    switch (Event.Type) {
+                        case CMlEvent::Type::KeyPress: {
+                            switch (Event.CharPressed) {
+                                // F4 - Change respawn behavior
+                                case "2686976": {
+                                    if (Net_RespawnBehavior == {{{Constants::C_RespawnBehavior_FullRestart}}})
+                                        Net_RespawnBehavior = {{{Constants::C_RespawnBehavior_Normal}}};
+                                    else
+                                        Net_RespawnBehavior = {{{Constants::C_RespawnBehavior_FullRestart}}};
+                                }
+
+                                // F5 - Change respawn lock
+                                case "2752512": {
+                                    if (Net_RespawnBehavior == {{{Constants::C_RespawnBehavior_FullLocked}}})
+                                        Net_RespawnBehavior = {{{Constants::C_RespawnBehavior_Normal}}};
+                                    else
+                                        Net_RespawnBehavior = {{{Constants::C_RespawnBehavior_FullLocked}}};
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (LastRespawnBehavior != Net_RespawnBehavior) {
+                Label_RespawnBehavior.Value = GetRespawnText(Net_RespawnBehavior);
+                LastRespawnBehavior = Net_RespawnBehavior;
+            }
+        }
+
+    }
+--></script>
+</manialink>""";
+}

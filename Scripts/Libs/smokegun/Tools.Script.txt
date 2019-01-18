@@ -77,7 +77,7 @@ Integer GetWeaponTypeFromSpawn(CSmMapLandmark SpawnLandmark) {
 }
 
 Ident Private_GetClosestSpawn(Ident _CheckPointId, Ident[] _SpawnIds) {
-    declare Checkpoint <=> MapLandmarks_Gauge[_CheckPointId];
+    declare Checkpoint <=> MapLandmarks[_CheckPointId];
     declare ClosestSpawn = NullId;
     declare ClosestDistance = -1.0;
 
@@ -98,7 +98,7 @@ Ident Private_GetClosestSpawn(Ident _CheckPointId, Ident[] _SpawnIds) {
 }
 
 Ident GetClosestSpawn(Ident _CheckPointId) {
-    declare Checkpoint <=> MapLandmarks_Gauge[_CheckPointId];
+    declare Checkpoint <=> MapLandmarks[_CheckPointId];
     declare SpawnIds = Ident[];
 
     foreach (Spawn in MapLandmarks_PlayerSpawn) {

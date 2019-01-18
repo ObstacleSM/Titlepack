@@ -6,24 +6,18 @@
 *********************************************/
 
 #Include "TextLib" as TL
+
 #Include "Libs/Nadeo/Log.Script.txt" as Log
 #Include "Libs/Nadeo/Json2.Script.txt" as Json
 #Include "Libs/Nadeo/ShootMania/SM3.Script.txt" as SM
+
+#Include "Libs/smokegun/Constants.Script.txt" as Constants
 
 /*********************************************
  CONSTANTS
 *********************************************/
 #Const Version "2018-10-01"
 #Const ScriptName "ObstacleRecords.Script.txt"
-
-
-#Const C_HostUrl "http://localhost:3000/api/"
-//#Const C_HostUrl "https://api.obstacle.ovh/api/"
-
-
-#Const C_SIdle 0
-#Const C_SLoggingIn 1
-
 
 /*********************************************
   GLOBALES
@@ -74,8 +68,8 @@ Ident MakePost(Text _Url, Text _Data) {
     if (Http.Requests.count >= Http.SlotsAvailable) {
         return NullId;
     }
-    Log::Log("Made request '"^C_HostUrl^_Url^"' with headers:\n"^G_PostHeaders);
-    declare request <=> Http.CreatePost(C_HostUrl^_Url, _Data, G_PostHeaders);
+    Log::Log("Made request '"^Constants::C_HostUrl^_Url^"' with headers:\n"^G_PostHeaders);
+    declare request <=> Http.CreatePost(Constants::C_HostUrl^_Url, _Data, G_PostHeaders);
     return request.Id;
 }
 
@@ -100,14 +94,16 @@ Void Login() {
         Http.Destroy(Http.Requests[G_LoginRequestId]);
     }
 
+    declare pass = Http.CreateGet("file://Media/Private/test.txt").Result;
+    pass = TL::Split("\r\n", pass)[0];
     declare payload = """
     {
-    "username": "username",
-    "password": "password"
+    "username": "vincent",
+    "password": "{{{pass}}}"
     }""";
 
     G_LoginRequestId = MakePost("Users/Login", payload);
-    G_State = C_SLoggingIn;
+    G_State = Constants::C_SLoggingIn;
 }
 
 Void StartMap(Integer _RecordsPerTick, Integer _RecordsTickDelay) {
@@ -117,7 +113,7 @@ Void StartMap(Integer _RecordsPerTick, Integer _RecordsTickDelay) {
 Void Init(Integer _RecordsPerTick, Integer _RecordsTickDelay) {
     G_PostHeaders = "Content-Type: application/json\nAccept: application/xml";
     G_GetHeaders = "Accept: application/xml";
-    G_HostUrlLength = TL::Length(C_HostUrl);
+    G_HostUrlLength = TL::Length(Constants::C_HostUrl);
     Login();
 }
 
@@ -248,7 +244,7 @@ Void Loop() {
         /*
         * Wait for the login request to finish
         */
-        if (G_State == C_SLoggingIn && Http.Requests.existskey(G_LoginRequestId))
+        if (G_State == Constants::C_SLoggingIn && Http.Requests.existskey(G_LoginRequestId))
         {
             declare LoginRequest <=> Http.Requests[G_LoginRequestId];
 
@@ -269,7 +265,7 @@ Void Loop() {
                 }
 
                 // We are done logging in
-                G_State = C_SIdle;
+                G_State = Constants::C_SIdle;
             }
         }
         // We're not logged in and doing nothing so try to reconnect

@@ -1,0 +1,103 @@
+#Include "Libs/smokegun/Tools.Script.txt" as Tools
+
+#Const  Version     "2018-10-26"
+#Const  ScriptName  "TimeDiff.Script.txt"
+
+
+Void UpdateLayer(CSmPlayer _Player, Integer _Time1, Integer _Time2) {
+    declare netwrite Net_LayerTimeDiffUpdated for _Player = 0;
+    declare netwrite Net_Time1 for _Player = 0;
+    declare netwrite Net_Time2 for _Player = 0;
+    declare netwrite Net_CheckpointRank for _Player = 0;
+    declare netwrite Net_RespawnCount for _Player = -1;
+    Net_LayerTimeDiffUpdated = Now;
+    Net_Time1 = _Time1;
+    Net_Time2 = _Time2;
+    Net_CheckpointRank = Tools::GetPlayerRank(_Player);
+}
+
+Text GetLayer() {
+    return """
+<manialink version="3" name="Obstacle:TimeDiff">
+        <frame id="Frame_TimeDiff" pos="0 65">
+            <label id="Label_Rank" pos="0 6" halign="center" valign="center2" textemboss="1"/>
+            <label id="Label_Time" pos="-0.5 0" scale="1.5" halign="right" valign="center2"/>
+            <label id="Label_Diff" pos="0.5 0" scale="1.1" halign="left" valign="center2"/>
+        </frame>
+    <script><!--
+        #Include "TextLib" as TextLib
+
+        main() {
+            wait(InputPlayer != Null);
+
+            declare Frame_TimeDiff <=> (Page.GetFirstChild("Frame_TimeDiff") as CMlFrame);
+            declare Label_Time <=> (Frame_TimeDiff.GetFirstChild("Label_Time") as CMlLabel);
+            declare Label_Diff <=> (Frame_TimeDiff.GetFirstChild("Label_Diff") as CMlLabel);
+            declare Label_Rank <=> (Frame_TimeDiff.GetFirstChild("Label_Rank") as CMlLabel);
+
+            declare LayerTimeDiffUpdated = 0;
+            declare ShowTimeDiff = False;
+
+            while (True) {
+                yield;
+
+                declare LocalPlayer <=> InputPlayer;
+                if (GUIPlayer != Null) LocalPlayer <=> GUIPlayer;
+
+                declare netread Net_LayerTimeDiffUpdated for LocalPlayer = 0;
+                declare netread Net_Time1 for LocalPlayer = 0;
+                declare netread Net_Time2 for LocalPlayer = 0;
+                declare netread Net_CheckpointRank for LocalPlayer = 0;
+
+                if (!PageIsVisible) continue;
+
+                // Hide after 3 sec
+                if (ShowTimeDiff && LayerTimeDiffUpdated + 3000 < ArenaNow) {
+                    ShowTimeDiff = False;
+                    Frame_TimeDiff.Hide();
+                }
+
+                if (Net_LayerTimeDiffUpdated != LayerTimeDiffUpdated) {
+                    LayerTimeDiffUpdated = Net_LayerTimeDiffUpdated;
+
+                    declare DiffString = "";
+                    declare Diff = 0;
+                    declare TimeString = TextLib::TimeToText(Net_Time1, True);
+
+                    if (Net_Time1 < 0 || Net_Time2 < 0) {
+                        Diff = 0;
+                    } else {
+                        Diff = Net_Time1 - Net_Time2;
+                    }
+
+                    if (Diff < 0) {
+                        DiffString = "$s$33f" ^ TextLib::TimeToText(Diff, True);
+                    } else if (Diff == 0) {
+                        DiffString = "$s$3f3 (00:00.00)";
+                    } else if (Diff > 0) {
+                        DiffString = "$s$f33+" ^ TextLib::TimeToText(Diff, True);
+                    }
+
+                    Label_Diff.SetText(DiffString);
+                    Label_Time.SetText("$s"^TimeString);
+
+                    if (Net_CheckpointRank == 1) {
+                        Label_Rank.Value = "{{{_("1st")}}}";
+                    } else if (Net_CheckpointRank == 2) {
+                        Label_Rank.Value = "{{{_("2nd")}}}";
+                    } else if (Net_CheckpointRank == 3) {
+                        Label_Rank.Value = "{{{_("3rd")}}}";
+                    } else if (Net_CheckpointRank > 3) {
+                        Label_Rank.Value = TextLib::Compose("{{{_("%1th")}}}", TextLib::ToText(Net_CheckpointRank));
+                    } else {
+                        Label_Rank.Value = "";
+                    }
+
+                    ShowTimeDiff = True;
+                    Frame_TimeDiff.Show();
+                }
+            }
+        }
+    --></script>
+</manialink>""";
+}

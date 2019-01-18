@@ -1,0 +1,24 @@
+#Const Version "2019-01-08"
+#Const ScriptName "Constants.Script.txt"
+
+// Respawn
+#Const C_RespawnBehavior_Normal 0
+#Const C_RespawnBehavior_FullRestart 1
+#Const C_RespawnBehavior_FullLocked 2
+
+// Items
+#Const C_ItemOffzone "Obstacle\\OffzoneShield.Item.gbx"
+#Const C_ItemAmmo "Obstacle\\Ammo.Item.gbx"
+#Const C_Module_Items "ItemsModule"
+#Const C_Module_ItemsInfo "ItemsInfoModule"
+
+// API
+#Const C_HostUrl "https://api.obstacle.ovh/api/"
+#Const C_SIdle 0
+#Const C_SLoggingIn 1
+
+// Weapons
+#Const C_Weapon_Laser 0
+#Const C_Weapon_Rocket 1
+#Const C_Weapon_Nucleus 2
+#Const C_Weapon_Arrow 3

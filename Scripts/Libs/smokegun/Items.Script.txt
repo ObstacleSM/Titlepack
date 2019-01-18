@@ -11,6 +11,7 @@
 #Include "Libs/Nadeo/CustomUI.Script.txt" as CustomUI
 #Include "Libs/smokegun/Tools.Script.txt" as Tools
 #Include "Libs/smokegun/Player.Script.txt" as Player
+#Include "Libs/smokegun/Constants.Script.txt" as Constants
 
 /***************************************
     CONSTANTS
@@ -19,18 +20,14 @@
 #Const Version  "2017-11-25"
 #Const ScriptName "Items.Script.txt"
 
-#Const T_ItemOffzone "Obstacle\\OffzoneShield.Item.gbx"
-#Const T_ItemAmmo "Obstacle\\Ammo.Item.gbx"
-#Const C_Module_Items "ItemsModule"
-#Const C_Module_ItemsInfo "ItemsInfoModule"
 
 declare Ident[Text] G_ItemIdents;
 declare CSmObject[] G_AnchorsObjects;
 
 Void Init() {
     ItemList_Begin();
-    G_ItemIdents[T_ItemOffzone] = ItemList_Add(T_ItemOffzone);
-    G_ItemIdents[T_ItemAmmo] = ItemList_Add(T_ItemAmmo);
+    G_ItemIdents[Constants::C_ItemOffzone] = ItemList_Add(Constants::C_ItemOffzone);
+    G_ItemIdents[Constants::C_ItemAmmo] = ItemList_Add(Constants::C_ItemAmmo);
     ItemList_End();
 }
 
@@ -54,13 +51,13 @@ Void Place() {
 
         switch (ObjectName) {
 
-            case T_ItemOffzone: {
+            case Constants::C_ItemOffzone: {
                     declare metadata Meta_BuffDuration for AnchorLandmark = 5.;
                     declare Real Duration for Object;
                     Duration = Meta_BuffDuration;
             }
 
-            case T_ItemAmmo: {
+            case Constants::C_ItemAmmo: {
                     declare metadata Meta_GrantAmmoDuration for AnchorLandmark = 0.;
                     declare metadata Meta_GrantAmmoAmount for AnchorLandmark = 1.;
                     declare Real Duration for Object;
@@ -84,12 +81,12 @@ Boolean PickupItems(CSmModeEvent _Event) {
 
     switch (ItemName) {
 
-        case T_ItemOffzone: {
+        case Constants::C_ItemOffzone: {
             declare Duration for _Event.Object = 5.;
             Player::setBuffTime(_Event.Player, ItemName, Now + ML::NearestInteger(Duration * 1000.));
         }
 
-        case T_ItemAmmo: {
+        case Constants::C_ItemAmmo: {
             declare Duration for _Event.Object = 0.;
             declare Amount for _Event.Object = 1.;
 
@@ -224,10 +221,10 @@ Text CreateLayerItems() {
             }
         }
     --></script>
-    <frame id="{{{C_Module_ItemsInfo}}}" class="LibCustomUI_Module">
+    <frame id="{{{Constants::C_Module_ItemsInfo}}}" class="LibCustomUI_Module">
         <label id="Label_Info" posn="0 40" sizen="110 10" translate="1" halign="center" valign="center2" hidden="1" text="hi"/>
     </frame>
-    <frame id="{{{C_Module_Items}}}" class="LibCustomUI_Module">
+    <frame id="{{{Constants::C_Module_Items}}}" class="LibCustomUI_Module">
         <framemodel id="Model_ItemGauge">
             <gauge id="Gauge_Item" sizen="80 14" color="1c6b" style="EnergyBar" drawbg="0" drawblockbg="1" halign="center" valign="center2"/>
             <label id="Label_Time" posn="0 -0.5" style="TextTitle1" textsize="2" halign="center" valign="center2"/>

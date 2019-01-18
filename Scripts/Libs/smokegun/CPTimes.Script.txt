@@ -15,7 +15,7 @@
 *************************/
 
 // from Media/Manialinks/cptimes.xml
-Text GetWidget() {
+Text Private_GetWidget() {
     return """
 <frame id="Frame_CPTimes" hidden="1">
     <frame id="Frame_Heading">
@@ -59,11 +59,11 @@ Text GetWidget() {
     """;
 }
 
-Text CreateManialink() {
+Text GetLayer() {
     return """
-<manialink version="3" name="Obstacle_CPTimes">
+<manialink version="3" name="Obstacle:CPTimes">
     <frame>
-        {{{GetWidget()}}}
+        {{{Private_GetWidget()}}}
     </frame>
     <script><!--
         #Include "TextLib" as TL
@@ -228,7 +228,7 @@ Text CreateManialink() {
     """;
 }
 
-Void UpdatePlayer(CSmPlayer _Player) {
+Void UpdateLayer(CSmPlayer _Player) {
     declare TimeToSub = 0;
     declare LastCPTimes = Player::getLastCPTimes(_Player);
 

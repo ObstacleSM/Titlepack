@@ -20,10 +20,11 @@
 #Include "Libs/smokegun/Player.Script.txt" as Player
 #Include "Libs/smokegun/Tools.Script.txt" as Tools
 #Include "Libs/smokegun/Weapons.Script.txt" as Weapons
-#Include "Libs/smokegun/UI.Script.txt" as ObsUI
 #Include "Libs/smokegun/ObstacleRecords.Script.txt" as API
 
 #Include "Libs/smokegun/CPTimes.Script.txt" as CPTimes
+
+#Include "Libs/smokegun/UI/TimeDiff.Script.txt" as TimeDiff
 
 
 /*********************************************
@@ -48,17 +49,21 @@ declare Boolean G_FastRespawn;
 declare Boolean G_LegacyRespawn;
 declare Boolean G_AllowJump;
 
+// Should update the map scores of player to order them
+declare Boolean G_UseMapRanking;
+
 
 /*********************************************
   FUNCTIONS
  *********************************************/
 
 // TODO: handle settings better
-Void SetSettings(Boolean _FullAmmoSpawn, Boolean _FastRespawn, Boolean _LegacyRespawn, Boolean _AllowJump) {
+Void SetSettings(Boolean _FullAmmoSpawn, Boolean _FastRespawn, Boolean _LegacyRespawn, Boolean _AllowJump, Boolean _UseMapRanking) {
     G_FullAmmoSpawn = _FullAmmoSpawn;
     G_FastRespawn = _FastRespawn;
     G_LegacyRespawn = _LegacyRespawn;
     G_AllowJump = _AllowJump;
+    G_UseMapRanking = _UseMapRanking;
 }
 
 /**
@@ -93,13 +98,15 @@ Boolean PrepareMap() {
     // Count checkpoints and init markers for portals
     // We save checkpoints to CheckpointOrders to count multiple checkpoints with the same order once
     declare CheckpointOrders = Integer[];
-    foreach (GaugeLandmark in MapLandmarks_Gauge) {
-        GaugeLandmark.Gauge.ValueReal = 1.0;
 
-        if (Tools::IsCheckpoint(GaugeLandmark)) {
-            if (GaugeLandmark.Order == 0 || !CheckpointOrders.exists(GaugeLandmark.Order)) {
+    foreach (Landmark in MapLandmarks) {
+        if (Landmark.Gauge != Null)
+            Landmark.Gauge.ValueReal = 1.0;
+
+        if (Tools::IsCheckpoint(Landmark)) {
+            if (Landmark.Order == 0 || !CheckpointOrders.exists(Landmark.Order)) {
                 G_CheckpointsTotal += 1;
-                CheckpointOrders.add(GaugeLandmark.Order);
+                CheckpointOrders.add(Landmark.Order);
             }
         }
     }
@@ -131,6 +138,10 @@ Boolean PrepareMap() {
     }
 
     return True;
+}
+
+Integer GetCheckpointsTotal() {
+	return G_CheckpointsTotal;
 }
 
 /////////////////////////////////////////////////////////////////
@@ -184,6 +195,8 @@ Void Private_SendFinishedRun(CSmPlayer _Player, Integer _Run, Ident _GoalId) {
  *
  */
 Void Private_UpdateRanking() {
+    if (!G_UseMapRanking) return;
+
     declare Finished = Integer[Ident];
     declare Unfinished = CSmPlayer[];
 
@@ -239,7 +252,6 @@ Void Private_UpdatePlayerBestTime(CSmPlayer _Player) {
     }
 
     Hud.ScoresTable.SetColumnValue (_Player.Score, "BestTime", newBestTime);
-    Private_UpdateRanking();
 }
 
 /**
@@ -281,7 +293,7 @@ Void Private_CpRestart(CSmPlayer _Player, Integer _Delay, Ident _LastCheckpoint,
     if(_Increment)
         Player::incrementRespawnCount(_Player);
 
-    declare Checkpoint <=> MapLandmarks_Gauge[_LastCheckpoint];
+    declare Checkpoint <=> MapLandmarks[_LastCheckpoint];
     declare Spawn <=> MapLandmarks_PlayerSpawn[_CPSpawn];
     declare CanFastRespawn = G_FastRespawn;
 
@@ -369,6 +381,8 @@ Void RespawnPlayer(CSmPlayer _Player, Boolean _forceRestart) {
     /////////////////////////////////
     // Common behaviour after spawns
 
+    Private_UpdateRanking();
+
     Private_UpdatePlayerBestTime(_Player);
     if(Player::getBestRun(_Player) < 0) {
         Private_UpdatePlayerRsCounter(_Player);
@@ -431,7 +445,7 @@ Void JumpToCheckpoint(CSmPlayer _Player, Integer _Target) {
 
     // Search for the checkpoint to jump to
     declare CSmMapLandmark Target <=> Null;
-    foreach (Landmark in MapLandmarks_Gauge) {
+    foreach (Landmark in MapLandmarks) {
         if (Tools::IsCheckpoint(Landmark) && Landmark.Order == _Target) {
             Target <=> Landmark;
             break;
@@ -442,7 +456,7 @@ Void JumpToCheckpoint(CSmPlayer _Player, Integer _Target) {
     // In this case it's a bit random and that sucks but who jumps in orderless maps anyway...
     if (Target == Null) {
         declare PoleIndex = 0;
-        foreach (Landmark in MapLandmarks_Gauge) {
+        foreach (Landmark in MapLandmarks) {
             if (Tools::IsCheckpoint(Landmark) && PoleIndex == _Target) {
                 Target <=> Landmark;
                 break;
@@ -486,7 +500,7 @@ Void JumpToCheckpoint(CSmPlayer _Player, Integer _Target) {
 Void Private_HandleFinish(CSmPlayer _Player, Ident _GoalId) {
     declare LastCPTimes = Player::getLastCPTimes(_Player);
     declare BestCPTimes = Player::getBestCPTimes(_Player);
-    declare Goal <=> MapLandmarks_Gauge[_GoalId];
+    declare Goal <=> MapLandmarks[_GoalId];
     declare BestRun = Player::getBestRun(_Player);
 
     declare time = Player::getTime(_Player);
@@ -495,14 +509,14 @@ Void Private_HandleFinish(CSmPlayer _Player, Ident _GoalId) {
     LastCPTimes = Player::setLastCPTimes(_Player, _GoalId, time);
 
     // Update time diff before updating best run
-    ObsUI::UpdateLayerTimeDiff(_Player, LastRun, BestRun);
+    TimeDiff::UpdateLayer(_Player, LastRun, BestRun);
 
     // Check if last run is  if last run is better
     if (LastRun < BestRun || BestRun < 0) {
         BestRun = Player::setBestRun(_Player, LastRun);
         BestCPTimes = Player::setBestCPTimes(_Player, LastCPTimes);
 
-        CPTimes::UpdatePlayer(_Player);
+        CPTimes::UpdateLayer(_Player);
 
         Private_UpdatePlayerRsCounter(_Player);
     }
@@ -547,7 +561,7 @@ Void Private_HandleFinish(CSmPlayer _Player, Ident _GoalId) {
  */
 Void Private_CheckpointEffect(CSmPlayer _Player, Ident _CheckpointId) {
     declare MapVersion = Map::GetMapTypeVersion();
-    declare Checkpoint <=> MapLandmarks_Gauge[_CheckpointId];
+    declare Checkpoint <=> MapLandmarks[_CheckpointId];
     declare CheckpointName = Checkpoint.Tag;
 
     if(MapVersion <= 2) {
@@ -580,7 +594,7 @@ Void Private_CheckpointEffect(CSmPlayer _Player, Ident _CheckpointId) {
  *            Ident     _CheckpointId Checkpoint captured (guaranted to be the next cp)
  */
 Void Private_HandleCheckpoint(CSmPlayer _Player, Ident _CheckpointId) {
-    declare Checkpoint <=> MapLandmarks_Gauge[_CheckpointId];
+    declare Checkpoint <=> MapLandmarks[_CheckpointId];
     declare LastCPTimes = Player::getLastCPTimes(_Player);
     declare BestCPTimes = Player::getBestCPTimes(_Player);
 
@@ -600,6 +614,9 @@ Void Private_HandleCheckpoint(CSmPlayer _Player, Ident _CheckpointId) {
     XmlRpc.SendCallback("Obstacle_OnCheckpoint", Player::ToJSON(_Player));
 
     // UPDATE UI
+
+    Private_UpdateRanking();
+
     Private_UpdatePlayerBestTime(_Player);
 
     declare UI <=> UIManager.GetUI(_Player);
@@ -609,7 +626,7 @@ Void Private_HandleCheckpoint(CSmPlayer _Player, Ident _CheckpointId) {
     declare BestTime = Player::getBestTime(_Player, _CheckpointId);
     if(time > BestTime) Variant = 1;
 
-    ObsUI::UpdateLayerTimeDiff(_Player, time, BestTime);
+    TimeDiff::UpdateLayer(_Player, time, BestTime);
 
     UI.SendNotice("",
             CUIConfig::ENoticeLevel::PlayerInfo, _Player.User, CUIConfig::EAvatarVariant::Default,

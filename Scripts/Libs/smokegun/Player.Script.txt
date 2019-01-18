@@ -10,6 +10,8 @@
 
 #Include "Libs/Nadeo/Json2.Script.txt" as Json
 
+#Include "Libs/smokegun/Constants.Script.txt" as Constants
+
 /*********************************************
   CONSTANTS
  *********************************************/
@@ -197,13 +199,15 @@ Void InitPlayer(CSmPlayer _Player) {
 
 Boolean wantsRestart(CSmPlayer _Player, Boolean _GiveUp) {
     declare UI <=> UIManager.GetUI(_Player);
-    declare restart = False;
-    if (UI != Null) {
-        declare netread Net_PlayerWantsRestart for UI = False;
-        declare netread Net_PlayerLockedRestart for UI = False;
-        restart = (Net_PlayerWantsRestart || _GiveUp) && !Net_PlayerLockedRestart;
-    }
-    return restart;
+    if (UI == Null)
+        return False;
+
+    declare netread Net_RespawnBehavior for UI = Constants::C_RespawnBehavior_Normal;
+
+    if (Net_RespawnBehavior == Constants::C_RespawnBehavior_FullLocked)
+        return False;
+
+    return (Net_RespawnBehavior == Constants::C_RespawnBehavior_FullRestart|| _GiveUp);
 }
 
 Integer getTime(CSmPlayer _Player) {
@@ -214,7 +218,7 @@ Text Private_CPTimesToJSON(Integer[Ident] _Times) {
     declare res = "{";
     declare i = 0;
     foreach(CPId => CPTime in _Times) {
-        res ^= """ "{{{Json::GetInteger(MapLandmarks_Gauge[CPId].Order)}}}" : {{{Json::GetInteger(CPTime)}}}""";
+        res ^= """ "{{{Json::GetInteger(MapLandmarks[CPId].Order)}}}" : {{{Json::GetInteger(CPTime)}}}""";
 
         if(i < _Times.count-1)
             res ^= ",";
