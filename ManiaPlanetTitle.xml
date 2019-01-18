@@ -1,7 +1,7 @@
 <maniaplanet_title version="4">
 	<id>testobstacle@smokegun</id>
 	<name>testobstacle@smokegun</name>
-	<desc>Obstacle dev titlepack</desc>
+	<desc>Obstacle development title pack.</desc>
 	<url>testobstacle@smokegun</url>
 	<title_version></title_version>
 	<base>SMStorm</base>
@@ -20,21 +20,21 @@
 		<background_img name="MenuBg.jpg"/>
 		<background_replay name=""/>
 		<header name="MenuHeader.png"/>
-		<music name=""/>
+		<music name="Media\Musics\Storm\Race\Night\NIGHT_01_Track_06.ogg"/>
 		<manialink url="Media/Apps/MainMenuLagoon.Script.txt"/>
 	</menu>
 	<menu_style name=""/>
 	<music folder=""/>
 	<mod name=""/>
 	<solo>
-		<mode name="Modes\ShootMania\Obstacle.Script.txt"/>
+		<mode name=""/>
 		<datapack name=""/>
 		<default_maprecord_type>2</default_maprecord_type>
 		<score_context>
 			<name></name>
 			<maprecord_type>2</maprecord_type>
 			<medals_enabled>true</medals_enabled>
-			<compute_medals_from_maprecord>true</compute_medals_from_maprecord>
+			<compute_medals_from_maprecord>false</compute_medals_from_maprecord>
 			<author_medals_enabled>true</author_medals_enabled>
 			<skillpoints_enabled>true</skillpoints_enabled>
 		</score_context>
@@ -62,17 +62,9 @@
 			<author_medals_enabled>true</author_medals_enabled>
 			<skillpoints_enabled>true</skillpoints_enabled>
 		</score_context>
-		<campaign num="0">
-			<playlist name=""/>
-			<mode name=""/>
-			<score_context></score_context>
-			<official_record_enabled>true</official_record_enabled>
-			<disable_unlock_system>false</disable_unlock_system>
-			<maps folder="Campaigns\"/>
-		</campaign>
 	</solo>
 	<network>
-		<mode name="Modes\ShootMania\Obstacle.Script.txt"/>
+		<mode name=""/>
 		<playlist name=""/>
 	</network>
 	<splitscreen>
@@ -93,4 +85,5 @@
 	<unlock_features>0</unlock_features>
 	<hud3dfont name=""/>
 	<download_url></download_url>
+	<hud_default_module name=""/>
 </maniaplanet_title>
