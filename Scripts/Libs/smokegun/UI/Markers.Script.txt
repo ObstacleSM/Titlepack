@@ -5,15 +5,19 @@ Text Private_LandmarkToText(CSmMapLandmark _Landmark)
 {
     if (Tools::IsCheckpoint(_Landmark))
         return "CP "^_Landmark.Order;
+    else if (Tools::IsGoal(_Landmark))
+        return "GOAL";
     return TL::ToUpperCase(_Landmark.Tag);
 }
 
 Text GetXML() {
     declare MarkersXML = "";
     foreach (Landmark in MapLandmarks) {
+        if (!Tools::IsCheckpoint(Landmark) && !Tools::IsGoal(Landmark)) continue;
+
         MarkersXML ^= """
             <marker box="0 3 0"
-                manialinkframeid="CP_Marker_{{{Landmark.Id}}}"
+                manialinkframeid="Marker_{{{Landmark.Id}}}"
                 pos="{{{Tools::GetPos(Landmark.Position)}}}"
             />
         """;
@@ -31,7 +35,7 @@ Text GetLayer() {
         if (!Tools::IsCheckpoint(Landmark) && !Tools::IsGoal(Landmark)) continue;
 
         ML ^= """
-        <frame id="CP_Marker_{{{Landmark.Id}}}">
+        <frame id="Marker_{{{Landmark.Id}}}">
             <frame id="Content" hidden="1">
                 <label pos="0 0" z-index="0" size="20 10"
                     text="{{{Private_LandmarkToText(Landmark)}}}"
@@ -78,6 +82,7 @@ main() {
                 declare CP_Id = Parts[Parts.count - 1];
                 declare CSmMapLandmark CP_Landmark;
 
+
                 // Find the landmark associated to the frame
                 foreach (Landmark in MapLandmarks) {
                     if (""^Landmark.Id == CP_Id) {
@@ -90,7 +95,8 @@ main() {
                     continue;
 
                 if (Net_CpProgress == Net_CheckpointsTotal) {
-                    CP_Content.Visible = CP_Landmark.Tag == "Goal";
+                    declare metadata Meta_CPType for CP_Landmark = 0;
+                    CP_Content.Visible = CP_Landmark.Tag == "Goal" || Meta_CPType == 2;
                 } else {
                     CP_Content.Visible = CP_Landmark.Order == Net_CpProgress + 1;
                 }
