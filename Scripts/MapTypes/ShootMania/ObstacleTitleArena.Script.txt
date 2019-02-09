@@ -200,6 +200,8 @@ Text Get_EditGoal() {
 
 Void Load() {
     log(Now^"> Loaded.");
+    if (Map.TMObjective_AuthorTime == -1)
+		    Map.TMObjective_AuthorTime = 1;
 }
 
 Void Unload() {
@@ -609,9 +611,12 @@ Void SaveCheckpointSettings() {
     declare Integer Order for ManialinkPage;
     Anchor.Order = Order;
 
-    declare Boolean IsPortal for ManialinkPage;
+    declare Integer CPType for ManialinkPage;
     declare metadata Meta_IsPortal for Anchor = False;
-    Meta_IsPortal = IsPortal;
+    declare metadata Meta_CPType for Anchor = 0;
+    Meta_CPType = CPType;
+    Meta_IsPortal = CPType == 1;
+
 
     SaveBasePageVariables(Anchor);
     SaveWeaponPageVariables(Anchor);
@@ -672,17 +677,20 @@ Void UpdateValidability() {
         }
     }
 
-    if(Goals == 0) {
+
+    if(StartSpawns == 0) {
+        ValidationStatus = CSmMapType::ValidationStatus::NotValidable;
+        ValidabilityRequirementsMessage = _("You must place at least one Start Spawn.");
+    } else if(Goals == 0) {
         ValidationStatus = CSmMapType::ValidationStatus::NotValidable;
         ValidabilityRequirementsMessage = _("You must place at least one Goal.");
-        return;
+    } else {
+        ValidationStatus = CSmMapType::ValidationStatus::Validated;
     }
-
-    // Everything is fine :)
-    ValidationStatus = CSmMapType::ValidationStatus::Validated;
 }
 
 Void Loop() {
+
   foreach (Event in PendingEvents) {
     switch (Event.Type) {
       case CPluginEvent::Type::MapModified: {
@@ -712,6 +720,7 @@ Void Loop() {
       }
 
       case CPluginEvent::Type::EditObjectives: {
+DisplayDefaultSetObjectivesDialog ();
       }
 
       case CPluginEvent::Type::LayerCustomEvent: {
