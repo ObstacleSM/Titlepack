@@ -40,7 +40,7 @@ Void Yield(Real _NextMapVotingRatio) {
 Text GetLayer(Real _NextMapVotingRatio) {
     return """
 <manialink version="3" name="Obstacle:NextMapVote">
-    <frame pos="-49 90"id="NextMapVote">
+    <frame pos="-49 90"id="Frame_NextMapVote">
         <label id="Label_NextMapVoting" pos="0 -2" size="25 4" textsize="1" halign="left" valign="center2" textfont="OswaldMono" textcolor="080"/>
         <quad z-index="-1" pos="12.5 -2" size="27 5" style="BgRaceScore2" substyle="BgCardPlayer" halign="center" valign="center"/>
     </frame>
@@ -53,6 +53,7 @@ Text GetLayer(Real _NextMapVotingRatio) {
     main() {
         wait(InputPlayer != Null && Page != Null);
 
+        declare Frame_NextMapVote <=> (Page.GetFirstChild("Frame_NextMapVote") as CMlFrame);
         declare Label_NextMapVoting <=> (Page.GetFirstChild("Label_NextMapVoting") as CMlLabel);
 
         declare netread Net_PlayersVotingNext for Teams[0] = 0;
@@ -109,7 +110,7 @@ Text GetLayer(Real _NextMapVotingRatio) {
 
                 Label_NextMapVoting.Value = TL::Compose("%1%2: %3", Color, VotingText, Remaining);
             } else {
-                Label_NextMapVoting.Visible = False;
+                Frame_NextMapVote.Visible = False;
             }
         }
 
