@@ -140,14 +140,10 @@ Text GetLayer() {
         declare Frame_Widget <=> (Page.GetFirstChild("Frame_Small_Records") as CMlFrame);
         declare Frame_Records <=> (Frame_Widget.GetFirstChild("Frame_Records") as CMlFrame);
 
-        {{{CustomUI::InjectMLInit()}}}
-
         UpdateRecords(InputPlayer.User.Login);
 
         while (True) {
             yield;
-
-            {{{CustomUI::InjectMLLoop()}}}
 
             declare LocalPlayer <=> InputPlayer;
             if (GUIPlayer != Null) LocalPlayer <=> GUIPlayer;
