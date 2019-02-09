@@ -106,11 +106,8 @@ Void Login() {
     G_State = Constants::C_SLoggingIn;
 }
 
-Void StartMap(Integer _RecordsPerTick, Integer _RecordsTickDelay) {
-}
-
 // Init the API with a token
-Void Init(Integer _RecordsPerTick, Integer _RecordsTickDelay) {
+Void Init() {
     G_PostHeaders = "Content-Type: application/json\nAccept: application/xml";
     G_GetHeaders = "Accept: application/xml";
     G_HostUrlLength = TL::Length(Constants::C_HostUrl);

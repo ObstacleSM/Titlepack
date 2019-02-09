@@ -48,6 +48,7 @@ declare Boolean G_FullAmmoSpawn;
 declare Boolean G_FastRespawn;
 declare Boolean G_LegacyRespawn;
 declare Boolean G_AllowJump;
+declare Boolean G_UseRecords;
 
 // Should update the map scores of player to order them
 declare Boolean G_UseMapRanking;
@@ -58,12 +59,13 @@ declare Boolean G_UseMapRanking;
  *********************************************/
 
 // TODO: handle settings better
-Void SetSettings(Boolean _FullAmmoSpawn, Boolean _FastRespawn, Boolean _LegacyRespawn, Boolean _AllowJump, Boolean _UseMapRanking) {
+Void SetSettings(Boolean _FullAmmoSpawn, Boolean _FastRespawn, Boolean _LegacyRespawn, Boolean _AllowJump, Boolean _UseMapRanking, Boolean _UseRecords) {
     G_FullAmmoSpawn = _FullAmmoSpawn;
     G_FastRespawn = _FastRespawn;
     G_LegacyRespawn = _LegacyRespawn;
     G_AllowJump = _AllowJump;
     G_UseMapRanking = _UseMapRanking;
+    G_UseRecords = _UseRecords;
 }
 
 /**
@@ -73,7 +75,8 @@ Void SetSettings(Boolean _FullAmmoSpawn, Boolean _FastRespawn, Boolean _LegacyRe
 Void NewPlayer(CSmPlayer _Player)
 {
     Player::InitPlayer(_Player);
-    API::ReplaceOrCreatePlayer(_Player);
+    if (G_UseRecords)
+        API::ReplaceOrCreatePlayer(_Player);
     Ladder::AddPlayer(_Player.Score);
 
     declare UI <=> UIManager.GetUI(_Player);
@@ -90,7 +93,8 @@ Void NewPlayer(CSmPlayer _Player)
  * Returns: boolean is the map valid
  */
 Boolean PrepareMap() {
-    API::ReplaceOrCreateMap();
+    if (G_UseRecords)
+        API::ReplaceOrCreateMap();
 
     G_StartSpawnId = NullId;
     G_CheckpointsTotal = 0;
@@ -183,7 +187,8 @@ Void Private_SendXmlRpcCallback(Text _CallbackName, CSmPlayer _Player, Integer _
  */
 Void Private_SendFinishedRun(CSmPlayer _Player, Integer _Run, Ident _GoalId) {
     Private_SendXmlRpcCallback("OnFinish", _Player, _Run, _GoalId);
-    API::PlayerFinished(_Player);
+    if (G_UseRecords)
+        API::PlayerFinished(_Player);
 }
 
 /////////////////////////////////////////////////////////////////

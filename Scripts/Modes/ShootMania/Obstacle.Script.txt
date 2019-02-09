@@ -48,8 +48,7 @@
 #Setting S_AllowJump True as _("Enable checkpoint jumping")
 #Setting S_LegacyRespawn False as _("LEGACY: Enable old respawn")
 
-#Setting S_RecordsPerTick 100 as "<hidden>"
-#Setting S_RecordsTickDelay 50 as "<hidden>"
+#Setting S_EnableRecords True as "<hidden>"
 #Setting S_NextMapVotingRatio 0.7 as "<hidden>"
 
 #Setting S_ScriptEnvironment "development"
@@ -59,6 +58,8 @@
 // ---------------------------------- //
 #Const C_HudModulePath "Obstacle/UI.Module.Gbx" ///< Path to the hud module
 #Const Description _("Finish map as fast as possible !")
+
+declare Boolean G_Records_Enabled;
 
 ***Match_LogVersions***
 ***
@@ -138,7 +139,7 @@ if (Hud != Null && Hud.ScoresTable != Null) {
 SpawnScreen::CreateScores("Score.Points");
 ***
 
-***InitServer***
+***Match_InitServer***
 ***
 declare Integer G_LastUpdate = 0;
 ***
@@ -150,7 +151,10 @@ SM::SetupDefaultVisibility();
 Spectators::ForceCamera(Spectators::Camera_FirstPerson());
 Items::Init();
 CreateUI();
-API::Init(S_RecordsPerTick, S_RecordsTickDelay);
+
+G_Records_Enabled = S_EnableRecords;
+if (G_Records_Enabled)
+    API::Init();
 ***
 
 ***Match_InitMap***
@@ -171,9 +175,7 @@ if(!Obstacle::PrepareMap())
 UIManager.UIAll.MarkersXML = Markers::GetXML();
 Layers::Update("Markers", Markers::GetLayer());
 
-API::StartMap(S_RecordsPerTick, S_RecordsTickDelay);
-
-Obstacle::SetSettings(S_FullAmmoSpawn, S_FastRespawn, S_LegacyRespawn, S_AllowJump, True);
+Obstacle::SetSettings(S_FullAmmoSpawn, S_FastRespawn, S_LegacyRespawn, S_AllowJump, True, S_EnableRecords);
 Items::Place();
 
 foreach(Player in AllPlayers) {
@@ -191,13 +193,15 @@ if (S_TimeLimit > 0) {
 
 ***Match_Yield***
 ***
-API::Loop();
 SpectatorCount::Yield();
 NextMapVote::Yield(S_NextMapVotingRatio);
 ***
 
 ***Match_PlayLoop***
 ***
+
+if (G_Records_Enabled)
+    API::Loop();
 
 if (Now > EndTime) {
     Message::SendBigMessage(_("Time limit reached"),    2000, 3, CUIConfig::EUISound::Silence, 0);
@@ -336,7 +340,7 @@ if (PrevPvPWeapons != S_PvPWeapons) {
 if (LastUpdate + 1000 < Now) {
     LastUpdate = Now;
 
-    Obstacle::SetSettings(S_FullAmmoSpawn, S_FastRespawn, S_LegacyRespawn, S_AllowJump, True);
+    Obstacle::SetSettings(S_FullAmmoSpawn, S_FastRespawn, S_LegacyRespawn, S_AllowJump, True, G_Records_Enabled);
 }
 ***
 
@@ -416,7 +420,9 @@ Void CreateUI() {
     Layers::Create("Markers");
     Layers::SetType("Markers", CUILayer::EUILayerType::Markers);
     Layers::Create("Items", Items::CreateLayerItems());
-    Layers::Create("Records", RecordsWidget::GetLayer());
+
+    if (S_EnableRecords)
+        Layers::Create("Records", RecordsWidget::GetLayer());
 
     Layers::Attach("Chrono");
     Layers::Attach("TimeDiff");
@@ -437,7 +443,10 @@ Void DestroyUI() {
     Layers::Detach("CPTimes");
     Layers::Detach("Markers");
     Layers::Detach("Items");
-    Layers::Detach("Records");
+    
+    if (S_EnableRecords)
+        Layers::Detach("Records");
+
     Layers::Detach("SpectatorCount");
     Layers::Detach("NextMapVote");
     Layers::Detach("RespawnBehavior");
