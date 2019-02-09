@@ -68,6 +68,9 @@ Text GetLayer() {
                 if (Net_SpeccedTargetLogin != "")
                     Net_SpeccedTargetLogin = "";
             }
+
+            if (Frame_SpectateCount.Visible != (LastNbSpectating != 0))
+                Frame_SpectateCount.Visible = (LastNbSpectating != 0);
         }
 
     }
