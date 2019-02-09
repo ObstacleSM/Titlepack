@@ -16,22 +16,22 @@ Text Private_WeaponML() {
                 <label id="Rocket" pos="-10 -2.5" size="20 5" text="Rocket" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
                 <label id="Nucleus" pos="10 -2.5" size="20 5" text="Nucleus" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
                 <label id="Arrow" pos="30 -2.5" size="20 5" text="Arrow" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
-                <quad id="Weapon_Selector" pos="-20 0" size="20 5" bgcolor="393939AA"/>
-                <quad pos="0 0.5" size="81 6" bgcolor="595959AA" halign="center"/>
+                <quad id="Weapon_Selector" pos="-20 0" size="20 5" bgcolor="292929AA"/>
+                <quad pos="0 0.5" size="81 6" bgcolor="797979AA" halign="center"/>
             </frame>
             <label pos="-12 5.5" size="20 5" class="text" text="Gain (10%-1000%)" valign="center2" halign="center" textsize="2"/>
             <frame pos="-12 0">
                 <label pos="9 0" size="6 3.5" class="text" text="" scriptevents="1" halign="center" valign="bottom" textsize="1"/>
                 <label pos="9 0" size="6 3.5" class="text" text="" scriptevents="1" halign="center" valign="top" textsize="1"/>
                 <entry id="Entry_Weapon_Gain" pos="0 0"size="20 5" class="entry" default="100" textfont="Oswald" halign="center" valign="center2"/>
-                <quad pos="0 0" size="21 6" bgcolor="595959AA" halign="center" valign="center"/>
+                <quad pos="0 0" size="21 6" bgcolor="797979AA" halign="center" valign="center"/>
             </frame>
             <label pos="12 5.5" size="20 5" class="text" text="Amount (0-10)" valign="center2" halign="center" textsize="2"/>
             <frame pos="12 0">
                 <label pos="9 0" size="6 3.5" class="text" text="" scriptevents="1" halign="center" valign="bottom" textsize="1"/>
                 <label pos="9 0" size="6 3.5" class="text" text="" scriptevents="1" halign="center" valign="top" textsize="1"/>
                 <entry id="Entry_Weapon_Amount" pos="0 0"size="20 5" class="entry" default="4" textfont="Oswald" halign="center" valign="center2"/>
-                <quad pos="0 0" size="21 6" bgcolor="595959AA" halign="center" valign="center"/>
+                <quad pos="0 0" size="21 6" bgcolor="797979AA" halign="center" valign="center"/>
             </frame>
         </frame>
         <frame id="Stamina" pos="0 -65">
@@ -40,22 +40,22 @@ Text Private_WeaponML() {
                 <label id="Normal" pos="-20 -2.5" size="20 5" text="Normal" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
                 <label id="Custom" pos="0 -2.5" size="20 5" text="Custom" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
                 <label id="Unlimited" pos="20 -2.5" size="20 5" text="Unlimited" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
-                <quad id="Stamina_Selector" pos="-30 0" size="20 5" bgcolor="393939AA"/>
-                <quad pos="0 0.5" size="61 6" bgcolor="595959AA" halign="center"/>
+                <quad id="Stamina_Selector" pos="-30 0" size="20 5" bgcolor="292929AA"/>
+                <quad pos="0 0.5" size="61 6" bgcolor="797979AA" halign="center"/>
             </frame>
             <label pos="-12 5.5" size="20 5" class="text" text="Gain (10%-100%)" valign="center2" halign="center" textsize="2"/>
             <frame pos="-12 0">
                 <label pos="9 0" size="6 3.5" class="text" text="" scriptevents="1" halign="center" valign="bottom" textsize="1"/>
                 <label pos="9 0" size="6 3.5" class="text" text="" scriptevents="1" halign="center" valign="top" textsize="1"/>
                 <entry id="Entry_Stamina_Gain" pos="0 0"size="20 5" class="entry" default="100" textfont="Oswald" halign="center" valign="center2"/>
-                <quad pos="0 0" size="21 6" bgcolor="595959AA" halign="center" valign="center"/>
+                <quad pos="0 0" size="21 6" bgcolor="797979AA" halign="center" valign="center"/>
             </frame>
             <label pos="12 5.5" size="20 5" class="text" text="Amount (10%-300%)" valign="center2" halign="center" textsize="2"/>
             <frame pos="12 0">
                 <label pos="9 0" size="6 3.5" class="text" text="" scriptevents="1" halign="center" valign="bottom" textsize="1"/>
                 <label pos="9 0" size="6 3.5" class="text" text="" scriptevents="1" halign="center" valign="top" textsize="1"/>
                 <entry id="Entry_Stamina_Amount" pos="0 0"size="20 5" class="entry" default="100" textfont="Oswald" halign="center" valign="center2"/>
-                <quad pos="0 0" size="21 6" bgcolor="595959AA" halign="center" valign="center"/>
+                <quad pos="0 0" size="21 6" bgcolor="797979AA" halign="center" valign="center"/>
             </frame>
         </frame>
     """;
@@ -91,18 +91,18 @@ Text Get_EditCheckpoint() {
     return """
 <stylesheet>
     <style class="text" bgcolor="FFFF" textfont="Oswald" style="TextTitle3" focusareacolor1="0000" focusareacolor2="0000" textcolor="FFFFFFFF"/>
-    <style class="entry" focusareacolor1="595959AA" focusareacolor2="393939AA" textsize="2"/>
+    <style class="entry" focusareacolor1="797979AA" focusareacolor2="292929AA" textsize="2"/>
 </stylesheet>
 <frame pos="125 20" scale="0.75">
     <frame z-index="1">
         <label pos="0 40" size="75 10" class="text" text="Edit checkpoint" textsize="5" halign="center" valign="center2"/>
         <label pos="42.5 42.5" size="5 5" text="❌" valign="center" halign="center" focusareacolor2="FF0000FF" scriptevents="1" textsize="2" focusareacolor1="0000" scriptaction="Close"/>
-        <label id="Save" pos="0 -65" size="20 7" text="SAVE" halign="center" valign="center" focusareacolor1="595959AA" focusareacolor2="393939AA" scriptevents="1" textfont="Oswald" textcolor="FFFFFFFF"/>
+        <label id="Save" pos="0 -65" size="20 7" text="SAVE" halign="center" valign="center" focusareacolor1="797979AA" focusareacolor2="292929AA" scriptevents="1" textfont="Oswald" textcolor="FFFFFFFF"/>
         <frame pos="0 40">
             <label id="Enable" pos="-10 -8.5" size="20 5" text="enable" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
             <label id="Disable" pos="10 -8.5" size="20 5" text="disable" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
-            <quad id="Enabled_Selector" pos="-20 -6" size="20 5" bgcolor="393939AA"/>
-            <quad pos="0 -5.5" size="41 6" bgcolor="595959AA" halign="center"/>
+            <quad id="Enabled_Selector" pos="-20 -6" size="20 5" bgcolor="292929AA"/>
+            <quad pos="0 -5.5" size="41 6" bgcolor="797979AA" halign="center"/>
         </frame>
     </frame>
     <frame id="properties" z-index="1" pos="0 10">
@@ -112,8 +112,8 @@ Text Get_EditCheckpoint() {
                 <label id="Checkpoint" pos="-20 -2.5" size="20 5" text="Checkpoint" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
                 <label id="Portal" pos="0 -2.5" size="20 5" text="Portal" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
                 <label id="Goal" pos="20 -2.5" size="20 5" text="Goal" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
-                <quad id="Type_Selector" pos="-30 0" size="20 5" bgcolor="393939AA"/>
-                <quad pos="0 0.5" size="61 6" bgcolor="595959AA" halign="center"/>
+                <quad id="Type_Selector" pos="-30 0" size="20 5" bgcolor="292929AA"/>
+                <quad pos="0 0.5" size="61 6" bgcolor="797979AA" halign="center"/>
             </frame>
 
             <label pos="0 -13" size="20 5" class="text" text="Order" halign="center" textsize="3"/>
@@ -121,7 +121,7 @@ Text Get_EditCheckpoint() {
                 <label pos="9 0" size="6 3.5" class="text" text="" scriptevents="1" halign="center" valign="bottom" textsize="1"/>
                 <label pos="9 0" size="6 3.5" class="text" text="" scriptevents="1" halign="center" valign="top" textsize="1"/>
                 <entry id="Entry_Order" pos="0 0"size="20 5" class="entry" default="0" textfont="Oswald" halign="center" valign="center2"/>
-                <quad pos="0 0" size="21 6" bgcolor="595959AA" halign="center" valign="center"/>
+                <quad pos="0 0" size="21 6" bgcolor="797979AA" halign="center" valign="center"/>
             </frame>
         </frame>
         {{{Private_WeaponML()}}}
@@ -135,18 +135,18 @@ Text Get_EditSpawn() {
     return """
 <stylesheet>
     <style class="text" bgcolor="FFFF" textfont="Oswald" style="TextTitle3" focusareacolor1="0000" focusareacolor2="0000" textcolor="FFFFFFFF"/>
-    <style class="entry" focusareacolor1="595959AA" focusareacolor2="393939AA" textsize="2"/>
+    <style class="entry" focusareacolor1="797979AA" focusareacolor2="292929AA" textsize="2"/>
 </stylesheet>
 <frame pos="125 20" scale="0.75">
     <frame z-index="1">
         <label pos="0 40" size="75 10" class="text" text="Edit spawn" textsize="5" halign="center" valign="center2"/>
         <label pos="42.5 42.5" z-index="0" size="5 5" text="❌" valign="center" halign="center" focusareacolor2="FF0000FF" scriptevents="1" textsize="2" focusareacolor1="0000" scriptaction="Close"/>
-        <label id="Save" pos="0 -65" size="20 7" text="SAVE" halign="center" valign="center" focusareacolor1="595959AA" focusareacolor2="393939AA" scriptevents="1" textfont="Oswald" textcolor="FFFFFFFF"/>
+        <label id="Save" pos="0 -65" size="20 7" text="SAVE" halign="center" valign="center" focusareacolor1="797979AA" focusareacolor2="292929AA" scriptevents="1" textfont="Oswald" textcolor="FFFFFFFF"/>
         <frame pos="0 40">
             <label id="Enable" pos="-10 -8.5" size="20 5" text="enable" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
             <label id="Disable" pos="10 -8.5" size="20 5" text="disable" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
-            <quad id="Enabled_Selector" pos="-20 -6" size="20 5" bgcolor="393939AA"/>
-            <quad pos="0 -5.5" size="41 6" bgcolor="595959AA" halign="center"/>
+            <quad id="Enabled_Selector" pos="-20 -6" size="20 5" bgcolor="292929AA"/>
+            <quad pos="0 -5.5" size="41 6" bgcolor="797979AA" halign="center"/>
         </frame>
     </frame>
     <frame id="properties" z-index="1" pos="0 10">
@@ -155,15 +155,15 @@ Text Get_EditSpawn() {
             <frame pos="0 0">
                 <label id="Spawn" scriptevents="1" pos="-10 -8.5" size="20 5" class="text" text="spawn" halign="center" valign="center" textsize="2"/>
                 <label id="CPSpawn" scriptevents="1" pos="10 -8.5" size="20 5" class="text" text="cpspawn" halign="center" valign="center" textsize="2"/>
-                <quad id="Type_Selector" pos="-20 -6" size="20 5" bgcolor="393939AA"/>
-                <quad pos="0 -5.5" size="41 6" bgcolor="595959AA" halign="center"/>
+                <quad id="Type_Selector" pos="-20 -6" size="20 5" bgcolor="292929AA"/>
+                <quad pos="0 -5.5" size="41 6" bgcolor="797979AA" halign="center"/>
             </frame>
             <label pos="0 -13" size="20 5" class="text" text="Order" halign="center" textsize="3"/>
             <frame pos="0 -21">
                 <label pos="9 0" size="6 3.5" class="text" text="" scriptevents="1" halign="center" valign="bottom" textsize="1"/>
                 <label pos="9 0" size="6 3.5" class="text" text="" scriptevents="1" halign="center" valign="top" textsize="1"/>
                 <entry id="Entry_Order" pos="0 0"size="20 5" class="entry" default="0" textfont="Oswald" halign="center" valign="center2"/>
-                <quad pos="0 0" size="21 6" bgcolor="595959AA" halign="center" valign="center"/>
+                <quad pos="0 0" size="21 6" bgcolor="797979AA" halign="center" valign="center"/>
             </frame>
         </frame>
         {{{Private_WeaponML()}}}
@@ -177,18 +177,18 @@ Text Get_EditGoal() {
     return """
 <stylesheet>
     <style class="text" bgcolor="FFFF" textfont="Oswald" style="TextTitle3" focusareacolor1="0000" focusareacolor2="0000" textcolor="FFFFFFFF"/>
-    <style class="entry" focusareacolor1="595959AA" focusareacolor2="393939AA" textsize="2"/>
+    <style class="entry" focusareacolor1="797979AA" focusareacolor2="292929AA" textsize="2"/>
 </stylesheet>
 <frame pos="125 20" scale="0.75">
     <frame z-index="1">
         <label pos="0 40" size="75 10" class="text" text="Edit goal" textsize="5" halign="center" valign="center2"/>
         <label pos="42.5 42.5" z-index="0" size="5 5" text="❌" valign="center" halign="center" focusareacolor2="FF0000FF" scriptevents="1" textsize="2" focusareacolor1="0000" scriptaction="Close"/>
-        <label id="Save" pos="0 -65" size="20 7" text="SAVE" halign="center" valign="center" focusareacolor1="595959AA" focusareacolor2="393939AA" scriptevents="1" textfont="Oswald" textcolor="FFFFFFFF"/>
+        <label id="Save" pos="0 -65" size="20 7" text="SAVE" halign="center" valign="center" focusareacolor1="797979AA" focusareacolor2="292929AA" scriptevents="1" textfont="Oswald" textcolor="FFFFFFFF"/>
         <frame pos="0 40">
             <label id="Enable" pos="-10 -8.5" size="20 5" text="enable" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
             <label id="Disable" pos="10 -8.5" size="20 5" text="disable" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
-            <quad id="Enabled_Selector" pos="-20 -6" size="20 5" bgcolor="393939AA"/>
-            <quad pos="0 -5.5" size="41 6" bgcolor="595959AA" halign="center"/>
+            <quad id="Enabled_Selector" pos="-20 -6" size="20 5" bgcolor="292929AA"/>
+            <quad pos="0 -5.5" size="41 6" bgcolor="797979AA" halign="center"/>
         </frame>
     </frame>
     <frame id="properties" z-index="1" pos="0 10">
