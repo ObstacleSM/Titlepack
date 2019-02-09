@@ -653,7 +653,7 @@ Void UpdateValidability() {
     declare Goals = 0;
 
     foreach (Anchor in AnchorData) {
-        declare metadata Meta_Enabled for Anchor = False;
+        declare metadata Meta_Enabled for Anchor = True;
         if(!Meta_Enabled) continue;
 
         switch(Anchor.Tag) {
