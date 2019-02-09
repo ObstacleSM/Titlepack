@@ -28,10 +28,6 @@ Text GetPos(Vec2 _Pos) {
     return _Pos.X^" "^_Pos.Y;
 }
 
-Boolean IsGoal(CSmMapLandmark _Landmark) {
-    return _Landmark.Tag == "Goal";
-}
-
 Boolean IsEnabled(CSmMapLandmark _Landmark) {
     if(Map::GetMapTypeVersion() <= 2)
         return _Landmark.Tag != "No-Function";
@@ -39,14 +35,33 @@ Boolean IsEnabled(CSmMapLandmark _Landmark) {
     return Meta_IsEnabled;
 }
 
+Boolean IsGoal(CSmMapLandmark _Landmark) {
+    if (!IsEnabled(_Landmark))
+        return False;
+
+    if(Map::GetMapTypeVersion() <= 2)
+   	    return _Landmark.Tag == "Goal";
+
+    declare metadata Meta_CPType for _Landmark = 0;
+   	return _Landmark.Tag == "Goal" || Meta_CPType == 2;
+}
+
 Boolean IsCheckpoint(CSmMapLandmark _Landmark) {
+    if (!IsEnabled(_Landmark))
+        return False;
+
     if(Map::GetMapTypeVersion() <= 2)
         return "Checkpoint" == TextLib::SubText(_Landmark.Tag, 0, 10);
 
-    return _Landmark.Tag == "Checkpoint";
+    declare metadata Meta_CPType for _Landmark = 0;
+   	return _Landmark.Tag == "Checkpoint"
+           && (Meta_CPType == 0 || Meta_CPType == 1);
 }
 
 Boolean IsPortal(CSmMapLandmark _Landmark) {
+    if (!IsEnabled(_Landmark))
+        return False;
+
     if(Map::GetMapTypeVersion() <= 2)
         return _Landmark.Tag == "Portal" || _Landmark.Tag == "CheckpointType3";
     declare metadata Meta_IsPortal for _Landmark = False;
@@ -54,6 +69,9 @@ Boolean IsPortal(CSmMapLandmark _Landmark) {
 }
 
 Boolean IsCpSpawn(CSmMapLandmark _Landmark) {
+    if (!IsEnabled(_Landmark))
+        return False;
+
     if(Map::GetMapTypeVersion() <= 2)
         return _Landmark.Tag == "CPSpawn";
     declare metadata Meta_IsCpSpawn for _Landmark = False;
@@ -61,6 +79,9 @@ Boolean IsCpSpawn(CSmMapLandmark _Landmark) {
 }
 
 Boolean IsSpawn(CSmMapLandmark _Landmark) {
+    if (!IsEnabled(_Landmark))
+        return False;
+
     if(Map::GetMapTypeVersion() <= 2)
         return TextLib::SubString(_Landmark.Tag, 0, 5) == "Spawn";
     declare metadata Meta_IsCpSpawn for _Landmark = False;
