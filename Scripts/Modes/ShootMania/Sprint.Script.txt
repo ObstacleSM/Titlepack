@@ -248,7 +248,7 @@ foreach (Event in PendingEvents) {
         }
 
         case CSmModeEvent::EType::OnPlayerTriggersSector: {
-            HandleCapture(Event.Player);
+            Private_HandleCapture(Event.Player);
             Events::Valid(Event);
         }
 
@@ -343,24 +343,7 @@ if (BestPlayerScore != Null) {
 
 ***Match_BeforeCloseLadder***
 ***
-declare Unranked = CSmScore[];
-
-declare WorstRun = -1;
-foreach (Score in Scores) {
-    declare BestRun for Score = 1;
-    if (BestRun > 0) {
-        Score.LadderRankSortValue = BestRun;
-
-        if(BestRun > WorstRun) WorstRun = BestRun;
-    }
-    else {
-        Unranked.add(Score);
-    }
-}
-
-foreach(Score in Unranked) {
-    Score.LadderRankSortValue = WorstRun + 1;
-}
+DoNothing();
 ***
 
 ***Match_AfterCloseLadder***
@@ -506,53 +489,62 @@ Void Private_HandleFinish(CSmPlayer _Player, Ident _GoalId) {
     }
 }
 
-Void Private_ShowMessage(CSmPlayer _Player, Text _Message)
-{
-    declare LastStatusMessage for _Player = Now;
-    if(_Message != "" && LastStatusMessage + 2500 < Now) {
-        LastStatusMessage = Now;
-        Message::SendBigMessage(_Player, _Message, 2000, 0, CUIConfig::EUISound::Warning, 1);
-    }
-}
-
-Void HandleCapture(CSmPlayer _Player) {
+Void Private_HandleCapture(CSmPlayer _Player) {
     declare Landmark <=> _Player.CapturedLandmark;
     declare MapVersion = Map::GetMapTypeVersion();
     declare CpProgress = Player::getCpProgress(_Player);
+    declare HasJumped = Player::usedJump(_Player);
     declare MessageToShow = "";
 
-    if (!Tools::IsEnabled(Landmark))
+    if(!Tools::IsEnabled(Landmark))
         return;
 
-    if (Tools::IsGoal(Landmark)) {
-        declare CpMissing = Obstacle::GetCheckpointsTotal() - CpProgress;
-        if (CpMissing != 0) {
-            Private_ShowMessage(_Player, "Checkpoints are missing!");
-            return;
-        }
-        Private_HandleFinish(_Player, Landmark.Id);
+    declare time = Player::getTime(_Player);
+    if (time < 0) {
+        Obstacle::RespawnPlayer(_Player, True);
         return;
     }
 
-    if (Tools::IsCheckpoint(Landmark)) {
-        declare LastCpTimes = Player::getLastCPTimes(_Player);
-        declare LastCheckpoint = Player::getLastCheckpoint(_Player);
-
-        declare isNextCp = Landmark.Order == CpProgress + 1;
-        if (Landmark.Order == 0)
-            isNextCp = !LastCpTimes.existskey(Landmark.Id);
-
-        if (!isNextCp) {
-            Private_ShowMessage(_Player, "Checkpoints are missing!");
-            return;
+    if(Tools::IsGoal(Landmark)) {
+        if (HasJumped) {
+            MessageToShow =  _("You used a Jump! Your Time is invalid.");
+        } else {
+            declare CpMissing = Obstacle::GetCheckpointsTotal() - CpProgress;
+            if (CpMissing == 0)
+                Private_HandleFinish(_Player, Landmark.Id);
+            else
+                MessageToShow = "Missing "^CpMissing^" checkpoint(s)!";
         }
+    } else if(Tools::IsCheckpoint(Landmark)) {
+        // Take any checkpoints if player jumped
+        if(HasJumped) {
+            if(Landmark.Order != CpProgress) {
+                Obstacle::Private_HandleCheckpoint(_Player, Landmark.Id);
+            }
+        } else {
+            declare LastCpTimes = Player::getLastCPTimes(_Player);
+            declare LastCheckpoint = Player::getLastCheckpoint(_Player);
 
-        Obstacle::Private_HandleCheckpoint(_Player, Landmark.Id);
-        return;
-    }
+            // Check if the checkpoint is the next one
+            declare isNextCp = True;
+            if(Landmark.Order == 0) {
+                isNextCp = !LastCpTimes.existskey(Landmark.Id);
+            } else {
+                isNextCp = Landmark.Order == CpProgress + 1;
+            }
 
-    if (Tools::IsPortal(Landmark)) {
+            if(isNextCp)
+                Obstacle::Private_HandleCheckpoint(_Player, Landmark.Id);
+        }
+    } else if(Tools::IsPortal(Landmark)) {
         Obstacle::Private_UsePortal(_Player, Landmark.Id);
-        return;
+    }
+
+    // TODO: Change this to a separate function (in Tools or Player?)
+    declare LastStatusMessage for _Player = Now;
+    if(MessageToShow != "" && LastStatusMessage + 2500 < Now) {
+        LastStatusMessage = Now;
+        Message::SendBigMessage(_Player, MessageToShow, 2000, 0, CUIConfig::EUISound::Warning, 1);
     }
 }
+
