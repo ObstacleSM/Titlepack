@@ -41,7 +41,7 @@
 // ---------------------------------- //
 // Settings
 // ---------------------------------- //
-#Setting S_TimeLimit 30 as _("Time limit")
+#Setting S_TimeLimit -1 as _("Time limit")
 #Setting S_PvPWeapons False as _("Enable PvP Weapons")
 #Setting S_FullAmmoSpawn True as _("Spawning with full Ammunition")
 #Setting S_FastRespawn True as _("Fast respawn on the checkpoint")
@@ -203,7 +203,7 @@ NextMapVote::Yield(S_NextMapVotingRatio);
 if (G_Records_Enabled)
     API::Loop();
 
-if (Now > EndTime) {
+if (EndTime > 0 && Now > EndTime) {
     Message::SendBigMessage(_("Time limit reached"),    2000, 3, CUIConfig::EUISound::Silence, 0);
     MB_Private_StopMatch();
 }
