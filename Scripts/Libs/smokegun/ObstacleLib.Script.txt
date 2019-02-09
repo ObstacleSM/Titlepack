@@ -525,6 +525,7 @@ Void Private_HandleFinish(CSmPlayer _Player, Ident _GoalId) {
     Private_SendFinishedRun(_Player, LastRun, _GoalId);
     XmlRpc.SendCallback("Obstacle_OnFinish", Player::ToJSON(_Player));
 
+    // BELOW IS OBSTACLE ONLY
     //Update UI
     declare UI <=> UIManager.GetUI(_Player);
     if (UI != Null) {
@@ -614,9 +615,6 @@ Void Private_HandleCheckpoint(CSmPlayer _Player, Ident _CheckpointId) {
     XmlRpc.SendCallback("Obstacle_OnCheckpoint", Player::ToJSON(_Player));
 
     // UPDATE UI
-
-    Private_UpdateRanking();
-
     Private_UpdatePlayerBestTime(_Player);
 
     declare UI <=> UIManager.GetUI(_Player);
@@ -631,6 +629,9 @@ Void Private_HandleCheckpoint(CSmPlayer _Player, Ident _CheckpointId) {
     UI.SendNotice("",
             CUIConfig::ENoticeLevel::PlayerInfo, _Player.User, CUIConfig::EAvatarVariant::Default,
             CUIConfig::EUISound::Checkpoint, Variant);
+    
+    // BELOW IS OBSTACLE ONLY
+    Private_UpdateRanking();
 }
 
 /**
@@ -684,8 +685,6 @@ Void HandleCapture(CSmPlayer _Player) {
 
             if(isNextCp)
                 Private_HandleCheckpoint(_Player, Landmark.Id);
-            else if(Landmark.Id != LastCheckpoint)
-                MessageToShow = "Wrong checkpoint !";
         }
     } else if(Tools::IsPortal(Landmark)) {
         Private_UsePortal(_Player, Landmark.Id);
