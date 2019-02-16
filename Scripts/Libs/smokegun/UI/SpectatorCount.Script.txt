@@ -57,9 +57,15 @@ Text GetLayer() {
             declare LocalPlayer <=> InputPlayer;
             if (GUIPlayer != Null) LocalPlayer <=> GUIPlayer;
 
+            if (LocalPlayer == Null)
+                continue;
+
             declare netread Net_NbSpectating for LocalPlayer = 0;
             if (LastNbSpectating != Net_NbSpectating)
+            {
+                LastNbSpectating = Net_NbSpectating;
                 Label_SpectateCount.Value = TL::ToText(Net_NbSpectating);
+            }
 
             if (LocalPlayer.Login != InputPlayer.Login) {
                 if (Net_SpeccedTargetLogin != LocalPlayer.Login)
