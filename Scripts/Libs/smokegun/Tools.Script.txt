@@ -31,8 +31,8 @@ Text GetPos(Vec2 _Pos) {
 Boolean IsEnabled(CSmMapLandmark _Landmark) {
     if(Map::GetMapTypeVersion() <= 2)
         return _Landmark.Tag != "No-Function";
-    declare metadata Meta_IsEnabled for _Landmark = True;
-    return Meta_IsEnabled;
+    declare metadata Meta_Enabled for _Landmark = True;
+    return Meta_Enabled;
 }
 
 Boolean IsGoal(CSmMapLandmark _Landmark) {
