@@ -8,7 +8,6 @@
 #Include "TextLib" as TL
 #Include "MathLib" as ML
 #Include "Libs/Nadeo/ShootMania/SM3.Script.txt" as SM
-#Include "Libs/Nadeo/CustomUI.Script.txt" as CustomUI
 #Include "Libs/smokegun/Tools.Script.txt" as Tools
 #Include "Libs/smokegun/Player.Script.txt" as Player
 #Include "Libs/smokegun/Constants.Script.txt" as Constants
@@ -87,6 +86,9 @@ Boolean PickupItems(CSmModeEvent _Event) {
         }
 
         case Constants::C_ItemAmmo: {
+            if (_Event.Player.CurAmmo == _Event.Player.CurAmmoMax)
+                return False;
+
             declare Duration for _Event.Object = 0.;
             declare Amount for _Event.Object = 1.;
 
@@ -99,7 +101,7 @@ Boolean PickupItems(CSmModeEvent _Event) {
 
             // Instant grant
             if (Duration <= 0.) {
-                if(ML::CeilingInteger(Amount) +_Event.Player.CurAmmoUnit > _Event.Player.CurAmmoMax) {
+                if(ML::CeilingInteger(Amount) * _Event.Player.CurAmmoUnit +_Event.Player.CurAmmo > _Event.Player.CurAmmoMax) {
                     SetPlayerAmmo(_Event.Player, SM::GetWeapon(_Event.Player.CurWeapon), _Event.Player.CurAmmoMax);
                 } else {
                     AddPlayerAmmo(_Event.Player, SM::GetWeapon(_Event.Player.CurWeapon), Amount);
@@ -122,10 +124,10 @@ Void Destroy() {
 Text CreateLayerItems() {
     declare ItemCount = G_ItemIdents.count;
     declare Manialink = """
-<manialink version="1" name="Obstacle_LayerItems">
+<manialink version="3" name="Obstacle:Items">
     <script><!--
-        #Include "MathLib" as MathLib
-        #Include "TextLib" as TextLib
+        #Include "MathLib" as ML
+        #Include "TextLib" as TL
 
         #Const C_ItemCount  {{{ItemCount}}}
 
@@ -139,8 +141,6 @@ Text CreateLayerItems() {
             declare Last_BuffEnds = Integer[Text];
             declare Last_BuffDurations = Integer[Text];
 
-            {{{CustomUI::InjectMLInit()}}}
-
             while (True) {
                 yield;
 
@@ -151,7 +151,7 @@ Text CreateLayerItems() {
                 if (GUIPlayer != Null && GUIPlayer != LocalPlayer) LocalPlayer <=> GUIPlayer;
 
                 declare Index = 1;
-                declare netread ItemBuffTimes for LocalPlayer = Integer[Text];
+                declare netread Integer[Text] ItemBuffTimes for LocalPlayer = [];
                 if (LocalPlayer.SpawnStatus == CSmPlayer::ESpawnStatus::Spawned) {
                     if(ItemBuffTimes.count == 0) {
                         Label_Info.Visible = False;
@@ -160,6 +160,7 @@ Text CreateLayerItems() {
                     foreach (ItemName => BuffTime in ItemBuffTimes) {
                         declare Frame <=> (Page.GetFirstChild("Frame_ItemGauge"^Index) as CMlFrame);
                         if (Frame == Null) continue;
+
                         if (BuffTime < ArenaNow) {
                             if(Label_Info.Visible) {
                                 Label_Info.Visible = False;
@@ -167,9 +168,13 @@ Text CreateLayerItems() {
                             continue;
                         }
 
+
                         declare Gauge_Item <=> (Frame.GetFirstChild("Gauge_Item") as CMlGauge);
                         declare Label_Time <=> (Frame.GetFirstChild("Label_Time") as CMlLabel);
                         declare Label_Item <=> (Frame.GetFirstChild("Label_Item") as CMlLabel);
+
+                        if (Gauge_Item.Color != LocalPlayer.User.Color)
+                            Gauge_Item.Color = LocalPlayer.User.Color;
 
                         Index += 1;
                         Frame.Visible = True;
@@ -190,23 +195,24 @@ Text CreateLayerItems() {
 
                         declare TimeDiff = BuffTime - ArenaNow;
 
-                        declare Ratio = TimeDiff / MathLib::ToReal(Last_BuffDurations[ItemName]);
-                        if (Ratio < 0.) {
-                            Ratio = 0.;
-                        } else if (Ratio > 1.) {
-                            Ratio = 1.;
+                        if (Last_BuffDurations[ItemName] != 0) {
+                        	declare Ratio = TimeDiff / ML::ToReal(Last_BuffDurations[ItemName]);
+	                        if (Ratio < 0.) {
+	                            Ratio = 0.;
+	                        } else if (Ratio > 1.) {
+	                            Ratio = 1.;
+	                        }
+	                        Gauge_Item.Ratio = Ratio;
+	
+	                        declare TimeDiffText = ML::NearestInteger(TimeDiff / 100.) / 10.;
+	                        Label_Time.Value = TimeDiffText^"s";
                         }
-                        Gauge_Item.Ratio = Ratio;
-
-                        declare TimeDiffText = MathLib::NearestInteger(TimeDiff / 100.) / 10.;
-                        Label_Time.Value = TimeDiffText^"s";
-
-                        declare ItemParts = TextLib::Split("\\", ItemName);
-                        ItemParts = TextLib::Split(".", ItemParts[ItemParts.count-1]);
+                        
+                        declare ItemParts = TL::Split("\\", ItemName);
+                        ItemParts = TL::Split(".", ItemParts[ItemParts.count-1]);
                         Label_Item.Value = ItemParts[0];
-
                         if (LocalPlayer != InputPlayer || Label_Info.Visible) continue;
-                        Label_Info.Value = TextLib::Compose(_("You picked up the %1 Item!"), ItemParts[0]);
+                        Label_Info.Value = TL::Compose(_("You picked up the %1 Item!"), ItemParts[0]);
                         Label_Info.Visible = True;
                     }
                 }
@@ -216,23 +222,21 @@ Text CreateLayerItems() {
                     Frame.Visible = False;
                 }
 
-
-                {{{CustomUI::InjectMLLoop()}}}
             }
         }
     --></script>
-    <frame id="{{{Constants::C_Module_ItemsInfo}}}" class="LibCustomUI_Module">
-        <label id="Label_Info" posn="0 40" sizen="110 10" translate="1" halign="center" valign="center2" hidden="1" text="hi"/>
+    <frame id="Info">
+	      <label id="Label_Info" pos="0 40" size="110 10" translate="1" halign="center" valign="center2" textfont="OswaldMono" textsize="5"/>
     </frame>
-    <frame id="{{{Constants::C_Module_Items}}}" class="LibCustomUI_Module">
+    <frame id="Items">
         <framemodel id="Model_ItemGauge">
-            <gauge id="Gauge_Item" sizen="80 14" color="1c6b" style="EnergyBar" drawbg="0" drawblockbg="1" halign="center" valign="center2"/>
-            <label id="Label_Time" posn="0 -0.5" style="TextTitle1" textsize="2" halign="center" valign="center2"/>
-            <label id="Label_Item" posn="-36.5 -0.5" style="TextTitle1" textsize="1" translate="1" halign="left" valign="center2"/>
+            <label id="Label_Time" pos="0 -0.5" textsize="2" halign="center" valign="center2" textfont="OswaldMono"/>
+            <label id="Label_Item" pos="-36.5 -0.5" textsize="2" translate="1" halign="left" valign="center2" textfont="OswaldMono"/>
+            <gauge id="Gauge_Item" size="80 14" color="11FF00BB" style="EnergyBar" drawbg="0" drawblockbg="1" halign="center" valign="center2"/>
         </framemodel>""";
-    for (Index, 1, ItemCount) {
-        Manialink ^= """<frameinstance id="Frame_ItemGauge{{{Index}}}" posn="0 {{{-65 + Index * 8.3}}} -15" modelid="Model_ItemGauge" hidden="1"/>""";
-    }
+		    for (Index, 1, ItemCount) {
+		        Manialink ^= """<frameinstance id="Frame_ItemGauge{{{Index}}}" pos="0 {{{-65 + Index * 8.3}}} -15" modelid="Model_ItemGauge" hidden="1"/>""";
+		    }
     Manialink ^= """
     </frame>
 </manialink>""";

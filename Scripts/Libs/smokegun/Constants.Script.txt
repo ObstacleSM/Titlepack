@@ -9,8 +9,6 @@
 // Items
 #Const C_ItemOffzone "Obstacle\\OffzoneShield.Item.gbx"
 #Const C_ItemAmmo "Obstacle\\Ammo.Item.gbx"
-#Const C_Module_Items "ItemsModule"
-#Const C_Module_ItemsInfo "ItemsInfoModule"
 
 // API
 #Const C_HostUrl "https://api.obstacle.ovh/api/"

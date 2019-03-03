@@ -70,6 +70,7 @@ Log::RegisterScript(ScriptName, Version);
 ***
 MB_Settings_UseDefaultHud = False;
 MB_Settings_UseDefaultTimer = False;
+MB_Settings_UseDefaultObjects = False;
 
 UsePvPCollisions = False;
 UseClans = False;

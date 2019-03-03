@@ -183,7 +183,7 @@ Text Get_EditGoal() {
     <frame z-index="1">
         <label pos="0 40" size="75 10" class="text" text="Edit goal" textsize="5" halign="center" valign="center2"/>
         <label pos="42.5 42.5" z-index="0" size="5 5" text="❌" valign="center" halign="center" focusareacolor2="FF0000FF" scriptevents="1" textsize="2" focusareacolor1="0000" scriptaction="Close"/>
-        <label id="Save" pos="0 -65" size="20 7" text="SAVE" halign="center" valign="center" focusareacolor1="797979AA" focusareacolor2="292929AA" scriptevents="1" textfont="Oswald" textcolor="FFFFFFFF"/>
+        <label id="Save" pos="0 20" size="20 7" text="SAVE" halign="center" valign="center" focusareacolor1="797979AA" focusareacolor2="292929AA" scriptevents="1" textfont="Oswald" textcolor="FFFFFFFF"/>
         <frame pos="0 40">
             <label id="Enable" pos="-10 -8.5" size="20 5" text="enable" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
             <label id="Disable" pos="10 -8.5" size="20 5" text="disable" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
@@ -191,9 +191,7 @@ Text Get_EditGoal() {
             <quad pos="0 -5.5" size="41 6" bgcolor="797979AA" halign="center"/>
         </frame>
     </frame>
-    <frame id="properties" z-index="1" pos="0 10">
-    </frame>
-    <quad pos="-45 45" z-index="1" size="90 115" bgcolor="000000AA" scriptevents="1"/>
+    <quad pos="-45 45" z-index="1" size="90 30" bgcolor="000000AA" scriptevents="1"/>
 </frame>
     """;
 }
@@ -287,15 +285,10 @@ Void EditGoal(CAnchorData _Goal) {
         declare Boolean Saved for Page;
 
         declare Quad_Enabled_Selector <=> (Page.GetFirstChild("Enabled_Selector") as CMlQuad);
-        declare Frame_Properties <=> (Page.GetFirstChild("properties") as CMlFrame);
-
-        if(Enabled) {
+        if (Enabled)
             Quad_Enabled_Selector.RelativePosition_V3.X = -20.;
-            Frame_Properties.ZIndex = 1.;
-        } else {
+        else
             Quad_Enabled_Selector.RelativePosition_V3.X = 0.;
-            Frame_Properties.ZIndex = -1.;
-        }
     }
 
     main() {
@@ -602,6 +595,223 @@ Void EditSpawn(CAnchorData _Spawn) {
     """;
 }
 
+Void EditAmmoItem(CAnchorData _Item) {
+    
+    declare Real Amount for ManialinkPage;
+    declare metadata Meta_GrantAmmoAmount for _Item = 1.;
+    Amount = Meta_GrantAmmoAmount;
+
+    declare Real Duration for ManialinkPage;
+	  declare metadata Meta_GrantAmmoDuration for _Item = 0.;
+	  Duration = Meta_GrantAmmoDuration;
+
+    ManialinkText = """
+    <manialink version="3" name="Obstacle:EditAmmoItem">
+    <stylesheet>
+		    <style class="text" bgcolor="FFFF" textfont="Oswald" style="TextTitle3" focusareacolor1="0000" focusareacolor2="0000" textcolor="FFFFFFFF"/>
+		    <style class="entry" focusareacolor1="797979AA" focusareacolor2="292929AA" textsize="2"/>
+		</stylesheet>
+		<frame pos="125 20" scale="0.75">
+		    <frame z-index="1">
+		        <label pos="0 40" size="75 10" class="text" text="Edit Ammo Item" textsize="5" halign="center" valign="center2"/>
+		        <label pos="42.5 42.5" size="5 5" text="❌" valign="center" halign="center" focusareacolor2="FF0000FF" scriptevents="1" textsize="2" focusareacolor1="0000" scriptaction="Close"/>
+		        <label id="Save" pos="0 -20" size="20 7" text="SAVE" halign="center" valign="center" focusareacolor1="797979AA" focusareacolor2="292929AA" scriptevents="1" textfont="Oswald" textcolor="FFFFFFFF"/>
+		    </frame>
+				<frame id="properties" z-index="1" pos="0 10">
+	        <frame id="Basic" pos="0 15">
+	            <label pos="0 0" size="20 5" class="text" text="Type" halign="center" textsize="3"/>
+	            <frame pos="0 -5.5">
+			            <label id="Instantly" pos="-10 -2.5" size="20 5" text="instantly" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
+		            	<label id="Duration" pos="10 -2.5" size="20 5" text="duration" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
+		            	<quad id="Duration_Selector" pos="-20 0" size="20 5" bgcolor="292929AA"/>
+		            	<quad pos="0 0.5" size="41 6" bgcolor="797979AA" halign="center"/>
+	            </frame>
+	
+	            <label pos="0 -13" size="20 5" class="text" text="Duration" halign="center" textsize="3"/>
+	            <frame pos="0 -21">
+	                <label pos="9 0" size="6 3.5" class="text" text="" scriptevents="1" halign="center" valign="bottom" textsize="1"/>
+	                <label pos="9 0" size="6 3.5" class="text" text="" scriptevents="1" halign="center" valign="top" textsize="1"/>
+	                <entry id="Entry_Duration" pos="0 0"size="20 5" class="entry" default="0" textfont="Oswald" halign="center" valign="center2"/>
+	                <quad pos="0 0" size="21 6" bgcolor="797979AA" halign="center" valign="center"/>
+	            </frame>
+	
+	
+	            <label pos="0 -26" size="20 5" class="text" text="Amount" halign="center" textsize="3"/>
+	            <frame pos="0 -34">
+	                <label pos="9 0" size="6 3.5" class="text" text="" scriptevents="1" halign="center" valign="bottom" textsize="1"/>
+	                <label pos="9 0" size="6 3.5" class="text" text="" scriptevents="1" halign="center" valign="top" textsize="1"/>
+	                <entry id="Entry_Amount" pos="0 0"size="20 5" class="entry" default="0" textfont="Oswald" halign="center" valign="center2"/>
+	                <quad pos="0 0" size="21 6" bgcolor="797979AA" halign="center" valign="center"/>
+	            </frame>
+	        </frame>
+		    </frame>
+		
+		    <quad pos="-45 45" z-index="1" size="90 70" bgcolor="000000AA" scriptevents="1"/>
+		</frame>
+    <script><!--
+    #Include "TextLib" as TL
+
+    Void UpdateView() {
+        declare Real Duration for Page;
+        declare Boolean Saved for Page;
+        declare Real Amount for Page;
+
+        declare Quad_Duration_Selector <=> (Page.GetFirstChild("Duration_Selector") as CMlQuad);
+
+        if(Duration == 0.) {
+            Quad_Duration_Selector.RelativePosition_V3.X = -20.;
+        } else {
+            Quad_Duration_Selector.RelativePosition_V3.X = 0.;
+        }
+
+        declare Entry_Duration <=> (Page.GetFirstChild("Entry_Duration") as CMlEntry);
+        if (TL::ToReal(Entry_Duration.Value) != Duration)
+            Entry_Duration.Value = ""^Duration;
+
+        declare Entry_Amount <=> (Page.GetFirstChild("Entry_Amount") as CMlEntry);
+        if (TL::ToReal(Entry_Amount.Value) != Amount)
+            Entry_Amount.Value = ""^Amount;
+    }
+
+    main() {
+        declare Real Duration for Page;
+        declare Real Amount for Page;
+        declare NeedUpdate = False;
+        UpdateView();
+
+        while(True) {
+            yield;
+
+            if(NeedUpdate) {
+                UpdateView();
+                NeedUpdate = False;
+            }
+
+            foreach (Event in PendingEvents) {
+                switch (Event.Type){
+                    case CMlScriptEvent::Type::MouseClick: {
+                        switch (Event.ControlId) {
+                            case "Save" : {
+                                SendCustomEvent("Event_Save_AmmoItem", Text[]);
+                            }
+                            case "Instantly" : {
+                                NeedUpdate = True;
+                                Duration = 0.;
+                            }
+                            case "Duration" : {
+                                if (Duration == 0.)
+                                    Duration = 1.;
+                                NeedUpdate = True;
+                            }
+                        }
+                    }
+                    case CMlScriptEvent::Type::EntrySubmit: {
+                        declare Entry <=> (Event.Control as CMlEntry);
+                        switch(Entry.ControlId) {
+                            case "Entry_Duration": {
+                                Duration = TL::ToReal(Entry.Value);
+                                NeedUpdate = True;
+                            }
+                            case "Entry_Amount": {
+                                Amount = TL::ToReal(Entry.Value);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    --></script>
+    </manialink>
+    """;
+}
+
+Void EditOffzoneShieldItem(CAnchorData _Item) {
+    
+    declare Real Duration for ManialinkPage;
+	  declare metadata Meta_BuffDuration for _Item = 0.;
+	  Duration = Meta_BuffDuration;
+
+    ManialinkText = """
+    <manialink version="3" name="Obstacle:EditOffzoneShieldItem">
+    <stylesheet>
+		    <style class="text" bgcolor="FFFF" textfont="Oswald" style="TextTitle3" focusareacolor1="0000" focusareacolor2="0000" textcolor="FFFFFFFF"/>
+		    <style class="entry" focusareacolor1="797979AA" focusareacolor2="292929AA" textsize="2"/>
+		</stylesheet>
+		<frame pos="125 20" scale="0.75">
+		    <frame z-index="1">
+		        <label pos="0 40" size="75 10" class="text" text="Edit OffzoneShield Item" textsize="5" halign="center" valign="center2"/>
+		        <label pos="42.5 42.5" size="5 5" text="❌" valign="center" halign="center" focusareacolor2="FF0000FF" scriptevents="1" textsize="2" focusareacolor1="0000" scriptaction="Close"/>
+		        <label id="Save" pos="0 5" size="20 7" text="SAVE" halign="center" valign="center" focusareacolor1="797979AA" focusareacolor2="292929AA" scriptevents="1" textfont="Oswald" textcolor="FFFFFFFF"/>
+		    </frame>
+				<frame id="properties" z-index="1" pos="0 10">
+	        <frame id="Basic" pos="0 15">
+	
+	            <label pos="0 0" size="20 5" class="text" text="Duration" halign="center" textsize="3"/>
+	            <frame pos="0 -8">
+	                <label pos="9 0" size="6 3.5" class="text" text="" scriptevents="1" halign="center" valign="bottom" textsize="1"/>
+	                <label pos="9 0" size="6 3.5" class="text" text="" scriptevents="1" halign="center" valign="top" textsize="1"/>
+	                <entry id="Entry_Duration" pos="0 0"size="20 5" class="entry" default="0" textfont="Oswald" halign="center" valign="center2"/>
+	                <quad pos="0 0" size="21 6" bgcolor="797979AA" halign="center" valign="center"/>
+	            </frame>
+
+	        </frame>
+		    </frame>
+		
+		    <quad pos="-45 45" z-index="1" size="90 45" bgcolor="000000AA" scriptevents="1"/>
+		</frame>
+    <script><!--
+    #Include "TextLib" as TL
+
+    Void UpdateView() {
+        declare Real Duration for Page;
+
+        declare Entry_Duration <=> (Page.GetFirstChild("Entry_Duration") as CMlEntry);
+        if (TL::ToReal(Entry_Duration.Value) != Duration)
+            Entry_Duration.Value = ""^Duration;
+
+    }
+
+    main() {
+        declare Real Duration for Page;
+        declare Real Amount for Page;
+        declare NeedUpdate = False;
+        UpdateView();
+
+        while(True) {
+            yield;
+
+            if(NeedUpdate) {
+                UpdateView();
+                NeedUpdate = False;
+            }
+
+            foreach (Event in PendingEvents) {
+                switch (Event.Type){
+                    case CMlScriptEvent::Type::MouseClick: {
+                        switch (Event.ControlId) {
+                            case "Save" : {
+                                SendCustomEvent("Event_Save_AmmoItem", Text[]);
+                            }
+                        }
+                    }
+                    case CMlScriptEvent::Type::EntrySubmit: {
+                        declare Entry <=> (Event.Control as CMlEntry);
+                        switch(Entry.ControlId) {
+                            case "Entry_Duration": {
+                                Duration = TL::ToReal(Entry.Value);
+                                NeedUpdate = True;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    --></script>
+    </manialink>
+    """;
+}
 Void SaveCheckpointSettings() {
     if(!AnchorData.existskey(G_LastAnchorId)) return;
 
@@ -646,6 +856,32 @@ Void SaveGoalSettings() {
     if(Anchor.Tag != "Goal") return;
 
     SaveBasePageVariables(Anchor);
+}
+
+Void SaveAmmoItemSettings() {
+    if(!AnchorData.existskey(G_LastAnchorId)) return;
+
+    declare Anchor <=> AnchorData[G_LastAnchorId];
+    if(Anchor.Tag != "Ammo") return;
+
+    declare Real Amount for ManialinkPage;
+    declare metadata Meta_GrantAmmoAmount for Anchor = 1.;
+    Meta_GrantAmmoAmount = Amount;
+
+    declare Real Duration for ManialinkPage;
+	  declare metadata Meta_GrantAmmoDuration for Anchor = 0.;
+	  Meta_GrantAmmoDuration = Duration;
+}
+
+Void SaveOffzoneShieldItemSettings() {
+    if(!AnchorData.existskey(G_LastAnchorId)) return;
+
+    declare Anchor <=> AnchorData[G_LastAnchorId];
+    if(Anchor.Tag != "OffzoneShield") return;
+
+    declare Real Duration for ManialinkPage;
+	  declare metadata Meta_BuffDuration for Anchor = 0.;
+	  Meta_BuffDuration = Duration;
 }
 
 Void UpdateValidability() {
@@ -707,8 +943,8 @@ Void Loop() {
           case "Goal": EditGoal(Anchor);
           case "Checkpoint": EditCheckpoint(Anchor);
           case "Spawn": EditSpawn(Anchor);
-          case "Ammo": {}
-          case "OffzoneShield": {}
+          case "Ammo": EditAmmoItem(Anchor);
+          case "OffzoneShield": EditOffzoneShieldItem(Anchor);
           default: continue;
         }
 
@@ -729,6 +965,8 @@ DisplayDefaultSetObjectivesDialog ();
                 case "Event_Save_Goal": SaveGoalSettings();
                 case "Event_Save_Checkpoint": SaveCheckpointSettings();
                 case "Event_Save_Spawn": SaveSpawnSettings();
+                case "Event_Save_AmmoItem": SaveAmmoItemSettings();
+                case "Event_Save_OffzoneShieldItem": SaveOffzoneShieldItemSettings();
             }
 
             UpdateValidability();
