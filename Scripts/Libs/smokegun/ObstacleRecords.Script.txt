@@ -162,7 +162,7 @@ Void PlayerFinished(CSmPlayer _Player) {
 /////////////////////      LOOP         /////////////////////////
 /////////////////////////////////////////////////////////////////
 
-Void Loop() {
+Void Loop(Text _BestRecordMsg, Text _WorseRecordMsg) {
 
     if (G_PreviousState != G_State) {
         Log::Log(State(G_PreviousState)^" ===> "^State(G_State));
@@ -217,10 +217,17 @@ Void Loop() {
                     declare new = TL::ToInteger(response.Root.GetFirstChild("new").TextContents);
 
                     declare Player = SM::GetPlayer(login);
+                    declare PName = Player.User.Name;
+                    declare NewTime = TL::TimeToText(new, True);
+                    declare OldTime = TL::TimeToText(old, True);
+                    declare DiffTime = TL::TimeToText(new - old, True);
+
                     if (isNewBest) {
-                        UIManager.UIAll.SendChat("""{{{Player.User.Name}}}$z made a new record ! ({{{TL::TimeToText(new, True)}}})""");
+                        if (_BestRecordMsg != "")
+                            UIManager.UIAll.SendChat(TL::Compose(_BestRecordMsg, PName, NewTime, OldTime, DiffTime));
                     } else if (Player != Null) {
-                        UIManager.GetUI(Player).SendChat("""$zAt least you tried, you were too late by {{{TL::TimeToText(new-old, True)}}} !""");
+                        if (_WorseRecordMsg != "")
+                            UIManager.GetUI(Player).SendChat(TL::Compose(_WorseRecordMsg, PName, NewTime, OldTime, DiffTime));
                     }
 
                     declare netwrite Net_RecordsUpdated for Teams[0] = Now;

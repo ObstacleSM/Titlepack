@@ -164,6 +164,8 @@ Text GetLayer() {
                 // Parse the XML to text array
                 declare XRecords = Xml.Create(G_Req.Result);
                 declare Text[Text][] Records;
+                if (XRecords == Null || XRecords.Root == Null)
+                    continue;
                 foreach (Node in XRecords.Root.Children) {
                     if (Node.TextContents == "undefined")
                         continue;

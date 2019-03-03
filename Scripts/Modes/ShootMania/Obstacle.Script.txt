@@ -47,6 +47,8 @@
 #Setting S_FastRespawn True as _("Fast respawn on the checkpoint")
 #Setting S_AllowJump True as _("Enable checkpoint jumping")
 #Setting S_LegacyRespawn False as _("LEGACY: Enable old respawn")
+#Setting S_BestNewRecordMsg "%1$z made a new record ! (%2)" as _("New record message (1: name, 2: new time)")
+#Setting S_WorseNewRecordMsg "$zYou were too late by %4 !" as _("Worse record message (3: old time, 4: diff time")
 
 #Setting S_EnableRecords True as "<hidden>"
 #Setting S_NextMapVotingRatio 0.7 as "<hidden>"
@@ -202,7 +204,7 @@ NextMapVote::Yield(S_NextMapVotingRatio);
 ***
 
 if (G_Records_Enabled)
-    API::Loop();
+    API::Loop(S_BestNewRecordMsg, S_WorseNewRecordMsg);
 
 if (EndTime > 0 && Now > EndTime) {
     Message::SendBigMessage(_("Time limit reached"),    2000, 3, CUIConfig::EUISound::Silence, 0);
