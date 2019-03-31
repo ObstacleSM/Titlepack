@@ -41,12 +41,15 @@
 // ---------------------------------- //
 // Settings
 // ---------------------------------- //
-#Setting S_TimeLimit 10 as _("Time limit")
-#Setting S_RoundLimit 3 as _("Round limit")
+#Setting S_TimeLimit 10 as _("Time limit (minutes)")
+#Setting S_RoundLimit 5 as _("Round limit")
+#Setting S_PointLimit 3 as _("Point limit")
 #Setting S_PvPWeapons False as _("Enable PvP Weapons")
 #Setting S_FullAmmoSpawn True as _("Spawning with full Ammunition")
 #Setting S_FastRespawn True as _("Fast respawn on the checkpoint")
-
+#Setting S_RoundCooldown 10 as _("Waiting time between rounds (seconds)")
+#Setting S_MinTimeLeft 20 as _("Minimum time left (seconds)")
+#Setting S_MaxTimeLeft 120 as _("Maximum time left (seconds)")
 
 #Setting S_ScriptEnvironment "development"
 
@@ -55,9 +58,13 @@
 // ---------------------------------- //
 #Const C_HudModulePath "Sprint/UI.Module.Gbx" ///< Path to the hud module
 #Const Description _("Be careful, you only have one try...")
+#Const C_State_Playing 0
+#Const C_State_Waiting 1
 
 declare Ident           G_FirstPlayer;
+declare Integer         G_State;
 declare Boolean[Ident]  G_FinishedScores;
+declare Ident           G_InvisibleSkinId;
 
 ***Match_LogVersions***
 ***
@@ -143,6 +150,10 @@ DoNothing();
 
 ***Match_StartServer***
 ***
+ItemList_Begin();
+G_InvisibleSkinId = ItemList_AddWithSkin("ArenaPlayer", Constants::C_InvisibleSkin);
+ItemList_End();
+
 Spectators::ForceCamera(Spectators::Camera_FirstPerson());
 Items::Init();
 CreateUI();
@@ -164,19 +175,12 @@ if(!Obstacle::PrepareMap()) {
 UIManager.UIAll.MarkersXML = Markers::GetXML();
 Layers::Update("Markers", Markers::GetLayer());
 
-Obstacle::SetSettings(S_FullAmmoSpawn, S_FastRespawn, False, False, False);
+Obstacle::SetSettings(S_FullAmmoSpawn, S_FastRespawn, False, False, False, False);
 Items::Place();
 
 foreach(Player in AllPlayers) {
     Player::setInitialized(Player, False);
     NewPlayer(Player);
-}
-
-StartTime = Now;
-if (S_TimeLimit > 0) {
-    EndTime = (StartTime + S_TimeLimit * 1000 * 60);
-} else {
-    EndTime = -1;
 }
 
 CurrentRound = 0;
@@ -189,6 +193,10 @@ declare Boolean LastFinished;
 
 ***Match_StartRound***
 ***
+
+if (G_State == C_State_Waiting) {
+
+} else {
 CurrentRound += 1;
 
 G_FirstPlayer = NullId;
@@ -200,13 +208,24 @@ foreach (Player in Players) {
    G_FinishedScores[Player.Score.Id] = False;
 }
 
-EndTime = -1;
+StartTime = Now;
+if (S_TimeLimit > 0) {
+    EndTime = (StartTime + S_TimeLimit * 1000 * 60);
+} else {
+    EndTime = -1;
+}
 
 Message::SendBigMessage(_("New Round!"), 2000, 0, CUIConfig::EUISound::StartRound, 1);
+}
 ***
 
 ***Match_PlayLoop***
 ***
+if (G_State == C_State_Waiting) {
+if (EndTime > 0 && Now > EndTime) {
+    MB_StopRound();
+}
+} else {
 foreach (Event in PendingEvents) {
     switch (Event.Type) {
 
@@ -217,12 +236,12 @@ foreach (Event in PendingEvents) {
             if (Event.Victim.IsInOffZone) {
                 declare ItemBuffs = Player::getBuffTimes(Event.Victim);
                 if (ItemBuffs.existskey(Constants::C_ItemOffzone) && ItemBuffs[Constants::C_ItemOffzone] >= Now) {
-                    Events::Invalid(Event);
                     continue;
                 }
             }
 
-            Events::Valid(Event);
+            Obstacle::RespawnPlayer(Event.Victim);
+            Events::Invalid(Event);
         }
 
         case CSmModeEvent::EType::OnHit: {
@@ -304,24 +323,36 @@ if (EndTime > 0 && Now > EndTime) {
     Message::SendBigMessage(_("Time limit reached."), 2000, 0, CUIConfig::EUISound::Warning, 1);
     MB_StopRound();
 }
+}
 ***
 
 ***Match_EndRound***
 ***
+// state playing
+if (G_State == C_State_Playing) {
 SM::UnspawnAllPlayers();
 
 declare Message = _("|Match|Draw");
-if (G_FirstPlayer != NullId) {
+if (Scores.existskey(G_FirstPlayer)) {
     Scores::AddPlayerRoundPoints(Scores[G_FirstPlayer], 1);
     Message = MM_TL::Compose(_("$<%1$> wins the round!"), Scores[G_FirstPlayer].User.Name);
 }
 
-Message::SendBigMessage(Message, 2000, 0, CUIConfig::EUISound::EndRound, 0);
 
+Message::SendBigMessage(Message, 2000, 0, CUIConfig::EUISound::EndRound, 0);
 MB_Sleep(3000);
 
-if (CurrentRound == S_RoundLimit) {
+if ((Scores.existskey(G_FirstPlayer) && Scores::GetPlayerRoundPoints(Scores[G_FirstPlayer]) >= S_PointLimit)
+   || CurrentRound == S_RoundLimit) {
     MB_StopMap();
+} else {
+    G_State = C_State_Waiting;
+    EndTime = Now + S_RoundCooldown * 1000;
+}
+
+// State waiting
+} else {
+    G_State = C_State_Playing;
 }
 ***
 
@@ -398,6 +429,7 @@ Void DestroyUI() {
 
 Void NewPlayer(CSmPlayer _Player)
 {
+    _Player.ForceModelId = G_InvisibleSkinId;
     Player::InitPlayer(_Player);
     Ladder::AddPlayer(_Player.Score);
 
@@ -422,6 +454,12 @@ Void Player_NewRound(CSmPlayer _Player)
     Player::clearLastCPTimes(_Player);
 
     Obstacle::RespawnPlayer(_Player);
+
+    Player::setCpProgress(_Player, 0);
+    Player::setBestRun(_Player, -1);
+
+    Obstacle::Private_UpdatePlayerRsCounter(_Player);
+    Obstacle::Private_UpdatePlayerBestTime(_Player);
 }
 
 Void Private_HandleFinish(CSmPlayer _Player, Ident _GoalId) {
@@ -449,7 +487,13 @@ Void Private_HandleFinish(CSmPlayer _Player, Ident _GoalId) {
 
     // Set the end timer when the first player finishes
     if (G_FirstPlayer == NullId) {
-        EndTime = Now + Time / 3;
+        declare TimeLeft = Time / 3;
+        if (TimeLeft > S_MaxTimeLeft)
+            TimeLeft = S_MaxTimeLeft;
+        else if (TimeLeft < S_MinTimeLeft)
+            TimeLeft = S_MinTimeLeft;
+
+        EndTime = Now + TimeLeft;
         G_FirstPlayer = _Player.Score.Id;
     }
     G_FinishedScores[_Player.Score.Id] = True;
