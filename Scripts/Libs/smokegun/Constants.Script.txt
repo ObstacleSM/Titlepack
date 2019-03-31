@@ -9,6 +9,7 @@
 // Items
 #Const C_ItemOffzone "Obstacle\\OffzoneShield.Item.gbx"
 #Const C_ItemAmmo "Obstacle\\Ammo.Item.gbx"
+#Const C_InvisibleSkin "Skins\\Models\\ArenaPlayer\\Invisible.zip"
 
 // API
 #Const C_HostUrl "https://api.obstacle.ovh/api/"
