@@ -169,6 +169,10 @@ declare LastUpdate = -1;
 
 ***Match_StartMap***
 ***
+
+// This needs to be called before PrepareMap to have the right settings
+Obstacle::SetSettings(S_FullAmmoSpawn, S_FastRespawn, S_LegacyRespawn, S_AllowJump, True, S_EnableRecords);
+
 // map is invalid
 if(!Obstacle::PrepareMap())
 {
@@ -178,7 +182,6 @@ if(!Obstacle::PrepareMap())
 UIManager.UIAll.MarkersXML = Markers::GetXML();
 Layers::Update("Markers", Markers::GetLayer());
 
-Obstacle::SetSettings(S_FullAmmoSpawn, S_FastRespawn, S_LegacyRespawn, S_AllowJump, True, S_EnableRecords);
 Items::Place();
 
 foreach(Player in AllPlayers) {

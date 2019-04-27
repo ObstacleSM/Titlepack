@@ -2,6 +2,7 @@
 #Include "Libs/Nadeo/Log.Script.txt" as Log
 #Include "Libs/Nadeo/Layers2.Script.txt" as Layers
 #Include "Libs/Nadeo/CustomUI.Script.txt" as CustomUI
+#Include "Libs/smokegun/Constants.Script.txt" as Constants
 
 /*********************************************
     CONSTANTS
@@ -82,7 +83,7 @@ Text Private_GetRecordsList() {
 
 Text Private_GetSmallRecords() {
     return """
-<frame id="Frame_Small_Records" class="LibCustomUI_Module">
+<frame id="Frame_Small_Records" class="LibCustomUI_Module" hidden="1">
     <frame id="Frame_Background"halign="center" valign="center2" pos="139 75">
         <quad z-index="-1" size="44 67" style="BgRaceScore2" substyle="BgCardPlayer" halign="center" valign="top"/>
         <label pos="0 -1" size="40 5" text="Records" style="TextTitle3" textsize="4" halign="center" textfont="OswaldMono" maxline="1" valign="top" textemboss="1"/>
@@ -126,7 +127,7 @@ Text GetLayer() {
 
     Void UpdateRecords(Text _Login) {
         declare params = "?mapId="^Map.Id^"&playerId="^_Login;
-        declare url = "https://api.obstacle.ovh/api/Records/overview"^params;
+        declare url = "{{{Constants::C_HostUrl}}}Records/overview"^params;
         G_Req = Http.CreateGet(url, True, "Accept: application/xml");
     }
 
@@ -166,6 +167,7 @@ Text GetLayer() {
                 declare Text[Text][] Records;
                 if (XRecords == Null || XRecords.Root == Null)
                     continue;
+
                 foreach (Node in XRecords.Root.Children) {
                     if (Node.TextContents == "undefined")
                         continue;
@@ -179,6 +181,10 @@ Text GetLayer() {
 
                 Http.Destroy(G_Req);
                 G_Req = Null;
+
+              
+                if (!Frame_Widget.Visible)
+                    Frame_Widget.Show();
 
                 declare HasLocalPlayerFinished = False;
                 foreach (Idx => Control in Frame_Records.Controls) {

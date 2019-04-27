@@ -13,6 +13,7 @@
 
 // API
 #Const C_HostUrl "https://api.obstacle.ovh/api/"
+//#Const C_HostUrl "http://localhost:3000/api/"
 #Const C_SIdle 0
 #Const C_SLoggingIn 1
 
