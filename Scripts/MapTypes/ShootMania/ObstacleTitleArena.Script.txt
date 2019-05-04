@@ -93,8 +93,8 @@ Text Get_EditCheckpoint() {
     <style class="text" bgcolor="FFFF" textfont="Oswald" style="TextTitle3" focusareacolor1="0000" focusareacolor2="0000" textcolor="FFFFFFFF"/>
     <style class="entry" focusareacolor1="797979AA" focusareacolor2="292929AA" textsize="2"/>
 </stylesheet>
-<frame pos="125 20" scale="0.75">
-    <frame z-index="1">
+<frame pos="125 20" scale="0.75" z-index="-1">
+    <frame>
         <label pos="0 40" size="75 10" class="text" text="Edit checkpoint" textsize="5" halign="center" valign="center2"/>
         <label pos="42.5 42.5" size="5 5" text="❌" valign="center" halign="center" focusareacolor2="FF0000FF" scriptevents="1" textsize="2" focusareacolor1="0000" scriptaction="Close"/>
         <label id="Save" pos="0 -65" size="20 7" text="SAVE" halign="center" valign="center" focusareacolor1="797979AA" focusareacolor2="292929AA" scriptevents="1" textfont="Oswald" textcolor="FFFFFFFF"/>
@@ -105,7 +105,7 @@ Text Get_EditCheckpoint() {
             <quad pos="0 -5.5" size="41 6" bgcolor="797979AA" halign="center"/>
         </frame>
     </frame>
-    <frame id="properties" z-index="1" pos="0 10">
+    <frame id="properties" pos="0 10">
         <frame id="Basic" pos="0 15">
             <label pos="0 0" size="20 5" class="text" text="Type" halign="center" textsize="3"/>
             <frame pos="0 -5.5">
@@ -126,7 +126,7 @@ Text Get_EditCheckpoint() {
         </frame>
         {{{Private_WeaponML()}}}
     </frame>
-    <quad pos="-45 45" z-index="0" size="90 115" bgcolor="000000AA" scriptevents="1"/>
+    <quad pos="-45 45" size="90 115" bgcolor="000000AA" scriptevents="1"/>
 </frame>
     """;
 }
@@ -137,10 +137,10 @@ Text Get_EditSpawn() {
     <style class="text" bgcolor="FFFF" textfont="Oswald" style="TextTitle3" focusareacolor1="0000" focusareacolor2="0000" textcolor="FFFFFFFF"/>
     <style class="entry" focusareacolor1="797979AA" focusareacolor2="292929AA" textsize="2"/>
 </stylesheet>
-<frame pos="125 20" scale="0.75">
-    <frame z-index="1">
+<frame pos="125 20" scale="0.75"  z-index="-1">
+    <frame>
         <label pos="0 40" size="75 10" class="text" text="Edit spawn" textsize="5" halign="center" valign="center2"/>
-        <label pos="42.5 42.5" z-index="0" size="5 5" text="❌" valign="center" halign="center" focusareacolor2="FF0000FF" scriptevents="1" textsize="2" focusareacolor1="0000" scriptaction="Close"/>
+        <label pos="42.5 42.5" size="5 5" text="❌" valign="center" halign="center" focusareacolor2="FF0000FF" scriptevents="1" textsize="2" focusareacolor1="0000" scriptaction="Close"/>
         <label id="Save" pos="0 -65" size="20 7" text="SAVE" halign="center" valign="center" focusareacolor1="797979AA" focusareacolor2="292929AA" scriptevents="1" textfont="Oswald" textcolor="FFFFFFFF"/>
         <frame pos="0 40">
             <label id="Enable" pos="-10 -8.5" size="20 5" text="enable" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
@@ -149,7 +149,7 @@ Text Get_EditSpawn() {
             <quad pos="0 -5.5" size="41 6" bgcolor="797979AA" halign="center"/>
         </frame>
     </frame>
-    <frame id="properties" z-index="1" pos="0 10">
+    <frame id="properties" pos="0 10">
         <frame id="Basic" pos="0 15">
             <label pos="0 0" size="20 5" class="text" text="Type" halign="center" textsize="3"/>
             <frame pos="0 0">
@@ -168,7 +168,7 @@ Text Get_EditSpawn() {
         </frame>
         {{{Private_WeaponML()}}}
     </frame>
-    <quad pos="-45 45" z-index="0" size="90 115" bgcolor="000000AA" scriptevents="1"/>
+    <quad pos="-45 45" size="90 115" bgcolor="000000AA" scriptevents="1"/>
 </frame>
     """;
 }
@@ -179,10 +179,10 @@ Text Get_EditGoal() {
     <style class="text" bgcolor="FFFF" textfont="Oswald" style="TextTitle3" focusareacolor1="0000" focusareacolor2="0000" textcolor="FFFFFFFF"/>
     <style class="entry" focusareacolor1="797979AA" focusareacolor2="292929AA" textsize="2"/>
 </stylesheet>
-<frame pos="125 20" scale="0.75">
-    <frame z-index="1">
+<frame pos="125 20" scale="0.75" z-index="-1">
+    <frame>
         <label pos="0 40" size="75 10" class="text" text="Edit goal" textsize="5" halign="center" valign="center2"/>
-        <label pos="42.5 42.5" z-index="0" size="5 5" text="❌" valign="center" halign="center" focusareacolor2="FF0000FF" scriptevents="1" textsize="2" focusareacolor1="0000" scriptaction="Close"/>
+        <label pos="42.5 42.5" size="5 5" text="❌" valign="center" halign="center" focusareacolor2="FF0000FF" scriptevents="1" textsize="2" focusareacolor1="0000" scriptaction="Close"/>
         <label id="Save" pos="0 20" size="20 7" text="SAVE" halign="center" valign="center" focusareacolor1="797979AA" focusareacolor2="292929AA" scriptevents="1" textfont="Oswald" textcolor="FFFFFFFF"/>
         <frame pos="0 40">
             <label id="Enable" pos="-10 -8.5" size="20 5" text="enable" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
@@ -191,7 +191,7 @@ Text Get_EditGoal() {
             <quad pos="0 -5.5" size="41 6" bgcolor="797979AA" halign="center"/>
         </frame>
     </frame>
-    <quad pos="-45 45" z-index="1" size="90 30" bgcolor="000000AA" scriptevents="1"/>
+    <quad pos="-45 45" size="90 30" bgcolor="000000AA" scriptevents="1"/>
 </frame>
     """;
 }
@@ -612,12 +612,12 @@ Void EditAmmoItem(CAnchorData _Item) {
 		    <style class="entry" focusareacolor1="797979AA" focusareacolor2="292929AA" textsize="2"/>
 		</stylesheet>
 		<frame pos="125 20" scale="0.75">
-		    <frame z-index="1">
+		    <frame>
 		        <label pos="0 40" size="75 10" class="text" text="Edit Ammo Item" textsize="5" halign="center" valign="center2"/>
 		        <label pos="42.5 42.5" size="5 5" text="❌" valign="center" halign="center" focusareacolor2="FF0000FF" scriptevents="1" textsize="2" focusareacolor1="0000" scriptaction="Close"/>
 		        <label id="Save" pos="0 -20" size="20 7" text="SAVE" halign="center" valign="center" focusareacolor1="797979AA" focusareacolor2="292929AA" scriptevents="1" textfont="Oswald" textcolor="FFFFFFFF"/>
 		    </frame>
-				<frame id="properties" z-index="1" pos="0 10">
+				<frame id="properties" pos="0 10">
 	        <frame id="Basic" pos="0 15">
 	            <label pos="0 0" size="20 5" class="text" text="Type" halign="center" textsize="3"/>
 	            <frame pos="0 -5.5">
@@ -646,7 +646,7 @@ Void EditAmmoItem(CAnchorData _Item) {
 	        </frame>
 		    </frame>
 		
-		    <quad pos="-45 45" z-index="1" size="90 70" bgcolor="000000AA" scriptevents="1"/>
+		    <quad pos="-45 45" size="90 70" bgcolor="000000AA" scriptevents="1"/>
 		</frame>
     <script><!--
     #Include "TextLib" as TL
@@ -739,12 +739,12 @@ Void EditOffzoneShieldItem(CAnchorData _Item) {
 		    <style class="entry" focusareacolor1="797979AA" focusareacolor2="292929AA" textsize="2"/>
 		</stylesheet>
 		<frame pos="125 20" scale="0.75">
-		    <frame z-index="1">
+		    <frame>
 		        <label pos="0 40" size="75 10" class="text" text="Edit OffzoneShield Item" textsize="5" halign="center" valign="center2"/>
 		        <label pos="42.5 42.5" size="5 5" text="❌" valign="center" halign="center" focusareacolor2="FF0000FF" scriptevents="1" textsize="2" focusareacolor1="0000" scriptaction="Close"/>
 		        <label id="Save" pos="0 5" size="20 7" text="SAVE" halign="center" valign="center" focusareacolor1="797979AA" focusareacolor2="292929AA" scriptevents="1" textfont="Oswald" textcolor="FFFFFFFF"/>
 		    </frame>
-				<frame id="properties" z-index="1" pos="0 10">
+				<frame id="properties" pos="0 10">
 	        <frame id="Basic" pos="0 15">
 	
 	            <label pos="0 0" size="20 5" class="text" text="Duration" halign="center" textsize="3"/>
@@ -758,7 +758,7 @@ Void EditOffzoneShieldItem(CAnchorData _Item) {
 	        </frame>
 		    </frame>
 		
-		    <quad pos="-45 45" z-index="1" size="90 45" bgcolor="000000AA" scriptevents="1"/>
+		    <quad pos="-45 45" size="90 45" bgcolor="000000AA" scriptevents="1"/>
 		</frame>
     <script><!--
     #Include "TextLib" as TL
