@@ -13,13 +13,22 @@ Void UpdateLayer() {}
 Text GetLayer() {
     return """
 <manialink version="3" name="Obstacle:RespawnBehavior">
-    <frame pos="-76 90"id="RespawnBehavior">
-        <label id="Label_RespawnBehavior" pos="0 -2" size="25 4" textsize="1" halign="left" valign="center2" textfont="OswaldMono"/>
-        <quad z-index="-1" pos="12.5 -2" size="27 5" style="BgRaceScore2" substyle="BgCardPlayer" halign="center" valign="center"/>
+    <frame pos="-78.5 90"id="RespawnBehavior">
+        <label id="Label_RespawnBehavior" pos="3 -2" size="25 4" textsize="1" halign="left" valign="center2" textfont="OswaldMono"/>
+				<quad id="Quad_Indicator" pos="1 -2" size="2 2" halign="center" valign="center2" bgcolor="FFFA" image="file://Media/Images/Common/MarkerArrowDown.png"/>
+				<quad id="Quad_Toggler" pos="13.5 -2" size="30 5" style="BgRaceScore2" substyle="BgCardPlayer" halign="center" valign="center" scriptevents="1"/>
+				<frame id="Frame_Infos" pos="12.5 -4.5">
+					<label size="45 6" textsize="1" halign="center" textfont="OswaldMono" text="Press F4 to always restart from the beginning. Press F5 to disable restart from the beginning. " valign="top" pos="0 -1" autonewline="1"/>
+					<quad  size="50 8" style="BgRaceScore2" substyle="BgCardPlayer" pos="0 0" halign="center" valign="top"/>
+				</frame>
     </frame>
 
 <script><!--
     #Include "TextLib" as TL
+
+    declare CMlQuad Quad_Toggler;
+    declare CMlQuad Quad_Indicator;
+    declare CMlFrame Frame_Infos;
 
     Text GetRespawnText(Integer _RespawnBehavior) {
         declare Result = "Respawn: ERROR";
@@ -32,10 +41,30 @@ Text GetLayer() {
         return Result;
     }
 
+    Void HideInfos() {
+        if (!Frame_Infos.Visible)
+            return;
+        Frame_Infos.Hide();
+        Quad_Indicator.RelativeRotation = 0.;
+    }
+
+    Void ShowInfos() {
+        if (Frame_Infos.Visible)
+            return;
+        Frame_Infos.Show();
+        Quad_Indicator.RelativeRotation = 180.;
+    }
+
     main() {
         wait(InputPlayer != Null && Page != Null);
-
+        
         declare Label_RespawnBehavior <=> (Page.GetFirstChild("Label_RespawnBehavior") as CMlLabel);
+
+        Quad_Toggler <=> (Page.GetFirstChild("Quad_Toggler") as CMlQuad);
+        Quad_Indicator <=> (Page.GetFirstChild("Quad_Indicator") as CMlQuad);
+        Frame_Infos <=> (Page.GetFirstChild("Frame_Infos") as CMlFrame);
+
+        HideInfos();
 
         declare netwrite Net_RespawnBehavior for UI = {{{Constants::C_RespawnBehavior_Normal}}};
         declare LastRespawnBehavior = -1;
@@ -50,7 +79,7 @@ Text GetLayer() {
             if (LocalPlayer == InputPlayer) {
                 foreach (Event in PendingEvents) {
                     switch (Event.Type) {
-                        case CMlEvent::Type::KeyPress: {
+                        case CMlScriptEvent::Type::KeyPress: {
                             switch (Event.CharPressed) {
                                 // F4 - Change respawn behavior
                                 case "2686976": {
@@ -69,6 +98,12 @@ Text GetLayer() {
                                 }
                             }
                         }
+                        case CMlScriptEvent::Type::MouseClick: {
+                            if (Frame_Infos.Visible)
+                                HideInfos();
+                            else
+                                ShowInfos();
+                        }
                     }
                 }
             }
@@ -78,8 +113,8 @@ Text GetLayer() {
                 LastRespawnBehavior = Net_RespawnBehavior;
             }
         }
-
-    }
+     }
+    
 --></script>
 </manialink>""";
 }
