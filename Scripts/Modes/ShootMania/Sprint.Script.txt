@@ -43,7 +43,10 @@
 // ---------------------------------- //
 #Setting S_TimeLimit 10 as _("Time limit (minutes)")
 #Setting S_RoundLimit 5 as _("Round limit")
-#Setting S_PointLimit 3 as _("Point limit")
+#Setting S_PointLimit 10 as _("Point limit")
+#Setting S_PointsMax 3 as _("Points for the 1st player")
+#Setting S_PointsMin 1 as _("Points for the lasts players")
+#Setting S_PointsDeduced 1 as _("Points deduced for each place")
 #Setting S_PvPWeapons False as _("Enable PvP Weapons")
 #Setting S_FullAmmoSpawn True as _("Spawning with full Ammunition")
 #Setting S_FastRespawn True as _("Fast respawn on the checkpoint")
@@ -334,8 +337,26 @@ SM::UnspawnAllPlayers();
 
 declare Message = _("|Match|Draw");
 if (Scores.existskey(G_FirstPlayer)) {
-    Scores::AddPlayerRoundPoints(Scores[G_FirstPlayer], 1);
+//    Scores::AddPlayerRoundPoints(Scores[G_FirstPlayer], 1);
     Message = MM_TL::Compose(_("$<%1$> wins the round!"), Scores[G_FirstPlayer].User.Name);
+}
+
+
+declare Integer[Ident] FinishedScores = [];
+foreach (ScoreId => HasFinished in G_FinishedScores) {
+    if (HasFinished) FinishedScores[ScoreId] = Player::getLastRunS(Scores[ScoreId]);
+}
+
+FinishedScores = FinishedScores.sort();
+
+declare PointsToAdd = S_PointsMax;
+foreach (ScoreId => LastRun in FinishedScores) {
+    if (PointsToAdd > S_PointsMin) {
+        Scores::AddPlayerRoundPoints(Scores[ScoreId], PointsToAdd);
+        PointsToAdd -= S_PointsDeduced;
+    } else {
+        Scores::AddPlayerRoundPoints(Scores[ScoreId], S_PointsMin);
+    }
 }
 
 
