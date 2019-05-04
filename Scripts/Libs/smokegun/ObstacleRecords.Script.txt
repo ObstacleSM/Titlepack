@@ -209,7 +209,14 @@ Void Loop(Text _BestRecordMsg, Text _WorseRecordMsg) {
             } else {
                 declare response = Xml.Create(request.Result);
 
-                if (TL::Find("player-finished", request.Url, True, True)) {
+                if (TL::Find("player-finished", request.Url, True, True)
+                    && response.Root != Null
+                    && response.Root.GetFirstChild("newBest") != Null
+                    && response.Root.GetFirstChild("login") != Null
+                    && response.Root.GetFirstChild("old") != Null
+                    && response.Root.GetFirstChild("new") != Null
+                ) {
+
                     declare isNewBest = response.Root.GetFirstChild("newBest").TextContents == "true";
                     // TODO: Add fields to backend response
                     declare login = response.Root.GetFirstChild("login").TextContents;

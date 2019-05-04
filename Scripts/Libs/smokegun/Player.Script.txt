@@ -107,6 +107,11 @@ Integer setBestRun(CSmPlayer _Player, Integer _Value) {
     return BestRun;
 }
 
+Integer getLastRunS(CSmScore _Score) {
+    declare Integer LastRun for _Score;
+    return LastRun;
+}
+
 Integer getLastRun(CSmPlayer _Player) {
     declare Integer LastRun for _Player.Score;
     return LastRun;
