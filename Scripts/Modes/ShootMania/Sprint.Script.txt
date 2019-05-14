@@ -379,9 +379,9 @@ foreach (ScoreId => LastRun in FinishedScores) {
 Message::SendBigMessage(Message, 2000, 0, CUIConfig::EUISound::EndRound, 0);
 MB_Sleep(3000);
 
-if ((Scores.existskey(G_FirstPlayer)
-    && Scores::GetPlayerMapPoints(Scores[G_FirstPlayer]) + Scores::GetPlayerRoundPoints(Scores[G_FirstPlayer]) >= S_PointLimit)
-   || CurrentRound == S_RoundLimit) {
+Scores::AffectPlayersRoundToMapPoints();
+
+if (Scores::GetBestPlayerMapPoints(Scores::C_Order_Descending).Points >= S_PointLimit || CurrentRound == S_RoundLimit) {
     MB_StopMap();
 } else {
     G_State = C_State_Waiting;
