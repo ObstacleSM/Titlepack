@@ -383,8 +383,8 @@ Message::SendBigMessage(Message, 2000, 0, CUIConfig::EUISound::EndRound, 0);
 MB_Sleep(3000);
 
 Scores::AffectPlayersRoundToMapPoints();
-
-if (Scores::GetBestPlayerMapPoints(Scores::C_Order_Descending).Points >= S_PointLimit || CurrentRound == S_RoundLimit) {
+declare BestPlayerScore <=> Scores::GetBestPlayerMapPoints(Scores::C_Order_Descending);
+if (BestPlayerScore != Null && BestPlayerScore.Points >= S_PointLimit || CurrentRound == S_RoundLimit) {
     MB_StopMap();
 } else {
     G_State = C_State_Waiting;
