@@ -23,3 +23,7 @@
 #Const C_Weapon_Rocket 1
 #Const C_Weapon_Nucleus 2
 #Const C_Weapon_Arrow 3
+
+// Modes
+#Const C_Mode_Obstacle 0
+#Const C_Mode_Sprint 1

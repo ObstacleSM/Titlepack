@@ -17,6 +17,7 @@
 #Include "Libs/Nadeo/Log.Script.txt" as Log
 #Include "Libs/Nadeo/TabsServer.Script.txt" as Tabs
 
+#Include "Libs/smokegun/Constants.Script.txt" as Constants
 #Include "Libs/smokegun/Player.Script.txt" as Player
 #Include "Libs/smokegun/Tools.Script.txt" as Tools
 #Include "Libs/smokegun/Weapons.Script.txt" as Weapons
@@ -53,6 +54,8 @@ declare Boolean G_UseRecords;
 // Should update the map scores of player to order them
 declare Boolean G_UseMapRanking;
 
+declare Integer G_Mode;
+
 
 /*********************************************
   FUNCTIONS
@@ -66,6 +69,14 @@ Void SetSettings(Boolean _FullAmmoSpawn, Boolean _FastRespawn, Boolean _LegacyRe
     G_AllowJump = _AllowJump;
     G_UseMapRanking = _UseMapRanking;
     G_UseRecords = _UseRecords;
+}
+
+Void SetMode(Integer _Mode) {
+   G_Mode = _Mode;
+}
+
+Integer GetMode() {
+return G_Mode;
 }
 
 /**
@@ -339,15 +350,26 @@ Void Private_CpRestart( CSmPlayer _Player, Integer _Delay, Ident _LastCheckpoint
 Void Private_FullRestart(CSmPlayer _Player, Integer _Delay) {
     declare Spawn <=> MapLandmarks_PlayerSpawn[G_StartSpawnId];
 
+    declare IsFirstRespawn = Player::getStartTime(_Player) <= 0;
+
     SM::SpawnNoLadder(_Player, 0, Spawn.PlayerSpawn, Now + _Delay);
 
     Private_RestartEffect(_Player, Spawn.Id);
 
     // Update values
-    Player::setStartTime(_Player, _Player.StartTime);
-    Player::setCpProgress(_Player, 0);
-    Player::setUsedJump(_Player, False);
-    Player::setRespawnCount(_Player, 0);
+
+    if (G_Mode == Constants::C_Mode_Obstacle) {
+        Player::setCpProgress(_Player, 0);
+        Player::setUsedJump(_Player, False);
+        Player::setRespawnCount(_Player, 0);
+        Player::setStartTime(_Player, _Player.StartTime);
+    }
+
+    if (G_Mode == Constants::C_Mode_Sprint && IsFirstRespawn) {
+        Player::setStartTime(_Player, _Player.StartTime);
+    }
+
+
     Player::setLastCheckpoint(_Player, NullId);
     Player::clearLastCPTimes(_Player);
 

@@ -158,7 +158,7 @@ ItemList_End();
 
 ***Match_StartServer***
 ***
-DoNothing();
+Obstacle::SetMode(Constants::C_Mode_Sprint);
 Spectators::ForceCamera(Spectators::Camera_FirstPerson());
 CreateUI();
 ***
