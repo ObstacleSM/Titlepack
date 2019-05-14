@@ -43,6 +43,7 @@
 // ---------------------------------- //
 #Setting S_TimeLimit 10 as _("Time limit (minutes)")
 #Setting S_RoundLimit 5 as _("Round limit")
+#Setting S_MinPlayers 2 as _("Numbers of players needed to start a map")
 #Setting S_PointLimit 10 as _("Point limit")
 #Setting S_PointsMax 3 as _("Points for the 1st player")
 #Setting S_PointsMin 1 as _("Points for the lasts players")
@@ -186,6 +187,9 @@ foreach(Player in AllPlayers) {
     NewPlayer(Player);
 }
 
+G_State = C_State_Waiting;
+
+Message::SendBigMessage("Waiting for "^S_MinPlayers^" players...", 2000, 0, CUIConfig::EUISound::Default, 1);
 CurrentRound = 0;
 ***
 
@@ -196,7 +200,6 @@ declare Boolean LastFinished;
 
 ***Match_StartRound***
 ***
-DoNothing();
 if (G_State == C_State_Waiting) {
 
 } else {
@@ -239,7 +242,7 @@ Player.ForceModelId = G_InvisibleSkinId;
 }
 
 if (G_State == C_State_Waiting) {
-if (EndTime > 0 && Now > EndTime) {
+if (EndTime > 0 && Now > EndTime || CurrentRound == 0 && AllPlayers.count >= S_MinPlayers) {
     MB_StopRound();
 }
 } else {
