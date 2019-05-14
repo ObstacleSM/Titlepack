@@ -94,6 +94,9 @@ Text GetLayer() {
                 // Parse the XML to text array
                 declare XRecords = Xml.Create(G_Req.Result);
                 declare Text[Text][] Records;
+                Http.Destroy(G_Req);
+                G_Req = Null;
+
                 if (XRecords == Null || XRecords.Root == Null)
                     continue;
 
@@ -108,8 +111,6 @@ Text GetLayer() {
                 }
                 Xml.Destroy(XRecords);
 
-                Http.Destroy(G_Req);
-                G_Req = Null;
 
               
                 if (!Frame_Widget.Visible)
