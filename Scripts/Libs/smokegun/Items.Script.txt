@@ -23,10 +23,14 @@
 declare Ident[Text] G_ItemIdents;
 declare CSmObject[] G_AnchorsObjects;
 
-Void Init() {
-    ItemList_Begin();
+Void LoadItems() {
     G_ItemIdents[Constants::C_ItemOffzone] = ItemList_Add(Constants::C_ItemOffzone);
     G_ItemIdents[Constants::C_ItemAmmo] = ItemList_Add(Constants::C_ItemAmmo);
+}
+
+Void Init() {
+    ItemList_Begin();
+    LoadItems();
     ItemList_End();
 }
 

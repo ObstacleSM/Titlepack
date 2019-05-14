@@ -146,19 +146,19 @@ if (Hud != Null && Hud.ScoresTable != Null) {
 SpawnScreen::CreateScores("Score.Points");
 ***
 
-***InitServer***
+***Match_InitServer***
 ***
-DoNothing();
+ItemList_Begin();
+G_InvisibleSkinId = ItemList_AddWithSkin("ArenaPlayer", "Skins\\Models\\ArenaPlayer\\Invisible.zip");
+Items::LoadItems();
+ItemList_End();
+
 ***
 
 ***Match_StartServer***
 ***
-ItemList_Begin();
-G_InvisibleSkinId = ItemList_AddWithSkin("ArenaPlayer", Constants::C_InvisibleSkin);
-ItemList_End();
-
+DoNothing();
 Spectators::ForceCamera(Spectators::Camera_FirstPerson());
-Items::Init();
 CreateUI();
 ***
 
@@ -169,6 +169,7 @@ declare Integer CurrentRound;
 
 ***Match_StartMap***
 ***
+DoNothing();
 // map is invalid
 if(!Obstacle::PrepareMap()) {
     MB_StopMap();
@@ -180,7 +181,6 @@ Layers::Update("Markers", Markers::GetLayer());
 
 Obstacle::SetSettings(S_FullAmmoSpawn, S_FastRespawn, False, False, False, False);
 Items::Place();
-
 foreach(Player in AllPlayers) {
     Player::setInitialized(Player, False);
     NewPlayer(Player);
@@ -196,7 +196,7 @@ declare Boolean LastFinished;
 
 ***Match_StartRound***
 ***
-
+DoNothing();
 if (G_State == C_State_Waiting) {
 
 } else {
@@ -224,6 +224,20 @@ Message::SendBigMessage(_("New Round!"), 2000, 0, CUIConfig::EUISound::StartRoun
 
 ***Match_PlayLoop***
 ***
+foreach (Player in Players) {
+declare LastModel for Player = Player.ForceModelId;
+
+if (LastModel != Player.ForceModelId) {
+log("Old skin: "^LastModel^"| New skin: "^Player.ForceModelId);
+LastModel = Player.ForceModelId;
+}
+
+if (Player.ForceModelId == NullId){
+log("Setting invisible skin...");
+Player.ForceModelId = G_InvisibleSkinId;
+}
+}
+
 if (G_State == C_State_Waiting) {
 if (EndTime > 0 && Now > EndTime) {
     MB_StopRound();
@@ -255,6 +269,7 @@ foreach (Event in PendingEvents) {
         case CSmModeEvent::EType::OnPlayerRequestRespawn: {
             // Only spawn players that were present during the round's start and haven't finished yet
             declare ScoreId = Event.Player.Score.Id;
+
             if (G_FinishedScores.existskey(ScoreId) && !G_FinishedScores[ScoreId])
                 Obstacle::RespawnPlayer(Event.Player);
 
@@ -280,6 +295,7 @@ foreach (Event in PendingEvents) {
 
     }
 }
+
 
 foreach (Player in Players) {
     switch (Player.SpawnStatus) {
@@ -451,7 +467,6 @@ Void DestroyUI() {
 
 Void NewPlayer(CSmPlayer _Player)
 {
-    _Player.ForceModelId = G_InvisibleSkinId;
     Player::InitPlayer(_Player);
     Ladder::AddPlayer(_Player.Score);
 
