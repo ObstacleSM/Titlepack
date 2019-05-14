@@ -358,7 +358,7 @@ Void Private_FullRestart(CSmPlayer _Player, Integer _Delay) {
 
     // Update values
 
-    if (G_Mode == Constants::C_Mode_Obstacle) {
+    if (G_Mode != Constants::C_Mode_Sprint) {
         Player::setCpProgress(_Player, 0);
         Player::setUsedJump(_Player, False);
         Player::setRespawnCount(_Player, 0);
