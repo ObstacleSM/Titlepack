@@ -2,7 +2,7 @@
 	<folder name="Blocks\" public="true" internal="false"/>
 	<folder name="Items\" public="true" internal="false"/>
 	<folder name="Media\Images\Common\" public="true" internal="true"/>
-	<folder name="Skins\Storm\Mod\" public="true" internal="false"/>
+	<folder name="Skins" public="true" internal="false"/>
 	<folder name="Actions" public="false" internal="true"/>
 	<folder name="Maps" public="false" internal="true"/>
 	<folder name="Media" public="false" internal="true"/>
