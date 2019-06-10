@@ -149,8 +149,9 @@ SpawnScreen::CreateScores("Score.Points");
 
 ***Match_InitServer***
 ***
+SpawnInvulnerabilityDuration = 0;
 ItemList_Begin();
-G_InvisibleSkinId = ItemList_AddWithSkin("ArenaPlayer", "Skins\\Models\\ArenaPlayer\\Invisible.zip");
+G_InvisibleSkinId = ItemList_Add("InvisibleBot.Item.Gbx");
 Items::LoadItems();
 ItemList_End();
 
