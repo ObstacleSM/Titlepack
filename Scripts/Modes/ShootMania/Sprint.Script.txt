@@ -30,6 +30,7 @@
 #Include "Libs/smokegun/UI/Chrono.Script.txt" as Chrono
 #Include "Libs/smokegun/UI/CpProgress.Script.txt" as CpProgress
 #Include "Libs/smokegun/UI/SpectatorCount.Script.txt" as SpectatorCount
+#Include "Libs/smokegun/UI/SpecKeys.Script.txt" as SpecKeys
 
 #Include "Libs/smokegun/Items.Script.txt" as Items
 #Include "Libs/smokegun/ObstacleRecords.Script.txt" as API
@@ -43,15 +44,15 @@
 // ---------------------------------- //
 #Setting S_TimeLimit 10 as _("Time limit (minutes)")
 #Setting S_RoundLimit 5 as _("Round limit")
-#Setting S_MinPlayers 2 as _("Numbers of players needed to start a map")
+#Setting S_MinPlayers 2  as _("Number of players needed to start a map")
+#Setting S_PointDistribution False as _("Beta: Enable dynamic point distribution")
 #Setting S_PointLimit 10 as _("Point limit")
 #Setting S_PointsMax 3 as _("Points for the 1st player")
 #Setting S_PointsMin 1 as _("Points for the lasts players")
 #Setting S_PointsDeduced 1 as _("Points deduced for each place")
 #Setting S_PvPWeapons False as _("Enable PvP Weapons")
-#Setting S_FullAmmoSpawn True as _("Spawning with full Ammunition")
-#Setting S_FastRespawn True as _("Fast respawn on the checkpoint")
 #Setting S_RoundCooldown 10 as _("Waiting time between rounds (seconds)")
+#Setting S_WarmupRounds 1 as _("Number of warmup rounds")
 #Setting S_MinTimeLeft 20 as _("Minimum time left (seconds)")
 #Setting S_MaxTimeLeft 120 as _("Maximum time left (seconds)")
 
@@ -139,6 +140,8 @@ if (Hud != Null && Hud.ScoresTable != Null) {
         ], 15, 7, False);
     TabsLayer.Type = CUILayer::EUILayerType::AltMenu;
     UIManager.UIAll.UILayers.add(TabsLayer);
+
+    Hud.ScoresTable.SetFooterText("Time limit: "^TL::TimeToText(S_TimeLimit*60*1000)^" | Round limit: "^S_RoundLimit^" | Point limit: "^S_PointLimit^" | Warmup round: "^S_WarmupRounds);
 }
 ***
 
@@ -167,6 +170,10 @@ CreateUI();
 ***Match_InitMap***
 ***
 declare Integer CurrentRound;
+declare Integer PrevTimeLimit;
+declare Integer PrevRoundLimit;
+declare Integer PrevPointLimit;
+declare Integer PrevWarmupRounds;
 ***
 
 ***Match_StartMap***
@@ -181,7 +188,7 @@ if(!Obstacle::PrepareMap()) {
 UIManager.UIAll.MarkersXML = Markers::GetXML();
 Layers::Update("Markers", Markers::GetLayer());
 
-Obstacle::SetSettings(S_FullAmmoSpawn, S_FastRespawn, False, False, False, False);
+Obstacle::SetSettings(True, True, False, False, False, False);
 Items::Place();
 foreach(Player in AllPlayers) {
     Player::setInitialized(Player, False);
@@ -191,12 +198,18 @@ foreach(Player in AllPlayers) {
 G_State = C_State_Waiting;
 
 Message::SendBigMessage("Waiting for "^S_MinPlayers^" players...", 2000, 0, CUIConfig::EUISound::Default, 1);
+
 CurrentRound = 0;
+PrevTimeLimit = S_TimeLimit;
+PrevRoundLimit = S_RoundLimit;
+PrevPointLimit = S_PointLimit;
+PrevWarmupRounds = S_WarmupRounds;
 ***
 
 ***Match_InitRound***
 ***
 declare Boolean LastFinished;
+declare Integer NumberOfPlayerRound;
 ***
 
 ***Match_StartRound***
@@ -208,6 +221,7 @@ CurrentRound += 1;
 
 G_FirstPlayer = NullId;
 LastFinished = False;
+NumberOfPlayerRound = Players.count;
 G_FinishedScores.clear();
 
 foreach (Player in Players) {
@@ -218,16 +232,38 @@ foreach (Player in Players) {
 StartTime = Now;
 if (S_TimeLimit > 0) {
     EndTime = (StartTime + S_TimeLimit * 1000 * 60);
-} else {
+}
+else {
     EndTime = -1;
 }
 
-Message::SendBigMessage(_("New Round!"), 2000, 0, CUIConfig::EUISound::StartRound, 1);
+declare netwrite Net_IsWarmup for Teams[0] = False;
+Net_IsWarmup = CurrentRound <= S_WarmupRounds;
+
+if (Net_IsWarmup) {
+    Message::SendBigMessage("Warmup round "^ CurrentRound ^"!", 2000, 0, CUIConfig::EUISound::StartRound, 1);
 }
+else {
+    Message::SendBigMessage("Starting round "^ CurrentRound - S_WarmupRounds ^"!", 2000, 0, CUIConfig::EUISound::StartRound, 1);
+}
+}
+***
+
+***Match_Yield***
+***
+SpectatorCount::Yield();
 ***
 
 ***Match_PlayLoop***
 ***
+if (PrevTimeLimit != S_TimeLimit || PrevRoundLimit != S_RoundLimit || PrevPointLimit != S_PointLimit || PrevWarmupRounds != S_WarmupRounds) {
+    PrevTimeLimit = S_TimeLimit;
+    PrevRoundLimit = S_RoundLimit;
+    PrevPointLimit = S_PointLimit;
+    PrevWarmupRounds = S_WarmupRounds;
+    Hud.ScoresTable.SetFooterText("Time limit: "^TL::TimeToText(S_TimeLimit*60*1000)^" | Round limit: "^S_RoundLimit^" | Point limit: "^S_PointLimit^" | Warmup round: "^S_WarmupRounds);
+}
+
 foreach (Player in Players) {
 declare LastModel for Player = Player.ForceModelId;
 
@@ -307,6 +343,8 @@ foreach (Player in Players) {
         }
 
         case CSmPlayer::ESpawnStatus::Spawned: {
+            SpecKeys::UpdateLayer(Player);
+            
             // Unlimited stam
             declare StaminaUnlimited for Player = False;
             if(StaminaUnlimited && Player.Stamina < 7500) {
@@ -316,10 +354,7 @@ foreach (Player in Players) {
             // Effects on respawn
             declare PlayerHasRespawned for Player = False;
             if(PlayerHasRespawned) {
-                if(S_FullAmmoSpawn) {
-                    Weapons::FillUpPlayerAmmo(Player);
-                }
-
+                Weapons::FillUpPlayerAmmo(Player);
                 PlayerHasRespawned = False;
             }
 
@@ -361,7 +396,7 @@ if (Scores.existskey(G_FirstPlayer)) {
     Message = MM_TL::Compose(_("$<%1$> wins the round!"), Scores[G_FirstPlayer].User.Name);
 }
 
-
+if (CurrentRound > S_WarmupRounds) {
 declare Integer[Ident] FinishedScores = [];
 foreach (ScoreId => HasFinished in G_FinishedScores) {
     if (HasFinished) FinishedScores[ScoreId] = Player::getLastRunS(Scores[ScoreId]);
@@ -369,14 +404,39 @@ foreach (ScoreId => HasFinished in G_FinishedScores) {
 
 FinishedScores = FinishedScores.sort();
 
-declare PointsToAdd = S_PointsMax;
-foreach (ScoreId => LastRun in FinishedScores) {
-    if (PointsToAdd > S_PointsMin) {
-        Scores::AddPlayerRoundPoints(Scores[ScoreId], PointsToAdd);
-        PointsToAdd -= S_PointsDeduced;
-    } else {
-        Scores::AddPlayerRoundPoints(Scores[ScoreId], S_PointsMin);
+if (FinishedScores.count > 0) {
+    if (!S_PointDistribution) {
+        declare PointsToAdd = S_PointsMax;
+        declare PreviousRun = -1;
+
+        foreach (ScoreId => LastRun in FinishedScores) {
+            Scores::AddPlayerRoundPoints(Scores[ScoreId], PointsToAdd);
+
+
+            if (LastRun != PreviousRun) {
+                if (PointsToAdd - S_PointsDeduced > S_PointsMin) {
+                    PointsToAdd -= S_PointsDeduced;
+                }
+                else {
+                    PointsToAdd = S_PointsMin;
+                }
+            }
+            PreviousRun = LastRun;
+        }
     }
+    else if (FinishedScores.count > 0) {
+        declare PointsToAdd = NumberOfPlayerRound;
+        declare PreviousRun = -1;
+        foreach (ScoreId => LastRun in FinishedScores) {
+            Scores::AddPlayerRoundPoints(Scores[ScoreId], PointsToAdd);
+
+            if (LastRun != PreviousRun) {
+                PointsToAdd -= 1;
+            }
+            PreviousRun = LastRun;
+        }
+    }
+}
 }
 
 
@@ -384,12 +444,29 @@ Message::SendBigMessage(Message, 2000, 0, CUIConfig::EUISound::EndRound, 0);
 MB_Sleep(3000);
 
 Scores::AffectPlayersRoundToMapPoints();
+
+
 declare BestPlayerScore <=> Scores::GetBestPlayerMapPoints(Scores::C_Order_Descending);
-if (BestPlayerScore != Null && BestPlayerScore.Points >= S_PointLimit || CurrentRound == S_RoundLimit) {
+
+declare MostPointsScore <=> Scores[0];
+foreach (Score in Scores) {
+    if (Score.Points > MostPointsScore.Points) {
+        MostPointsScore <=> Score;
+    }
+}
+
+if (BestPlayerScore == Null && (MostPointsScore.Points >= S_PointLimit || CurrentRound >= S_RoundLimit)) {
+     Message::SendBigMessage("Draw! A new round will start while there is a draw.", 5000, 0, CUIConfig::EUISound::Warning, 1);
+}
+
+if (BestPlayerScore != Null && (BestPlayerScore.Points >= S_PointLimit || CurrentRound >= S_RoundLimit)) {
     MB_StopMap();
 } else {
     G_State = C_State_Waiting;
-    EndTime = Now + S_RoundCooldown * 1000;
+
+    if (S_RoundCooldown > 0) {
+        EndTime = Now + S_RoundCooldown * 1000;
+    }
 }
 
 // State waiting
@@ -443,6 +520,7 @@ Void CreateUI() {
     Layers::Create("CpProgress", CpProgress::GetLayer());
     Layers::Create("CPTimes", CPTimes::GetLayer());
     Layers::Create("SpectatorCount", SpectatorCount::GetLayer());
+    Layers::Create("SpecKeys", SpecKeys::GetLayer());
 
     Layers::Create("Markers");
     Layers::SetType("Markers", CUILayer::EUILayerType::Markers);
@@ -455,6 +533,7 @@ Void CreateUI() {
     Layers::Attach("Markers");
     Layers::Attach("Items");
     Layers::Attach("SpectatorCount");
+    Layers::Attach("SpecKeys");
 }
 
 Void DestroyUI() {
@@ -465,6 +544,7 @@ Void DestroyUI() {
     Layers::Detach("Markers");
     Layers::Detach("Items");
     Layers::Detach("SpectatorCount");
+    Layers::Detach("SpecKeys");
 
     UIManager.UILayerDestroyAll();
 }
@@ -529,10 +609,10 @@ Void Private_HandleFinish(CSmPlayer _Player, Ident _GoalId) {
     // Set the end timer when the first player finishes
     if (G_FirstPlayer == NullId) {
         declare TimeLeft = Time / 3;
-        if (TimeLeft > S_MaxTimeLeft)
-            TimeLeft = S_MaxTimeLeft;
-        else if (TimeLeft < S_MinTimeLeft)
-            TimeLeft = S_MinTimeLeft;
+        if (TimeLeft > S_MaxTimeLeft * 1000)
+            TimeLeft = S_MaxTimeLeft * 1000;
+        else if (TimeLeft < S_MinTimeLeft * 1000)
+            TimeLeft = S_MinTimeLeft * 1000;
 
         EndTime = Now + TimeLeft;
         G_FirstPlayer = _Player.Score.Id;

@@ -30,6 +30,7 @@
 #Include "Libs/smokegun/UI/SpectatorCount.Script.txt" as SpectatorCount
 #Include "Libs/smokegun/UI/NextMapVote.Script.txt" as NextMapVote
 #Include "Libs/smokegun/UI/RespawnBehavior.Script.txt" as RespawnBehavior
+#Include "Libs/smokegun/UI/SpecKeys.Script.txt" as SpecKeys
 
 #Include "Libs/smokegun/Items.Script.txt" as Items
 #Include "Libs/smokegun/ObstacleRecords.Script.txt" as API
@@ -287,6 +288,8 @@ foreach (Player in Players) {
         }
 
         case CSmPlayer::ESpawnStatus::Spawned: {
+            SpecKeys::UpdateLayer(Player);
+
             // Unlimited stam
             declare StaminaUnlimited for Player = False;
             if(StaminaUnlimited && Player.Stamina < 7500) {
@@ -422,6 +425,7 @@ Void CreateUI() {
     Layers::Create("SpectatorCount", SpectatorCount::GetLayer());
     Layers::Create("NextMapVote", NextMapVote::GetLayer(S_NextMapVotingRatio));
     Layers::Create("RespawnBehavior", RespawnBehavior::GetLayer());
+    Layers::Create("SpecKeys", SpecKeys::GetLayer());
 
     Layers::Create("Markers");
     Layers::SetType("Markers", CUILayer::EUILayerType::Markers);
@@ -440,6 +444,7 @@ Void CreateUI() {
     Layers::Attach("SpectatorCount");
     Layers::Attach("NextMapVote");
     Layers::Attach("RespawnBehavior");
+    Layers::Attach("SpecKeys");
 }
 
 Void DestroyUI() {
@@ -456,6 +461,7 @@ Void DestroyUI() {
     Layers::Detach("SpectatorCount");
     Layers::Detach("NextMapVote");
     Layers::Detach("RespawnBehavior");
+    Layers::Detach("SpecKeys");
 
     UIManager.UILayerDestroyAll();
 }
