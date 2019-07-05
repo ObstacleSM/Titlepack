@@ -31,6 +31,7 @@ Text GetLayer() {
         Frame_Chrono.Visible = True;
 
         declare PrevUsedJump = False;
+        declare PrevWarmup = False;
         while (True) {
             yield;
 
@@ -47,6 +48,17 @@ Text GetLayer() {
                 // Set the color to red if the player has jumped
                 if (Net_UsedJump)
                     Label_Chrono.TextColor = <0.7, 0., 0.>;
+                else
+                    Label_Chrono.TextColor = <1., 1., 1.>;
+            }
+
+            declare netread Net_IsWarmup for Teams[0] = False;
+            if (PrevWarmup != Net_IsWarmup) {
+                PrevWarmup = Net_IsWarmup;
+
+                // Set the color to red if the player has jumped
+                if (Net_IsWarmup)
+                    Label_Chrono.TextColor = <1., 0.7, 0.>;
                 else
                     Label_Chrono.TextColor = <1., 1., 1.>;
             }
