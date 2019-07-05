@@ -3,18 +3,25 @@
 
 Text Private_LandmarkToText(CSmMapLandmark _Landmark)
 {
-    if (Tools::IsCheckpoint(_Landmark))
-        return "CP "^_Landmark.Order;
+    declare prefix = "";
+    if (Tools::IsPortal(_Landmark))
+        prefix = "PORTAL ";
+    else if (Tools::IsCheckpoint(_Landmark))
+        prefix = "CP ";
     else if (Tools::IsGoal(_Landmark))
         return "GOAL";
-    return TL::ToUpperCase(_Landmark.Tag);
+    else
+        return TL::ToUpperCase(_Landmark.Tag);
+
+    if (_Landmark.Order != 0)
+        return prefix^" "^_Landmark.Order;
+    return prefix;
 }
 
 Text GetXML() {
     declare MarkersXML = "";
     foreach (Landmark in MapLandmarks) {
-        if (!Tools::IsCheckpoint(Landmark) && !Tools::IsGoal(Landmark)) continue;
-
+        if (!Tools::IsCheckpoint(Landmark) && !Tools::IsGoal(Landmark) && !Tools::IsPortal(Landmark)) continue;
         MarkersXML ^= """
             <marker box="0 3 0"
                 manialinkframeid="Marker_{{{Landmark.Id}}}"
@@ -32,7 +39,7 @@ Text GetLayer() {
 
 
     foreach (Landmark in MapLandmarks) {
-        if (!Tools::IsCheckpoint(Landmark) && !Tools::IsGoal(Landmark)) continue;
+        if (!Tools::IsCheckpoint(Landmark) && !Tools::IsGoal(Landmark) && !Tools::IsPortal(Landmark)) continue;
 
         ML ^= """
         <frame id="Marker_{{{Landmark.Id}}}">
@@ -43,7 +50,7 @@ Text GetLayer() {
                     textsize="2"
                 />
 
-                <quad pos="0 0" z-index="0" size="10 5" bgcolor="000C"
+                <quad id="Background" pos="0 0" z-index="0" size="10 5" bgcolor="000C"
                     halign="center" valign="center" style="Bgs1InRace"
                     substyle="BgCardList"/>
             </frame>
@@ -55,6 +62,26 @@ Text GetLayer() {
     </frame>
     <script><!--
 #Include "TextLib" as TL
+
+// From Tools.Script.txt
+
+Boolean IsEnabled(CSmMapLandmark _Landmark) {
+    if (_Landmark.Tag == "No-Function")
+        return False;
+    declare metadata Meta_Enabled for _Landmark = True;
+    return Meta_Enabled;
+}
+
+Boolean IsPortal(CSmMapLandmark _Landmark) {
+    if (!IsEnabled(_Landmark))
+        return False;
+
+    if(_Landmark.Tag == "Portal" || _Landmark.Tag == "CheckpointType3")
+        return True;
+
+    declare metadata Meta_IsPortal for _Landmark = False;
+    return Meta_IsPortal;
+}
 
 main() {
     wait(InputPlayer != Null && Page != Null);
@@ -78,6 +105,7 @@ main() {
             foreach (CP_Marker in Frame_Checkpoints.Controls) {
                 declare CP_Frame = (CP_Marker as CMlFrame);
                 declare CP_Content = CP_Frame.GetFirstChild("Content");
+                declare CP_Background = CP_Frame.GetFirstChild("Background");
                 declare Text[] Parts = TL::Split("_", CP_Marker.ControlId);
                 declare CP_Id = Parts[Parts.count - 1];
                 declare CSmMapLandmark CP_Landmark;
@@ -94,11 +122,15 @@ main() {
                 if (CP_Landmark == Null)
                     continue;
 
+                if (IsPortal(CP_Landmark)) {
+                    CP_Background.Size.X = 15.;
+                }
+
                 if (Net_CpProgress == Net_CheckpointsTotal) {
                     declare metadata Meta_CPType for CP_Landmark = 0;
                     CP_Content.Visible = CP_Landmark.Tag == "Goal" || Meta_CPType == 2;
                 } else {
-                    CP_Content.Visible = CP_Landmark.Order == Net_CpProgress + 1;
+                    CP_Content.Visible = CP_Landmark.Order == 0 || CP_Landmark.Order == Net_CpProgress + 1;
                 }
             }
         }
