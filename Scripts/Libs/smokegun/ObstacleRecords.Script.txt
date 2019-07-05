@@ -94,13 +94,7 @@ Void Login() {
         Http.Destroy(Http.Requests[G_LoginRequestId]);
     }
 
-    declare pass = Http.CreateGet("file://Media/Private/test.txt").Result;
-    pass = TL::Split("\r\n", pass)[0];
-    declare payload = """
-    {
-    "username": "vincent",
-    "password": "{{{pass}}}"
-    }""";
+    declare payload = "";
 
     G_LoginRequestId = MakePost("Users/Login", payload);
     G_State = Constants::C_SLoggingIn;
@@ -210,6 +204,7 @@ Void Loop(Text _BestRecordMsg, Text _WorseRecordMsg) {
                 declare response = Xml.Create(request.Result);
 
                 if (TL::Find("player-finished", request.Url, True, True)
+                    && response != Null
                     && response.Root != Null
                     && response.Root.GetFirstChild("newBest") != Null
                     && response.Root.GetFirstChild("login") != Null
