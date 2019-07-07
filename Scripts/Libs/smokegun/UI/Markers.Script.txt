@@ -65,20 +65,48 @@ Text GetLayer() {
 
 // From Tools.Script.txt
 
+Integer GetMapTypeVersion() {
+   declare metadata LibMapType_MapTypeVersion for Map = 0;
+   return LibMapType_MapTypeVersion;
+}
+
+
 Boolean IsEnabled(CSmMapLandmark _Landmark) {
-    if (_Landmark.Tag == "No-Function")
-        return False;
+    if(GetMapTypeVersion() <= 2)
+        return _Landmark.Tag != "No-Function";
     declare metadata Meta_Enabled for _Landmark = True;
     return Meta_Enabled;
+}
+
+Boolean IsGoal(CSmMapLandmark _Landmark) {
+    if (!IsEnabled(_Landmark))
+        return False;
+
+    if(GetMapTypeVersion() <= 2)
+        return _Landmark.Tag == "Goal";
+
+    declare metadata Meta_CPType for _Landmark = 0;
+    return _Landmark.Tag == "Goal" || Meta_CPType == 2;
+}
+
+Boolean IsCheckpoint(CSmMapLandmark _Landmark) {
+    if (!IsEnabled(_Landmark))
+        return False;
+
+    if(GetMapTypeVersion() <= 2)
+        return "Checkpoint" == TL::SubText(_Landmark.Tag, 0, 10);
+
+    declare metadata Meta_CPType for _Landmark = 0;
+    return _Landmark.Tag == "Checkpoint"
+           && (Meta_CPType == 0 || Meta_CPType == 1);
 }
 
 Boolean IsPortal(CSmMapLandmark _Landmark) {
     if (!IsEnabled(_Landmark))
         return False;
 
-    if(_Landmark.Tag == "Portal" || _Landmark.Tag == "CheckpointType3")
-        return True;
-
+    if(GetMapTypeVersion() <= 2)
+        return _Landmark.Tag == "Portal" || _Landmark.Tag == "CheckpointType3";
     declare metadata Meta_IsPortal for _Landmark = False;
     return Meta_IsPortal;
 }
@@ -128,9 +156,9 @@ main() {
 
                 if (Net_CpProgress == Net_CheckpointsTotal) {
                     declare metadata Meta_CPType for CP_Landmark = 0;
-                    CP_Content.Visible = CP_Landmark.Tag == "Goal" || Meta_CPType == 2;
+                    CP_Content.Visible = IsGoal(CP_Landmark);
                 } else {
-                    CP_Content.Visible = CP_Landmark.Order == 0 || CP_Landmark.Order == Net_CpProgress + 1;
+                    CP_Content.Visible = (IsPortal(CP_Landmark) || IsCheckpoint(CP_Landmark)) && (CP_Landmark.Order == 0 || CP_Landmark.Order == Net_CpProgress + 1);
                 }
             }
         }
