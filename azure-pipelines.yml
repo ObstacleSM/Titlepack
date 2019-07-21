@@ -1,0 +1,122 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- master
+
+pool:
+  vmImage: 'windows-2019'
+
+steps:
+
+- pwsh: Invoke-WebRequest "https://onedrive.live.com/download?cid=2EC0D2E0D9DA402A&resid=2EC0D2E0D9DA402A%2113388&authkey=APoRojn5vQhBS60" -OutFile "./Lol.7z"
+  workingDirectory: $(Build.StagingDirectory)
+  displayName: 'Downloading User files'
+
+- pwsh: 7z.exe x ./Lol.7z -bb
+  workingDirectory: $(Build.StagingDirectory)
+  displayName: 'Extracting User files'
+
+- pwsh: Invoke-WebRequest "https://onedrive.live.com/download?cid=2EC0D2E0D9DA402A&resid=2EC0D2E0D9DA402A%2113389&authkey=AC0somuBOCqaAAc" -OutFile "./Maniaplanet.7z"
+  workingDirectory: $(Build.StagingDirectory)
+  displayName: 'Downloading Maniaplanet'
+
+- pwsh: 7z.exe x ./Maniaplanet.7z -bb
+  workingDirectory: $(Build.StagingDirectory)
+  displayName: 'Extracting Maniaplanet'
+
+- pwsh: Invoke-WebRequest "https://onedrive.live.com/download?cid=2EC0D2E0D9DA402A&resid=2EC0D2E0D9DA402A%2113524&authkey=ALyh4OiUekTaLPI" -OutFile "./makerfiles.7z"
+  workingDirectory: $(Build.SourcesDirectory)
+  displayName: 'Downloading Maker files'
+
+- pwsh: 7z.exe x ./makerfiles.7z -bb
+  workingDirectory: $(Build.SourcesDirectory)
+  displayName: 'Extracting Maker files'
+
+- pwsh: New-Item -Path $(Build.StagingDirectory)/Lol/WorkTitles/testobstacle@smokegun -ItemType SymbolicLink -Value $(Build.SourcesDirectory)
+  displayName: 'Linking the repository and the user files'
+
+- task: PythonScript@0
+  displayName: 'Build titlepack'
+  inputs:
+    scriptSource: inline
+    workingDirectory: $(Build.StagingDirectory)
+    failOnStderr: true
+    script: |
+      import time
+      import subprocess
+      import glob
+      import os
+      import sys
+
+      tp = 'testobstacle@smokegun'
+
+      def is_built():
+          return os.path.exists(f"./Lol/Packs/{tp}.Title.Pack.Gbx")
+
+      def is_error(line):
+          return 'error' in line \
+              or 'Error' in line \
+              or 'ERROR' in line \
+              or 'failed' in line
+
+      def build_tp():
+          p = subprocess.Popen(f"./Maniaplanet/ManiaplanetLogs.exe /userdir=Lol /profile=vince /createpack={tp} /windowless /inputless /silent")
+
+          needs_restart = False
+          to_remove = []
+
+          while p.poll() is None:
+              time.sleep(0.5)
+
+
+              for filename in [f for f in glob.glob("./Lol/Maniaplanet*.txt", recursive=True)]:
+                  print(filename)
+
+                  f = open(filename, 'r')
+
+                  er, re = False, False
+
+                  for line in f.readlines():
+                      if 'Console' in line:
+                          print(line, end="")
+                          er = er or is_error(line)
+                          re = re or 'restart' in line
+
+                  f.close()
+
+                  if er:
+                      print(f"It failed.", file=sys.stderr)
+                      exit(1)
+
+                  if re:
+                      p.kill()
+                      to_remove.append(filename)
+                      print("Maniaplanet needs to restart.")
+                      needs_restart = True
+
+          for f in to_remove:
+              if os.path.exists(f):
+                  os.remove(f)
+
+
+          if not is_built():
+              print(f"The titlepack file is not here. (./Lol/Packs/{tp}.Title.Pack.Gbx)")
+
+              if not needs_restart:
+                  print(f"The titlepack file is not here. (./Lol/Packs/{tp}.Title.Pack.Gbx)", file=sys.stderr)
+                  exit(1)
+
+              return True
+
+          print("The titlepack was built correctly.")
+          return False
+
+      if build_tp() and not is_built():
+
+          build_tp()
+          
+- publish: $(Build.StagingDirectory)/Lol/Packs/testobstacle@smokegun.Title.Pack.Gbx
+  artifact: Titlepack
