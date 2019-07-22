@@ -1,15 +1,21 @@
 <maniaplanet_title version="4">
-	<id>testobstacle@smokegun</id>
-	<name>testobstacle</name>
+	<id>obstacle@smokegun</id>
+	<name></name>
 	<desc></desc>
-	<url>testobstacle@smokegun</url>
-	<title_version></title_version>
+	<url>ObstacleMP4</url>
+	<download_url></download_url>
+	<title_version>1.0</title_version>
+	<allowed_client_title_version></allowed_client_title_version>
+	<maker>SMStormMaker@nadeo</maker>
 	<base>SMStorm</base>
 	<player_model>ArenaPlayer</player_model>
 	<scriptcloud_enabled>false</scriptcloud_enabled>
+	<limit_camera_fov>false</limit_camera_fov>
+	<use_hmd>false</use_hmd>
+	<unlock_features>0</unlock_features>
 	<packaging>
-		<image name="Media\MenuBg.jpg"/>
-		<logos name="Media\Logos.png"/>
+		<image name="Media\Images\Logos\Background.jpg"/>
+		<logos name="Media\Images\Logos\Logos.png"/>
 		<collection></collection>
 		<sortindex>100</sortindex>
 		<station_manialink url=""/>
@@ -17,17 +23,15 @@
 		<boxcase_manialink url=""/>
 	</packaging>
 	<menu>
-		<background_img name="Media\MenuBg.jpg"/>
+		<background_img name="Media\Images\Logos\PackImage.webm"/>
 		<background_replay name=""/>
-		<header name="Media\Logos.png"/>
+		<header name=""/>
 		<music name=""/>
 		<manialink url="Media/Apps/MainMenuLagoon.Script.txt"/>
 	</menu>
 	<menu_style name=""/>
-	<music folder=""/>
-	<mod name=""/>
 	<solo>
-		<mode name=""/>
+		<mode name="Modes\ShootMania\ObstacleSolo.Script.txt"/>
 		<datapack name=""/>
 		<default_maprecord_type>2</default_maprecord_type>
 		<score_context>
@@ -76,25 +80,10 @@
 		<simple_editor_map name=""/>
 		<internalitems/>
 	</editor>
-	<files/>
-	<folders>
-		<folder name="Blocks\" public="true" internal="false"/>
-		<folder name="Items\" public="true" internal="false"/>
-		<folder name="Media\" public="true" internal="true"/>
-		<folder name="Skins" public="true" internal="false"/>
-		<folder name="Actions" public="false" internal="true"/>
-		<folder name="Maps" public="false" internal="true"/>
-		<folder name="Media" public="false" internal="true"/>
-		<folder name="Modules" public="false" internal="true"/>
-		<folder name="Replays" public="false" internal="true"/>
-		<folder name="Scripts" public="false" internal="false"/>
-	</folders>
-	<allowed_client_title_version></allowed_client_title_version>
-	<maker>SMStormMaker@nadeo</maker>
-	<limit_camera_fov>false</limit_camera_fov>
-	<use_hmd>false</use_hmd>
-	<unlock_features>0</unlock_features>
+	<music folder=""/>
+	<mod name=""/>
 	<hud3dfont name=""/>
-	<download_url></download_url>
+	<files/>
+	<folders/>
 	<hud_default_module name=""/>
 </maniaplanet_title>

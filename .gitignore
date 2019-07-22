@@ -1,4 +1,5 @@
 Blocks/
 Items/
-*.Map.Gbx
+Materials/
 Media/Manialinks/Keyboard
+*.Map.Gbx

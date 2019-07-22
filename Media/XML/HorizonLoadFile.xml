@@ -1,14 +1,14 @@
 <titlePackXML projectenviro="Storm" titlewasmadeonce="yes">
 	<global>
-		<News color="f00"/>
-		<Logo path="file://Media\Logos.png" />
+		<News color="fff"/>
+		<Logo path="file://Media\Images\Logos\Logos.png" />
 		<Background path="" />
-		<BackgroundImage path="file://Media\MenuBg.jpg" />
-		<Music path="file://Media\Musics\Storm\Race\Night\NIGHT_01_Track_06.ogg" />
+		<BackgroundImage path="file://Media\Images\Logos\Background.jpg" />
+		<Music path="" />
 		<Style MainTitlePolice="TextTitle3" SectionsPolice="TextRaceMessageBig" />
-		<Station stationlogos="file://Media\Logos.png" stationimage="file://Media\MenuBg.jpg"/>
+		<Station stationlogos="file://Media\Images\Logos\Logos.png" stationimage="file://Media\Images\Logos\Background.jpg"/>
 	</global>
-<Solo activated="False" color="FF0" logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_Solo.dds" allowevaluate="False" contextname="" scriptname="">
+<Solo activated="False" color="FF0" logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_Solo.dds" allowevaluate="False" contextname="AscendingScore" scriptname="Modes\ShootMania\ObstacleSolo.Script.txt">
 <campaign type="Mini">
 	<unlockcriterias>
 		<unlockcriteria id="1" name="semi-open"/>
@@ -156,29 +156,169 @@
 			<unlock id="1" medalnb="15" medaltype="Bronze"/>
 			<unlock id="2" medalnb="15" medaltype="Bronze"/>
 		</track>
+	</category>	<category name="White">
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="0" medaltype="Bronze"/>
+			<unlock id="2" medalnb="0" medaltype="Bronze"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="0" medaltype="Bronze"/>
+			<unlock id="2" medalnb="0" medaltype="Bronze"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="0" medaltype="Bronze"/>
+			<unlock id="2" medalnb="0" medaltype="Bronze"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="0" medaltype="Bronze"/>
+			<unlock id="2" medalnb="0" medaltype="Bronze"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="0" medaltype="Bronze"/>
+			<unlock id="2" medalnb="0" medaltype="Bronze"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="5" medaltype="Bronze"/>
+			<unlock id="2" medalnb="5" medaltype="Bronze"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="5" medaltype="Bronze"/>
+			<unlock id="2" medalnb="5" medaltype="Bronze"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="5" medaltype="Bronze"/>
+			<unlock id="2" medalnb="5" medaltype="Bronze"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="5" medaltype="Bronze"/>
+			<unlock id="2" medalnb="5" medaltype="Bronze"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="5" medaltype="Bronze"/>
+			<unlock id="2" medalnb="5" medaltype="Bronze"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="10" medaltype="Bronze"/>
+			<unlock id="2" medalnb="10" medaltype="Bronze"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="10" medaltype="Bronze"/>
+			<unlock id="2" medalnb="10" medaltype="Bronze"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="10" medaltype="Bronze"/>
+			<unlock id="2" medalnb="10" medaltype="Bronze"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="10" medaltype="Bronze"/>
+			<unlock id="2" medalnb="10" medaltype="Bronze"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="10" medaltype="Bronze"/>
+			<unlock id="2" medalnb="10" medaltype="Bronze"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="15" medaltype="Bronze"/>
+			<unlock id="2" medalnb="15" medaltype="Bronze"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="15" medaltype="Bronze"/>
+			<unlock id="2" medalnb="15" medaltype="Bronze"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="15" medaltype="Bronze"/>
+			<unlock id="2" medalnb="15" medaltype="Bronze"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="15" medaltype="Bronze"/>
+			<unlock id="2" medalnb="15" medaltype="Bronze"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="15" medaltype="Bronze"/>
+			<unlock id="2" medalnb="15" medaltype="Bronze"/>
+		</track>
 	</category>
 	</categories>
 </campaign>
 </Solo>
-	<Multiplayer logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_Online.dds" activated="True" color="c39" allowallmodes="False" displaytitleserversonly="True">
+	<Multiplayer logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_Online.dds" activated="True" color="fff" allowallmodes="True" displaytitleserversonly="True">
 			<asset id="Modes\ShootMania\Obstacle.Script.txt" isdefault="no" titlename="Modes\ShootMania\Obstacle.Script.txt" makername="Modes\ShootMania\Obstacle.Script.txt" isvisibleinmaker="yes"/>
 	<asset id="Modes\ShootMania\Sprint.Script.txt" isdefault="no" titlename="Modes\ShootMania\Sprint.Script.txt" makername="Modes\ShootMania\Sprint.Script.txt" isvisibleinmaker="yes"/>
 
 	</Multiplayer>
-	<LocalPlay logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_LocalPlay.dds" activated="True" color="0f8">
+	<LocalPlay logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_LocalPlay.dds" activated="True" color="fff">
 			<asset id="LocalNetwork" isdefault="yes" titlename="Local Network" makername="Local Network" isvisibleinmaker="True" isactivated="True"/>
 	<asset id="Modes\ShootMania\Obstacle.Script.txt" isdefault="no" titlename="Modes\ShootMania\Obstacle.Script.txt" makername="Modes\ShootMania\Obstacle.Script.txt" isvisibleinmaker="yes"/>
 	<asset id="Modes\ShootMania\Sprint.Script.txt" isdefault="no" titlename="Modes\ShootMania\Sprint.Script.txt" makername="Modes\ShootMania\Sprint.Script.txt" isvisibleinmaker="yes"/>
 
 	</LocalPlay>
-	<Editors logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_Editor.dds" activated="True" color="48e" mapeditor="">
+	<Editors logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_Editor.dds" activated="True" color="fff" mapeditor="">
 	<asset id="" isdefault="yes" titlename="NewMap" isactivated="True"/>
 	<asset id="" isdefault="yes" titlename="EditReplay" isactivated="True"/>
-	<asset id="" isdefault="yes" titlename="PaintCar" isactivated="True"/>
 	<asset id="" isdefault="yes" titlename="TitleTools" isactivated="True"/>
 
 	</Editors>
-<Resources flashurlcustom="testobstacle@smokegun" flashurlfocus="0"/>
+<Resources flashurlcustom="obstacle@smokegun" flashurlfocus="0"/>
 	<Ingame accelcoef="1." controlcoef="1." gravitycoef="1.">
 	</Ingame>
 	<Profile>

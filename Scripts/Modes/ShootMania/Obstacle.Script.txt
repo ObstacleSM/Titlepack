@@ -51,10 +51,10 @@
 #Setting S_BestNewRecordMsg "%1$z made a new record ! (%2)" as _("New record message (1: name, 2: new time)")
 #Setting S_WorseNewRecordMsg "$zYou were too late by %4 !" as _("Worse record message (3: old time, 4: diff time")
 
-#Setting S_EnableRecords True as "<hidden>"
+#Setting S_EnableRecords True as "Enable records"
 #Setting S_NextMapVotingRatio 0.7 as "<hidden>"
 
-#Setting S_ScriptEnvironment "development"
+#Setting S_ScriptEnvironment "production"
 
 // ---------------------------------- //
 // Constants

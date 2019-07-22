@@ -1,8 +1,10 @@
 <folders>
-	<folder name="Blocks\" public="true" internal="false"/>
-	<folder name="Items\" public="true" internal="false"/>
-	<folder name="Media\Images\Common\" public="true" internal="true"/>
-	<folder name="Skins" public="true" internal="false"/>
+	<folder name="Blocks\" public="false" internal="false"/>
+	<folder name="Items\" public="false" internal="false"/>
+	<folder name="Media\Images\Common\" public="false" internal="true"/>
+	<folder name="Media\Images\Obstacle\Script\" public="false" internal="true"/>
+	<folder name="Media\Images\Obstacle\Tutorial" public="false" internal="true"/>
+	<folder name="Skins\" public="true" internal="false"/>
 	<folder name="Actions" public="false" internal="true"/>
 	<folder name="Maps" public="false" internal="true"/>
 	<folder name="Media" public="false" internal="true"/>

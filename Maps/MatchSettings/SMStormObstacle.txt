@@ -2,8 +2,8 @@
 <playlist>
 	<gameinfos>
 		<game_mode>0</game_mode>
-		<script_name>ObstacleBeta.Script.txt</script_name>
-		<title>ShootMania\testobstacle@smokegun</title>
+		<script_name>Obstacle.Script.txt</script_name>
+		<title>ShootMania\obstacle@smokegun</title>
 		<chat_time>10000</chat_time>
 		<finishtimeout>1</finishtimeout>
 		<allwarmupduration>0</allwarmupduration>
