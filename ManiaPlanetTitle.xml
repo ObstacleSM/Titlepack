@@ -1,6 +1,6 @@
 <maniaplanet_title version="4">
 	<id>testobstacle@smokegun</id>
-	<name></name>
+	<name>testobstacle</name>
 	<desc></desc>
 	<url>testobstacle@smokegun</url>
 	<title_version></title_version>
@@ -17,10 +17,10 @@
 		<boxcase_manialink url=""/>
 	</packaging>
 	<menu>
-		<background_img name="MenuBg.jpg"/>
+		<background_img name="Media\MenuBg.jpg"/>
 		<background_replay name=""/>
-		<header name="MenuHeader.png"/>
-		<music name="Media\Musics\Storm\Race\Night\NIGHT_01_Track_06.ogg"/>
+		<header name="Media\Logos.png"/>
+		<music name=""/>
 		<manialink url="Media/Apps/MainMenuLagoon.Script.txt"/>
 	</menu>
 	<menu_style name=""/>
@@ -77,7 +77,18 @@
 		<internalitems/>
 	</editor>
 	<files/>
-	<folders/>
+	<folders>
+		<folder name="Blocks\" public="true" internal="false"/>
+		<folder name="Items\" public="true" internal="false"/>
+		<folder name="Media\" public="true" internal="true"/>
+		<folder name="Skins" public="true" internal="false"/>
+		<folder name="Actions" public="false" internal="true"/>
+		<folder name="Maps" public="false" internal="true"/>
+		<folder name="Media" public="false" internal="true"/>
+		<folder name="Modules" public="false" internal="true"/>
+		<folder name="Replays" public="false" internal="true"/>
+		<folder name="Scripts" public="false" internal="false"/>
+	</folders>
 	<allowed_client_title_version></allowed_client_title_version>
 	<maker>SMStormMaker@nadeo</maker>
 	<limit_camera_fov>false</limit_camera_fov>
