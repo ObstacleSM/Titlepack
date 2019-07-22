@@ -1,7 +1,9 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
+variables:
+  title_pack: 'testobstacle@smokegun'
+  user_config_url: 'https://onedrive.live.com/download?cid=2EC0D2E0D9DA402A&resid=2EC0D2E0D9DA402A%2113388&authkey=APoRojn5vQhBS60'
+  tp_data_url: 'https://onedrive.live.com/download?cid=2EC0D2E0D9DA402A&resid=2EC0D2E0D9DA402A%2113525&authkey=AKLRq2DUxFhuFiU'
+  maniaplanet_url: 'https://onedrive.live.com/download?cid=2EC0D2E0D9DA402A&resid=2EC0D2E0D9DA402A%2113389&authkey=AC0somuBOCqaAAc'
+  maker_files_url: 'https://onedrive.live.com/download?cid=2EC0D2E0D9DA402A&resid=2EC0D2E0D9DA402A%2113524&authkey=ALyh4OiUekTaLPI'
 
 trigger:
 - master
@@ -11,32 +13,30 @@ pool:
 
 steps:
 
-- pwsh: Invoke-WebRequest "https://onedrive.live.com/download?cid=2EC0D2E0D9DA402A&resid=2EC0D2E0D9DA402A%2113388&authkey=APoRojn5vQhBS60" -OutFile "./Lol.7z"
+- pwsh: |
+    Invoke-WebRequest "$(user_config_url)" -OutFile "./user.7z"
+    7z.exe x ./user.7z -bb
+    New-Item -Path $(Build.StagingDirectory)/User/WorkTitles/$(title_pack) -ItemType SymbolicLink -Value $(Build.SourcesDirectory)
   workingDirectory: $(Build.StagingDirectory)
-  displayName: 'Downloading User files'
+  displayName: 'Downloading and Extracting User config'
 
-- pwsh: 7z.exe x ./Lol.7z -bb
+- pwsh: |
+    Invoke-WebRequest "$(maniaplanet_url)" -OutFile "./maniaplanet.7z"
+    7z.exe x ./maniaplanet.7z -bb
   workingDirectory: $(Build.StagingDirectory)
-  displayName: 'Extracting User files'
+  displayName: 'Downloading and Extracting Maniaplanet'
 
-- pwsh: Invoke-WebRequest "https://onedrive.live.com/download?cid=2EC0D2E0D9DA402A&resid=2EC0D2E0D9DA402A%2113389&authkey=AC0somuBOCqaAAc" -OutFile "./Maniaplanet.7z"
-  workingDirectory: $(Build.StagingDirectory)
-  displayName: 'Downloading Maniaplanet'
-
-- pwsh: 7z.exe x ./Maniaplanet.7z -bb
-  workingDirectory: $(Build.StagingDirectory)
-  displayName: 'Extracting Maniaplanet'
-
-- pwsh: Invoke-WebRequest "https://onedrive.live.com/download?cid=2EC0D2E0D9DA402A&resid=2EC0D2E0D9DA402A%2113524&authkey=ALyh4OiUekTaLPI" -OutFile "./makerfiles.7z"
+- pwsh: |
+    Invoke-WebRequest "$(maniaplanet_url)" -OutFile "./maker_files.7z"
+    7z.exe x ./maker_files.7z -bb
   workingDirectory: $(Build.SourcesDirectory)
-  displayName: 'Downloading Maker files'
+  displayName: 'Downloading and Extracting Maker files'
 
-- pwsh: 7z.exe x ./makerfiles.7z -bb
+- pwsh: |
+    Invoke-WebRequest "$(maniaplanet_url)" -OutFile "./tp_data_files.7z"
+    7z.exe x ./tp_data_files.7z -bb
   workingDirectory: $(Build.SourcesDirectory)
-  displayName: 'Extracting Maker files'
-
-- pwsh: New-Item -Path $(Build.StagingDirectory)/Lol/WorkTitles/testobstacle@smokegun -ItemType SymbolicLink -Value $(Build.SourcesDirectory)
-  displayName: 'Linking the repository and the user files'
+  displayName: 'Downloading and Extracting Titlepack data'
 
 - task: PythonScript@0
   displayName: 'Build titlepack'
@@ -45,16 +45,12 @@ steps:
     workingDirectory: $(Build.StagingDirectory)
     failOnStderr: true
     script: |
-      import time
-      import subprocess
-      import glob
-      import os
-      import sys
+      import time, subprocess, glob, os, sys
 
-      tp = 'testobstacle@smokegun'
-
-      def is_built():
-          return os.path.exists(f"./Lol/Packs/{tp}.Title.Pack.Gbx")
+      tp = '$(title_pack)'
+      tp_path = f"./User/Packs/{tp}.Title.Pack.Gbx"
+      program = f"./Maniaplanet/ManiaplanetLogs.exe /userdir=User /profile=vince /createpack={tp} /windowless /inputless /silent"
+      logs = './User/Maniaplanet*.txt'
 
       def is_error(line):
           return 'error' in line \
@@ -62,34 +58,33 @@ steps:
               or 'ERROR' in line \
               or 'failed' in line
 
-      def build_tp():
-          p = subprocess.Popen(f"./Maniaplanet/ManiaplanetLogs.exe /userdir=Lol /profile=vince /createpack={tp} /windowless /inputless /silent")
+      def fail(msg):
+          print(msg)
+          print(msg, file=sys.stderr)
+          exit(1)
 
+      def build_tp():
+          p = subprocess.Popen(program)
           needs_restart = False
           to_remove = []
 
           while p.poll() is None:
               time.sleep(0.5)
 
-
-              for filename in [f for f in glob.glob("./Lol/Maniaplanet*.txt", recursive=True)]:
-                  print(filename)
-
+              for filename in [f for f in glob.glob(logs, recursive=True)]:
                   f = open(filename, 'r')
-
                   er, re = False, False
 
+                  print(filename)
                   for line in f.readlines():
                       if 'Console' in line:
                           print(line, end="")
                           er = er or is_error(line)
                           re = re or 'restart' in line
-
                   f.close()
 
                   if er:
-                      print(f"It failed.", file=sys.stderr)
-                      exit(1)
+                      fail('It failed');
 
                   if re:
                       p.kill()
@@ -101,22 +96,20 @@ steps:
               if os.path.exists(f):
                   os.remove(f)
 
+          if not os.path.exists(tp_path) and not needs_restart:
+              fail(f"The titlepack file is not here. ({tp_path})")
 
-          if not is_built():
-              print(f"The titlepack file is not here. (./Lol/Packs/{tp}.Title.Pack.Gbx)")
+          return needs_restart
 
-              if not needs_restart:
-                  print(f"The titlepack file is not here. (./Lol/Packs/{tp}.Title.Pack.Gbx)", file=sys.stderr)
-                  exit(1)
+      should_restart = build_tp()
 
-              return True
-
-          print("The titlepack was built correctly.")
-          return False
-
-      if build_tp() and not is_built():
-
+      if should_restart:
           build_tp()
-          
-- publish: $(Build.StagingDirectory)/Lol/Packs/testobstacle@smokegun.Title.Pack.Gbx
+
+      if os.path.exists(tp_path):
+          print("The titlepack was built correctly.")
+      else:
+          fail(f"The titlepack file is not here. ({tp_path})")
+
+- publish: $(Build.StagingDirectory)/User/Packs/$(title_pack).Title.Pack.Gbx
   artifact: Titlepack
