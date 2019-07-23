@@ -1,127 +1,186 @@
 /************************************************
-*	Obstacle Library								*
-*	Author:		smokegun						*
-*												*
-*	Obstacle functions.				*
+*   Obstacle Library                            *
+*   Author:     smokegun                        *
+*                                               *
+*   Utility functions.                          *
 ************************************************/
 
 #Include "TextLib" as TextLib
 #Include "MathLib" as MathLib
+#Include "Libs/Nadeo/ShootMania/Map.Script.txt" as Map
 
 /***************************************
-	CONSTANTS
+    CONSTANTS
 ***************************************/
 
-#Const	Version		"2017-07-10"
-#Const	ScriptName	"Tools.Script.txt"
+#Const  Version     "2017-07-10"
+#Const  ScriptName  "Tools.Script.txt"
 
 /***************************************
-	FUNCTIONS
+    FUNCTIONS
 ***************************************/
-// Get posn string from Vec3
-Text GetPosn(Vec3 _Posn) {
-	return _Posn.X^" "^_Posn.Y^" "^_Posn.Z;
+
+Text GetPos(Vec3 _Pos) {
+    return _Pos.X^" "^_Pos.Y^" "^_Pos.Z;
 }
 
-// Get posn string from Vec2
-Text GetPosn(Vec2 _Posn) {
-	return _Posn.X^" "^_Posn.Y;
+Text GetPos(Vec2 _Pos) {
+    return _Pos.X^" "^_Pos.Y;
+}
+
+Boolean IsEnabled(CSmMapLandmark _Landmark) {
+    if(Map::GetMapTypeVersion() <= 2)
+        return _Landmark.Tag != "No-Function";
+    declare metadata Meta_Enabled for _Landmark = True;
+    return Meta_Enabled;
+}
+
+Boolean IsGoal(CSmMapLandmark _Landmark) {
+    if (!IsEnabled(_Landmark))
+        return False;
+
+    if(Map::GetMapTypeVersion() <= 2)
+   	    return _Landmark.Tag == "Goal";
+
+    declare metadata Meta_CPType for _Landmark = 0;
+   	return _Landmark.Tag == "Goal" || Meta_CPType == 2;
+}
+
+Boolean IsCheckpoint(CSmMapLandmark _Landmark) {
+    if (!IsEnabled(_Landmark))
+        return False;
+
+    if(Map::GetMapTypeVersion() <= 2)
+        return "Checkpoint" == TextLib::SubText(_Landmark.Tag, 0, 10);
+
+    declare metadata Meta_CPType for _Landmark = 0;
+   	return _Landmark.Tag == "Checkpoint"
+           && (Meta_CPType == 0 || Meta_CPType == 1);
+}
+
+Boolean IsPortal(CSmMapLandmark _Landmark) {
+    if (!IsEnabled(_Landmark))
+        return False;
+
+    if(Map::GetMapTypeVersion() <= 2)
+        return _Landmark.Tag == "Portal" || _Landmark.Tag == "CheckpointType3";
+    declare metadata Meta_IsPortal for _Landmark = False;
+    return Meta_IsPortal;
+}
+
+Boolean IsCpSpawn(CSmMapLandmark _Landmark) {
+    if (!IsEnabled(_Landmark))
+        return False;
+
+    if(Map::GetMapTypeVersion() <= 2)
+        return _Landmark.Tag == "CPSpawn";
+    declare metadata Meta_IsCpSpawn for _Landmark = False;
+    return Meta_IsCpSpawn;
+}
+
+Boolean IsSpawn(CSmMapLandmark _Landmark) {
+    if (!IsEnabled(_Landmark))
+        return False;
+
+    if(Map::GetMapTypeVersion() <= 2)
+        return TextLib::SubString(_Landmark.Tag, 0, 5) == "Spawn";
+    declare metadata Meta_IsCpSpawn for _Landmark = False;
+    return !Meta_IsCpSpawn;
 }
 
 Integer GetWeaponTypeFromSpawn(CSmMapLandmark SpawnLandmark) {
-	declare WeaponType = 0;
-	declare SpawnName = SpawnLandmark.Tag;
-	if (TextLib::Length(SpawnName) > 5) {
-		WeaponType = TextLib::ToInteger(TextLib::SubString(SpawnName, 9, 1));
-	}
+    declare WeaponType = 0;
+    declare SpawnName = SpawnLandmark.Tag;
+    if (TextLib::Length(SpawnName) > 5) {
+        WeaponType = TextLib::ToInteger(TextLib::SubString(SpawnName, 9, 1));
+    }
   return WeaponType;
 }
 
-Ident GetClosestSpawn(Ident _CheckPointId, Ident[] _SpawnIds) {
-	if (!MapLandmarks_Gauge.existskey(_CheckPointId)) return NullId;
-	declare GaugeLandmark <=> MapLandmarks_Gauge[_CheckPointId];
-	declare ClosestSpawn = NullId;
-	declare ClosestDistance = -1.0;
-	foreach (Id in _SpawnIds) {
-		if (!MapLandmarks_PlayerSpawn.existskey(Id)) continue;
-		declare SpawnLandmark <=> MapLandmarks_PlayerSpawn[Id];
-		declare Distance = MathLib::Distance(GaugeLandmark.Position, SpawnLandmark.Position);
-		if (Distance >= ClosestDistance && ClosestDistance >= 0) continue;
-		ClosestDistance = Distance;
-		ClosestSpawn = SpawnLandmark.Id;
-	}
-	return ClosestSpawn;
+Ident Private_GetClosestSpawn(Ident _CheckPointId, Ident[] _SpawnIds) {
+    declare Checkpoint <=> MapLandmarks[_CheckPointId];
+    declare ClosestSpawn = NullId;
+    declare ClosestDistance = -1.0;
+
+    foreach (Id in _SpawnIds) {
+        if (!MapLandmarks_PlayerSpawn.existskey(Id))
+            continue;
+
+        declare Spawn <=> MapLandmarks_PlayerSpawn[Id];
+        declare Distance = MathLib::Distance(Checkpoint.Position, Spawn.Position);
+
+        if (Distance < ClosestDistance || ClosestDistance < 0) {
+            ClosestDistance = Distance;
+            ClosestSpawn = Spawn.Id;
+        }
+    }
+
+    return ClosestSpawn;
 }
 
 Ident GetClosestSpawn(Ident _CheckPointId) {
-	if (!MapLandmarks_Gauge.existskey(_CheckPointId)) return NullId;
-	declare GaugeLandmark <=> MapLandmarks_Gauge[_CheckPointId];
-	declare SpawnIds = Ident[];
+    declare Checkpoint <=> MapLandmarks[_CheckPointId];
+    declare SpawnIds = Ident[];
 
-	foreach (SpawnLandmark in MapLandmarks_PlayerSpawn) {
-		if (SpawnLandmark.Tag == "No-Function") continue;
-		if (SpawnLandmark.Tag != "CPSpawn") continue;
-		if (GaugeLandmark.Order != 0 && GaugeLandmark.Order != SpawnLandmark.Order) continue;
-		SpawnIds.add(SpawnLandmark.Id);
-	}
-	if (SpawnIds.count > 0) return GetClosestSpawn(_CheckPointId, SpawnIds);
+    foreach (Spawn in MapLandmarks_PlayerSpawn) {
+        if (IsCpSpawn(Spawn) && (Checkpoint.Order == 0 || Checkpoint.Order == Spawn.Order))
+            SpawnIds.add(Spawn.Id);
+    }
 
-	foreach (SpawnLandmark in MapLandmarks_PlayerSpawn) {
-		if (SpawnLandmark.Tag != "CPSpawn") continue;
-		if (GaugeLandmark.Order <= SpawnLandmark.Order) continue;
-		SpawnIds.add(SpawnLandmark.Id);
-	}
-	return GetClosestSpawn(_CheckPointId, SpawnIds);
+    if (SpawnIds.count > 0)
+        return Private_GetClosestSpawn(_CheckPointId, SpawnIds);
+
+    // If there is no spawn for the current checkpoint
+    // Search for previous spawns
+    foreach (Spawn in MapLandmarks_PlayerSpawn) {
+        if (IsCpSpawn(Spawn) && Checkpoint.Order > Spawn.Order)
+            SpawnIds.add(Spawn.Id);
+    }
+
+    return Private_GetClosestSpawn(_CheckPointId, SpawnIds);
 }
 
-Boolean IsCheckpoint(CSmMapLandmark _GaugeLandmark) {
-	return ("Checkpoint" == TextLib::SubText(_GaugeLandmark.Tag, 0, 10));
-}
-
-Integer GetTime(CPlayer _Player) {
-	if (_Player == Null) return 0;
-	declare netwrite Net_StartTime for _Player = 0;
-	return Now - Net_StartTime;
-}
-
-
-// Get player's rank
 Integer GetPlayerRank(CSmPlayer _Player) {
-	declare Rank = 1;
-	declare LastCheckpointId for _Player = NullId;
-	declare BestRun for _Player.Score = -1;
-	declare CheckpointsTimeLast for _Player.Score = Integer[Ident];
-	declare Ranking = Integer[Ident];
+    declare LastCheckpointId for _Player = NullId;
+    declare BestRun for _Player.Score = -1;
+    declare CheckpointsTimeLast for _Player.Score = Integer[Ident];
+    declare Ranking = Integer[Ident];
 
-	// Player is finishing a run
-	if(CheckpointsTimeLast.count == 0) {
+    // Player is finishing a run
+    if(CheckpointsTimeLast.count == 0) {
 
-		// Fill ranking with every player who has finished the map
-		foreach (Score in Scores) {
-			declare BestRun for Score = -1;
-			if (BestRun < 0) continue;
-			Ranking[Score.User.Id] = BestRun;
-		}
+        // Fill ranking with every player who has finished the map
+        foreach (Score in Scores) {
+            declare BestRun for Score = -1;
+            if (BestRun < 0) continue;
+            Ranking[Score.User.Id] = BestRun;
+        }
 
-	// Player has taken a checkpoint
-	} else {
+    // Player has taken a checkpoint
+    } else {
 
-		// Fill ranking with every player who has best time at last checkpoint
-		foreach (Score in Scores) {
-			declare CheckpointsTimeBest for Score = Integer[Ident];
-			if (!CheckpointsTimeBest.existskey(LastCheckpointId)) continue;
-			Ranking[Score.User.Id] = CheckpointsTimeLast[LastCheckpointId];
-		}
-	}
+        // Fill ranking with every player who has best time at last checkpoint
+        foreach (Score in Scores) {
+            declare CheckpointsTimeBest for Score = Integer[Ident];
+            if (!CheckpointsTimeBest.existskey(LastCheckpointId)) continue;
+            Ranking[Score.User.Id] = CheckpointsTimeBest[LastCheckpointId];
+        }
+    }
 
-	// Rank players by time
-	Ranking = Ranking.sort();
+    if(Ranking.count == 0) {
+        return 0;
+    }
 
-	// Get final rank
-	foreach (UserId => Time in Ranking) {
-		if (UserId == _Player.User.Id) break;
-		Rank += 1;
-	}
+    // Rank players by time
+    Ranking = Ranking.sort();
 
-	return Rank;
+
+    declare Rank = 1;
+    // Get final rank
+    foreach (UserId => Time in Ranking) {
+        if (UserId == _Player.User.Id) break;
+        Rank += 1;
+    }
+
+    return Rank;
 }

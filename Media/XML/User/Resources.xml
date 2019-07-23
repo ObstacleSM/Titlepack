@@ -1,21 +1,10 @@
 <folders>
-	<folder name="Blocks\" public="false" internal="false"/>
-	<folder name="Items\" public="false" internal="false"/>
-	<folder name="Media\Images\Common\" public="false" internal="true"/>
-	<folder name="Media\Images\Obstacle\Script\" public="false" internal="true"/>
-	<folder name="Media\Images\Obstacle\Tutorial" public="false" internal="true"/>
-	<folder name="Skins\Storm\Mod\Obstacle\" public="false" internal="false"/>
-	<folder name="Skins\Storm\Screens\1x3\Advertisement\" public="false" internal="false"/>
-	<folder name="Skins\Storm\Screens\1x3\Common\" public="false" internal="false"/>
-	<folder name="Skins\Storm\Screens\1x3\Obstacle\" public="false" internal="false"/>
-	<folder name="Skins\Storm\Screens\3x1\Advertisement\" public="false" internal="false"/>
-	<folder name="Skins\Storm\Screens\3x1\Common\" public="false" internal="false"/>
-	<folder name="Skins\Storm\Screens\3x1\Obstacle\" public="false" internal="false"/>
-	<folder name="Skins\Storm\TechSigns\Obstacle\" public="false" internal="false"/>
-	<folder name="Actions" public="false" internal="true"/>
+	<folder name="Blocks" public="false" internal="true"/>
+	<folder name="Items" public="false" internal="true"/>
 	<folder name="Maps" public="false" internal="true"/>
+	<folder name="Materials" public="false" internal="true"/>
 	<folder name="Media" public="false" internal="true"/>
 	<folder name="Modules" public="false" internal="true"/>
-	<folder name="Replays" public="false" internal="true"/>
-	<folder name="Scripts" public="false" internal="false"/>
+	<folder name="Scripts" public="false" internal="true"/>
+	<folder name="Skins" public="true" internal="false"/>
 </folders>

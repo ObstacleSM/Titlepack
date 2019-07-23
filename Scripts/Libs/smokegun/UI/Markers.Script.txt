@@ -1,0 +1,172 @@
+#Include "TextLib" as TL
+#Include "Libs/smokegun/Tools.Script.txt" as Tools
+
+Text Private_LandmarkToText(CSmMapLandmark _Landmark)
+{
+    declare prefix = "";
+    if (Tools::IsPortal(_Landmark))
+        prefix = "PORTAL ";
+    else if (Tools::IsCheckpoint(_Landmark))
+        prefix = "CP ";
+    else if (Tools::IsGoal(_Landmark))
+        return "GOAL";
+    else
+        return TL::ToUpperCase(_Landmark.Tag);
+
+    if (_Landmark.Order != 0)
+        return prefix^" "^_Landmark.Order;
+    return prefix;
+}
+
+Text GetXML() {
+    declare MarkersXML = "";
+    foreach (Landmark in MapLandmarks) {
+        if (!Tools::IsCheckpoint(Landmark) && !Tools::IsGoal(Landmark) && !Tools::IsPortal(Landmark)) continue;
+        MarkersXML ^= """
+            <marker box="0 3 0"
+                manialinkframeid="Marker_{{{Landmark.Id}}}"
+                pos="{{{Tools::GetPos(Landmark.Position)}}}"
+            />
+        """;
+    }
+    return MarkersXML;
+}
+
+Text GetLayer() {
+    declare ML = """
+<manialink version="3" name="Obstacle:Markers">
+    <frame id="Checkpoints">""";
+
+
+    foreach (Landmark in MapLandmarks) {
+        if (!Tools::IsCheckpoint(Landmark) && !Tools::IsGoal(Landmark) && !Tools::IsPortal(Landmark)) continue;
+
+        ML ^= """
+        <frame id="Marker_{{{Landmark.Id}}}">
+            <frame id="Content" hidden="1">
+                <label pos="0 0" z-index="0" size="20 10"
+                    text="{{{Private_LandmarkToText(Landmark)}}}"
+                    textfont="OswaldMono" halign="center" valign="center2"
+                    textsize="2"
+                />
+
+                <quad id="Background" pos="0 0" z-index="0" size="10 5" bgcolor="000C"
+                    halign="center" valign="center" style="Bgs1InRace"
+                    substyle="BgCardList"/>
+            </frame>
+        </frame>
+        """;
+    }
+
+    ML ^= """
+    </frame>
+    <script><!--
+#Include "TextLib" as TL
+
+// From Tools.Script.txt
+
+Integer GetMapTypeVersion() {
+   declare metadata LibMapType_MapTypeVersion for Map = 0;
+   return LibMapType_MapTypeVersion;
+}
+
+
+Boolean IsEnabled(CSmMapLandmark _Landmark) {
+    if(GetMapTypeVersion() <= 2)
+        return _Landmark.Tag != "No-Function";
+    declare metadata Meta_Enabled for _Landmark = True;
+    return Meta_Enabled;
+}
+
+Boolean IsGoal(CSmMapLandmark _Landmark) {
+    if (!IsEnabled(_Landmark))
+        return False;
+
+    if(GetMapTypeVersion() <= 2)
+        return _Landmark.Tag == "Goal";
+
+    declare metadata Meta_CPType for _Landmark = 0;
+    return _Landmark.Tag == "Goal" || Meta_CPType == 2;
+}
+
+Boolean IsCheckpoint(CSmMapLandmark _Landmark) {
+    if (!IsEnabled(_Landmark))
+        return False;
+
+    if(GetMapTypeVersion() <= 2)
+        return "Checkpoint" == TL::SubText(_Landmark.Tag, 0, 10);
+
+    declare metadata Meta_CPType for _Landmark = 0;
+    return _Landmark.Tag == "Checkpoint"
+           && (Meta_CPType == 0 || Meta_CPType == 1);
+}
+
+Boolean IsPortal(CSmMapLandmark _Landmark) {
+    if (!IsEnabled(_Landmark))
+        return False;
+
+    if(GetMapTypeVersion() <= 2)
+        return _Landmark.Tag == "Portal" || _Landmark.Tag == "CheckpointType3";
+    declare metadata Meta_IsPortal for _Landmark = False;
+    return Meta_IsPortal;
+}
+
+main() {
+    wait(InputPlayer != Null && Page != Null);
+
+    declare Frame_Checkpoints = (Page.GetFirstChild("Checkpoints") as CMlFrame);
+    declare netread Integer Net_CheckpointsTotal for Teams[0];
+    declare LastCpProgress = -1;
+
+    while (True) {
+        yield;
+
+        declare LocalPlayer <=> InputPlayer;
+        if (GUIPlayer != Null) LocalPlayer <=> GUIPlayer;
+
+        declare netread Integer Net_CpProgress for LocalPlayer;
+
+        if (LastCpProgress != Net_CpProgress) {
+            LastCpProgress = Net_CpProgress;
+
+            // Update the visibility of each marker
+            foreach (CP_Marker in Frame_Checkpoints.Controls) {
+                declare CP_Frame = (CP_Marker as CMlFrame);
+                declare CP_Content = CP_Frame.GetFirstChild("Content");
+                declare CP_Background = CP_Frame.GetFirstChild("Background");
+                declare Text[] Parts = TL::Split("_", CP_Marker.ControlId);
+                declare CP_Id = Parts[Parts.count - 1];
+                declare CSmMapLandmark CP_Landmark;
+
+
+                // Find the landmark associated to the frame
+                foreach (Landmark in MapLandmarks) {
+                    if (""^Landmark.Id == CP_Id) {
+                        CP_Landmark <=> Landmark;
+                        break;
+                    }
+                }
+
+                if (CP_Landmark == Null)
+                    continue;
+
+                if (IsPortal(CP_Landmark)) {
+                    CP_Background.Size.X = 15.;
+                }
+
+                if (Net_CpProgress == Net_CheckpointsTotal) {
+                    declare metadata Meta_CPType for CP_Landmark = 0;
+                    CP_Content.Visible = IsGoal(CP_Landmark);
+                } else {
+                    CP_Content.Visible = (IsPortal(CP_Landmark) || IsCheckpoint(CP_Landmark)) && (CP_Landmark.Order == 0 || CP_Landmark.Order == Net_CpProgress + 1);
+                }
+            }
+        }
+    }
+}
+    --></script>
+</manialink>
+    """;
+
+    return ML;
+}

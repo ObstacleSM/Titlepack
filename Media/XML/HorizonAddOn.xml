@@ -1,45 +1,31 @@
 <titlePackXML projectenviro="Storm">
 	<global>
-		<News color="f00"/>
-		<Logo path="file://Media/Nadeo/Images/Logos/BaseLogo.dds" />
+		<News color="fff"/>
+		<Logo path="file://Media\Images\Logos\Logos.png" />
 		<Background path="" />
-		<BackgroundImage path="file://Media/Nadeo/Images/Backgrounds/StormScreen.webp" />
+		<BackgroundImage path="file://Media\Images\Logos\Background.jpg" />
 		<Music path="file://Media/Nadeo/Musics/StormMenu.ogg" />
 		<Style MainTitlePolice="TextTitle3" SectionsPolice="TextRaceMessageBig" />
 	</global>
-<Solo color="FF0" logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_Solo.dds" allowevaluate="False" scriptname="Modes\ShootMania\ObstacleSolo.Script.txt">
-	<category name="White">
-<track path="Campaigns\0\zero.Map.Gbx" thumbnail="file://Thumbnails/MapUid/CbLJfRGDbeDs7Fu0zwH91MDojSf/" name="zero" medalnb="0" medaltype="Bronze"/>
-<track path="" thumbnail="" medalnb="0" medaltype="Bronze"/>
-<track path="" thumbnail="" medalnb="0" medaltype="Bronze"/>
-<track path="" thumbnail="" medalnb="0" medaltype="Bronze"/>
-<track path="" thumbnail="" medalnb="0" medaltype="Bronze"/>
-<track path="Campaigns\0\Sans nom.Map.Gbx" thumbnail="file://Thumbnails/MapUid/lLNqAWP6RXXyARFQsQq0iLDojSf/" name="Sans nom" medalnb="1" medaltype="Bronze"/>
-<track path="" thumbnail="" medalnb="1" medaltype="Bronze"/>
-<track path="" thumbnail="" medalnb="1" medaltype="Bronze"/>
-<track path="" thumbnail="" medalnb="1" medaltype="Bronze"/>
-<track path="" thumbnail="" medalnb="1" medaltype="Bronze"/>
-<track path="Campaigns\0\TimeAttack - WayDown.Map.Gbx" thumbnail="file://Thumbnails/MapUid/rVNzHhh71Be2xa0QwTS3x8tKOmk/" name="$fff$sTimeAttack - $f20Wa$f31yD$f42ow$f53n" medalnb="2" medaltype="Bronze"/>
-<track path="" thumbnail="" medalnb="2" medaltype="Bronze"/>
-<track path="" thumbnail="" medalnb="2" medaltype="Bronze"/>
-<track path="" thumbnail="" medalnb="2" medaltype="Bronze"/>
-<track path="" thumbnail="" medalnb="2" medaltype="Bronze"/>
-	</category>
-</Solo>
-	<Multiplayer logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_Online.dds" activated="True" color="c39" allowallmodes="False" displaytitleserversonly="False">
-		
+
+	<Multiplayer logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_Online.dds" activated="True" color="fff" allowallmodes="True" displaytitleserversonly="True">
+			<asset id="Online_UGCAsset-0" isdefault="no" titlename="Modes\ShootMania\Obstacle.Script.txt"/>
+	<asset id="Online_UGCAsset-1" isdefault="no" titlename="Modes\ShootMania\Sprint.Script.txt"/>
+
 	</Multiplayer>
-	<LocalPlay logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_LocalPlay.dds" activated="True" color="0f8">
+	<LocalPlay logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_LocalPlay.dds" activated="True" color="fff">
 			<asset id="LocalNetwork" isdefault="yes" titlename="Local Network" isvisibleinmaker="True"/>
+	<asset id="LocalPlay_UGCAsset-0" isdefault="no" titlename="Modes\ShootMania\Obstacle.Script.txt"/>
+	<asset id="LocalPlay_UGCAsset-1" isdefault="no" titlename="Modes\ShootMania\Sprint.Script.txt"/>
 
 	</LocalPlay>
-	<Editors logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_Editor.dds" activated="True" color="48e" mapeditor="">
+	<Editors logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_Editor.dds" activated="True" color="fff" mapeditor="">
 	<asset id="NewMap" isdefault="yes" titlename=""/>
 	<asset id="EditReplay" isdefault="yes" titlename=""/>
 	<asset id="TitleTools" isdefault="yes" titlename=""/>
 
 	</Editors>
-<Resources flashurl="testobstacle@smokegun"/>
+<Resources flashurl="obstacle@smokegun"/>
 	<Ingame accelcoef="1." controlcoef="1." gravitycoef="1.">
 	</Ingame>
 	<Profile>

@@ -1,0 +1,133 @@
+variables:
+  title_pack: 'obstacle@smokegun'
+  user_config_url: 'https://onedrive.live.com/download?cid=2EC0D2E0D9DA402A&resid=2EC0D2E0D9DA402A%2113388&authkey=APoRojn5vQhBS60'
+  tp_data_url:     'https://onedrive.live.com/download?cid=2EC0D2E0D9DA402A&resid=2EC0D2E0D9DA402A%2113525&authkey=AKLRq2DUxFhuFiU'
+  maniaplanet_url: 'https://onedrive.live.com/download?cid=2EC0D2E0D9DA402A&resid=2EC0D2E0D9DA402A%2113389&authkey=AC0somuBOCqaAAc'
+  maker_files_url: 'https://onedrive.live.com/download?cid=2EC0D2E0D9DA402A&resid=2EC0D2E0D9DA402A%2113524&authkey=ALyh4OiUekTaLPI'
+
+trigger:
+- master
+
+pool:
+  vmImage: 'windows-2019'
+
+steps:
+
+- pwsh: |
+    Invoke-WebRequest "$(user_config_url)" -OutFile "./user.7z"
+    7z.exe x ./user.7z -bb
+    New-Item -Path $(Build.StagingDirectory)/User/WorkTitles/$(title_pack) -ItemType SymbolicLink -Value $(Build.SourcesDirectory)
+  workingDirectory: $(Build.StagingDirectory)
+  displayName: 'Downloading and Extracting User config'
+
+- pwsh: |
+    Invoke-WebRequest "$(maniaplanet_url)" -OutFile "./maniaplanet.7z"
+    7z.exe x ./maniaplanet.7z -bb
+  workingDirectory: $(Build.StagingDirectory)
+  displayName: 'Downloading and Extracting Maniaplanet'
+
+- pwsh: |
+    Invoke-WebRequest "$(maker_files_url)" -OutFile "./maker_files.7z"
+    7z.exe x ./maker_files.7z -bb
+  workingDirectory: $(Build.SourcesDirectory)
+  displayName: 'Downloading and Extracting Maker files'
+
+- pwsh: |
+    Invoke-WebRequest "$(tp_data_url)" -OutFile "./tp_data_files.7z"
+    7z.exe x ./tp_data_files.7z -bb
+  workingDirectory: $(Build.SourcesDirectory)
+  displayName: 'Downloading and Extracting Titlepack data'
+
+- task: PythonScript@0
+  displayName: 'Build titlepack'
+  inputs:
+    scriptSource: inline
+    workingDirectory: $(Build.StagingDirectory)
+    failOnStderr: true
+    script: |
+      import time, subprocess, glob, os, sys
+
+      tp = 'obstacle@smokegun'
+      tp_path = f"./User/Packs/{tp}.Title.Pack.Gbx"
+      program = f"./Maniaplanet/ManiaplanetLogs.exe /userdir=User /profile=vince /createpack={tp} /windowless /inputless /silent"
+      logs = './User/Maniaplanet*.txt'
+
+      def is_error(line):
+          return 'error' in line \
+              or 'Error' in line \
+              or 'ERROR' in line \
+              or 'failed' in line
+
+      def fail(msg):
+          print(msg)
+          print(msg, file=sys.stderr)
+          exit(1)
+
+      def build_tp():
+          p = subprocess.Popen(program)
+          needs_restart = False
+          to_remove = []
+          lines = {}
+
+          while p.poll() is None:
+              time.sleep(0.5)
+
+              for filename in [f for f in glob.glob(logs, recursive=True)]:
+                  f = open(filename, 'r')
+                  er, re = False, False
+
+
+                  if filename not in lines:
+                      lines[filename] = 0
+
+                  i = 0
+                  to_print = []
+                  for line in f.readlines():
+                      if 'Console' in line:
+                          if i >= lines[filename]:
+                              to_print.append(line)
+                              lines[filename] += 1
+                          er = er or is_error(line)
+                          re = re or 'restart' in line
+                          i += 1
+                  f.close()
+
+                  if len(to_print) > 0:
+                      print(filename)
+                      for l in to_print:
+                          print(l, end="")
+                      print()
+
+                  if er:
+                      p.kill()
+                      fail('It failed');
+
+                  if re:
+                      p.kill()
+                      to_remove.append(filename)
+                      print("Maniaplanet needs to restart.")
+                      needs_restart = True
+
+          for f in to_remove:
+              if os.path.exists(f):
+                  os.remove(f)
+
+          if not os.path.exists(tp_path) and not needs_restart:
+              fail(f"The titlepack file is not here. ({tp_path})")
+
+          return needs_restart
+
+      for filename in [f for f in glob.glob(logs, recursive=True)]:
+          os.remove(filename)
+
+      should_restart = build_tp()
+      if should_restart:
+          build_tp()
+
+      if os.path.exists(tp_path):
+          print("The titlepack was built correctly.")
+      else:
+          fail(f"The titlepack file is not here. ({tp_path})")
+
+- publish: $(Build.StagingDirectory)/User/Packs/$(title_pack).Title.Pack.Gbx
+  artifact: Titlepack

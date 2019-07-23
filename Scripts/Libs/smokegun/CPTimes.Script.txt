@@ -1,0 +1,317 @@
+#Include "TextLib" as TextLib
+#Include "Libs/Nadeo/Layers2.Script.txt" as Layers
+#Include "Libs/smokegun/Player.Script.txt" as Player
+#Include "Libs/smokegun/Tools.Script.txt" as Tools
+
+/*************************
+    CONSTANTS
+*************************/
+
+#Const  Version     "2018-01-03"
+#Const  ScriptName  "CPTimes.Script.txt"
+
+/*************************
+    GLOBALES
+*************************/
+
+// from Media/Manialinks/cptimes.xml
+Text Private_GetWidget() {
+    return """
+<frame id="Frame_CPTimes" hidden="1">
+    <frame id="Frame_Heading">
+        <label pos="0 39" size="100 10" text="Checkpoints Times" textcolor="FFFFFFFF" maxline="1" halign="center" valign="bottom" textfont="Oswald" textsize="9" style="TextTitle3" textemboss="1"/>
+        <quad pos="0 40" z-index="-1" size="220 0.5" bgcolor="000000AA" halign="center"/>
+    </frame>
+    <frame pos="0 35" id="Frame_Checkpoints">
+        <frameinstance modelid="cp" pos="-70"/>
+        <frameinstance modelid="cp"/>
+        <frameinstance modelid="cp" pos="70"/>
+        <frameinstance modelid="cp" pos="-70 -40"/>
+        <frameinstance modelid="cp" pos="0 -40"/>
+        <frameinstance modelid="cp" pos="70 -40"/>
+    </frame>
+    <frame id="Frame_Footer">
+        <quad pos="0 -50" size="5 5" style="Icons64x64_1" substyle="ArrowNext" valign="bottom" scriptevents="1" halign="left" id="next_button"/>
+        <quad pos="0 -50" size="5 5" style="Icons64x64_1" substyle="ArrowPrev" valign="bottom" scriptevents="1" halign="right" id="prev_button"/>
+    </frame>
+    <frame id="Frame_Background">
+        <quad z-index="-1" size="220 100" bgcolor="000000FF" halign="center" valign="center"  opacity="0.5" pos="0 0"/>
+        <quad pos="0 40" z-index="-1" size="220 85" bgcolor="000000AA" halign="center" valign="top"/>
+    </frame>
+</frame>
+<framemodel id="cp">
+    <label pos="0 -5" z-index="0" size="60 5" text="63" halign="center" valign="bottom" textprefix="CP " id="title" style="CardButtonMediumXXL" scriptevents="1"/>
+    <frame id="Frame_Records">
+        <frameinstance modelid="cp_time" pos="0 -5"/>
+        <frameinstance modelid="cp_time" pos="0 -10"/>
+        <frameinstance modelid="cp_time" pos="0 -15"/>
+        <frameinstance modelid="cp_time" pos="0 -20"/>
+        <frameinstance modelid="cp_time" pos="0 -25"/>
+        <frameinstance modelid="cp_time" pos="0 -30"/>
+    </frame>
+    <quad pos="0 -5" z-index="0" size="60 30" bgcolor="FFFFFFFF"  halign="center" opacity="0.1"/>
+</framemodel>
+<framemodel id="cp_time">
+    <label pos="-28 -2.5" z-index="0" size="4 5" text="1." textsize="2" valign="center2" halign="center" id="rank" textfont="OswaldMono"/>
+    <label pos="-8.5 -2.5" z-index="0" size="35 5" text="superpseudodelamortsuperlong" halign="center" valign="center2" textsize="2" id="name" textfont="Oswald"/>
+    <label pos="19.5 -2.5" z-index="0" size="21 5" text="00:00:00:00" halign="center" valign="center2" textsize="2" id="time" textfont="OswaldMono"/>
+</framemodel>
+    """;
+}
+
+Text GetLayer() {
+    return """
+<manialink version="3" name="Obstacle:CPTimes">
+    <frame>
+        {{{Private_GetWidget()}}}
+    </frame>
+    <script><!--
+        #Include "TextLib" as TL
+
+        declare Integer G_CheckpointsTotal;
+        declare Integer G_PageNb;
+
+        declare Text[][] G_RecordsName;
+        declare Integer[][] G_RecordsTime;
+
+        Void UpdateFrameTab(CUIConfig UI, CMlPage Page, Text TabKey, Text FrameTabId)
+        {
+            declare netread Boolean _TabsLib_UseTabs for UI;
+            if (! _TabsLib_UseTabs) return;
+
+            declare Boolean _TabsLib_ScoresLayerIsVisible   for UI;
+            declare Boolean _TabsLib_AltLayerIsVisible      for UI;
+            declare Text    _TabsLib_CurrentTab             for UI;
+            declare netread Text _TabsLib_ScoresTableTab    for UI;
+
+            declare Boolean ShowCurrentTab = _TabsLib_AltLayerIsVisible && (_TabsLib_CurrentTab == TabKey);
+
+            if(TabKey == _TabsLib_ScoresTableTab)
+            {
+                // log("_TabsLib_ScoresTableTab: "^_TabsLib_ScoresTableTab);
+                ShowCurrentTab = _TabsLib_ScoresLayerIsVisible ||
+                    (_TabsLib_AltLayerIsVisible && (_TabsLib_CurrentTab == _TabsLib_ScoresTableTab));
+            }
+
+            declare MainFrame <=> (Page.GetFirstChild(FrameTabId) as CMlFrame);
+            if(MainFrame == Null) return;
+
+            if(ShowCurrentTab) {
+                MainFrame.Show();
+            } else {
+                MainFrame.Hide();
+            }
+        }
+
+        Void ChangePage(Integer dir) {
+            declare first_cp_number = (G_PageNb+dir)*6 + 1;
+            if(first_cp_number < 0 || first_cp_number > G_CheckpointsTotal) return;
+
+            G_PageNb += dir;
+
+            declare frame = (Page.GetFirstChild("Frame_Checkpoints") as CMlFrame);
+
+            foreach(CheckpointId => Control in frame.Controls) {
+                declare cp_number = first_cp_number + CheckpointId;
+
+                // Hide checkpoints that doesnt exist
+                if(cp_number > G_CheckpointsTotal) {
+                    Control.Hide();
+                    continue;
+                }
+
+                // Update values
+                declare checkpoint = (Control as CMlFrame);
+                declare records = (checkpoint.GetFirstChild("Frame_Records") as CMlFrame);
+                declare title = (checkpoint.GetFirstChild("title") as CMlLabel);
+
+                // Set checkpoints number or goal
+                if(cp_number == G_CheckpointsTotal)
+                    title.SetText("Goal");
+                else
+                    title.SetText(""^cp_number);
+
+                declare Cp_Number for title = "";
+                Cp_Number = title.Value;
+
+                // Update times
+                foreach(RecordId => ControlR in records.Controls) {
+                    declare record = (ControlR as CMlFrame);
+                    declare rank = (record.GetFirstChild("rank") as CMlLabel);
+                    declare name = (record.GetFirstChild("name") as CMlLabel);
+                    declare time = (record.GetFirstChild("time") as CMlLabel);
+
+                    if(RecordId < G_RecordsName[cp_number-1].count) {
+                        // CP1 is at the index 0
+                        rank.SetText((RecordId+1)^".");
+                        name.SetText(G_RecordsName[cp_number-1][RecordId]);
+                        time.SetText(TL::TimeToText(G_RecordsTime[cp_number-1][RecordId], True));
+
+                        record.Show();
+                    } else {
+                        record.Hide();
+                    }
+                }
+
+                Control.Show();
+            }
+        }
+
+        main() {
+            declare LastUpdate = -1;
+            declare LastTimesUpdate = -1;
+
+            while(True) {
+                yield;
+
+                UpdateFrameTab(UI, Page, "CPTimes", "Frame_CPTimes");
+
+                foreach(Event in PendingEvents) {
+                    switch(Event.Type) {
+                        case CMlScriptEvent::Type::MouseOver: {
+                            if(Event.Control.ControlId == "title") {
+                                declare title = (Event.Control as CMlLabel);
+                                title.SetText("JUMP");
+                            }
+                        }
+                        case CMlScriptEvent::Type::MouseOut: {
+                            if(Event.Control.ControlId == "title") {
+                                declare title = (Event.Control as CMlLabel);
+                                declare Cp_Number for title = "";
+                                title.SetText(Cp_Number);
+                            }
+                        }
+                        case CMlScriptEvent::Type::MouseClick: {
+                            switch(Event.Control.ControlId) {
+                                case "title": {
+                                    declare Cp_Number for Event.Control = "";
+                                    SendCustomEvent("jump_request", [LocalUser.Login, Cp_Number]);
+                                }
+                                case "next_button": {
+                                    ChangePage(1);
+                                }
+                                case "prev_button": {
+                                    ChangePage(-1);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if(LastUpdate + 500 < GameTime) {
+
+                    // It may be a new map
+                    declare netread Integer Net_CheckpointsTotal for Teams[0];
+                    if(G_CheckpointsTotal != Net_CheckpointsTotal + 1) {
+                        G_CheckpointsTotal = Net_CheckpointsTotal + 1;
+                    }
+
+                    declare netread Net_CPTimesUpdated for Teams[0] = -1;
+                    if(Net_CPTimesUpdated != LastTimesUpdate) {
+                        LastTimesUpdate = Net_CPTimesUpdated;
+
+                        declare netread Text[][] Net_CPTimes_RecordsName for Teams[0];
+                        declare netread Integer[][] Net_CPTimes_RecordsTime for Teams[0];
+
+                        G_RecordsName = Net_CPTimes_RecordsName;
+                        G_RecordsTime = Net_CPTimes_RecordsTime;
+
+                        ChangePage(0);
+                    }
+
+                    LastUpdate = GameTime;
+                }
+            }
+        }
+    --></script>
+</manialink>
+    """;
+}
+
+Void UpdateLayer(CSmPlayer _Player) {
+    declare TimeToSub = 0;
+    declare LastCPTimes = Player::getLastCPTimes(_Player);
+
+    declare netwrite Text[][] Net_CPTimes_RecordsName for Teams[0];
+    declare netwrite Integer[][] Net_CPTimes_RecordsTime for Teams[0];
+
+    // Make sure times are sorted to get the right cp order
+    // But they should be automatically sorted in theory
+    LastCPTimes.sort();
+
+    declare nth_cp = 0;
+
+    foreach(Id => CPTime in LastCPTimes) {
+        // declare Landmark <=> MapLandmarks_Gauge[Id];
+
+        // declare Time = CPTime - TimeToSub;
+
+        // Put the total time instead of the cp time
+        declare Time = CPTime;
+
+        // Get Index of the current checkpoint
+        declare Idx = nth_cp;
+
+        // Remove previous time if it exists
+        if(Net_CPTimes_RecordsName[Idx].exists(_Player.User.Name)) {
+            declare prev = Net_CPTimes_RecordsName[Idx].keyof(_Player.User.Name);
+            Net_CPTimes_RecordsName[Idx].removekey(prev);
+            Net_CPTimes_RecordsTime[Idx].removekey(prev);
+        }
+
+        // Find player rank
+        declare rank = 0;
+        while(rank < Net_CPTimes_RecordsTime[Idx].count && Net_CPTimes_RecordsTime[Idx][rank] < Time) {
+            rank += 1;
+        }
+
+        if(rank > 5) return;
+
+        if(Net_CPTimes_RecordsName[Idx].count < 6) {
+            // Add the player's time at the end
+            Net_CPTimes_RecordsName[Idx].add(_Player.User.Name);
+            Net_CPTimes_RecordsTime[Idx].add(Time);
+        } else {
+            Net_CPTimes_RecordsName[Idx][5] = _Player.User.Name;
+            Net_CPTimes_RecordsTime[Idx][5] = Time;
+        }
+
+        // And move it to the desired rank
+        declare i = Net_CPTimes_RecordsName[Idx].count - 1;
+        while(i > rank) {
+            declare tmp_name = Net_CPTimes_RecordsName[Idx][i];
+            declare tmp_time = Net_CPTimes_RecordsTime[Idx][i];
+
+            Net_CPTimes_RecordsName[Idx][i] = Net_CPTimes_RecordsName[Idx][i-1];
+            Net_CPTimes_RecordsTime[Idx][i] = Net_CPTimes_RecordsTime[Idx][i-1];
+
+            Net_CPTimes_RecordsName[Idx][i-1] = tmp_name;
+            Net_CPTimes_RecordsTime[Idx][i-1] = tmp_time;
+
+            i -= 1;
+        }
+
+        TimeToSub = CPTime;
+        nth_cp += 1;
+    }
+
+
+    declare netwrite Integer Net_CPTimesUpdated for Teams[0] = 0;
+    Net_CPTimesUpdated = Now;
+}
+
+Void StartMap(Integer _CheckpointsNb) {
+    declare netwrite Text[][] Net_CPTimes_RecordsName for Teams[0];
+    declare netwrite Integer[][] Net_CPTimes_RecordsTime for Teams[0];
+
+    Net_CPTimes_RecordsName.clear();
+    Net_CPTimes_RecordsTime.clear();
+
+    for(i, 0, _CheckpointsNb) {
+        Net_CPTimes_RecordsName.add(Text[]);
+        Net_CPTimes_RecordsTime.add(Integer[]);
+    }
+
+    declare netwrite Integer Net_CPTimesUpdated for Teams[0] = 0;
+    Net_CPTimesUpdated = Now;
+}
