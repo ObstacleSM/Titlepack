@@ -1,12 +1,12 @@
 <maniaplanet_title version="4">
 	<id>obstacle@smokegun</id>
-	<name></name>
+	<name>obstacle</name>
 	<desc></desc>
 	<url>ObstacleMP4</url>
 	<download_url></download_url>
 	<title_version>1.0</title_version>
 	<allowed_client_title_version></allowed_client_title_version>
-	<maker>SMStormMaker@nadeo</maker>
+	<maker></maker>
 	<base>SMStorm</base>
 	<player_model>ArenaPlayer</player_model>
 	<scriptcloud_enabled>false</scriptcloud_enabled>
@@ -84,6 +84,15 @@
 	<mod name=""/>
 	<hud3dfont name=""/>
 	<files/>
-	<folders/>
+	<folders>
+		<folder name="Blocks" public="false" internal="true"/>
+		<folder name="Items" public="false" internal="true"/>
+		<folder name="Maps" public="false" internal="true"/>
+		<folder name="Materials" public="false" internal="true"/>
+		<folder name="Media" public="false" internal="true"/>
+		<folder name="Modules" public="false" internal="true"/>
+		<folder name="Scripts" public="false" internal="true"/>
+		<folder name="Skins" public="true" internal="false"/>
+	</folders>
 	<hud_default_module name=""/>
 </maniaplanet_title>
