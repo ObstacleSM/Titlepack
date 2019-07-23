@@ -1,7 +1,7 @@
 variables:
   title_pack: 'obstacle@smokegun'
   user_config_url: 'https://onedrive.live.com/download?cid=2EC0D2E0D9DA402A&resid=2EC0D2E0D9DA402A%2113388&authkey=APoRojn5vQhBS60'
-  tp_data_url: 'https://onedrive.live.com/download?cid=2EC0D2E0D9DA402A&resid=2EC0D2E0D9DA402A%2113525&authkey=AKLRq2DUxFhuFiU'
+  tp_data_url:     'https://onedrive.live.com/download?cid=2EC0D2E0D9DA402A&resid=2EC0D2E0D9DA402A%2113525&authkey=AKLRq2DUxFhuFiU'
   maniaplanet_url: 'https://onedrive.live.com/download?cid=2EC0D2E0D9DA402A&resid=2EC0D2E0D9DA402A%2113389&authkey=AC0somuBOCqaAAc'
   maker_files_url: 'https://onedrive.live.com/download?cid=2EC0D2E0D9DA402A&resid=2EC0D2E0D9DA402A%2113524&authkey=ALyh4OiUekTaLPI'
 
@@ -27,13 +27,13 @@ steps:
   displayName: 'Downloading and Extracting Maniaplanet'
 
 - pwsh: |
-    Invoke-WebRequest "$(maniaplanet_url)" -OutFile "./maker_files.7z"
+    Invoke-WebRequest "$(maker_files_url)" -OutFile "./maker_files.7z"
     7z.exe x ./maker_files.7z -bb
   workingDirectory: $(Build.SourcesDirectory)
   displayName: 'Downloading and Extracting Maker files'
 
 - pwsh: |
-    Invoke-WebRequest "$(maniaplanet_url)" -OutFile "./tp_data_files.7z"
+    Invoke-WebRequest "$(tp_data_url)" -OutFile "./tp_data_files.7z"
     7z.exe x ./tp_data_files.7z -bb
   workingDirectory: $(Build.SourcesDirectory)
   displayName: 'Downloading and Extracting Titlepack data'
