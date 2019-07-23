@@ -99,6 +99,7 @@ steps:
                       print()
 
                   if er:
+                      p.kill()
                       fail('It failed');
 
                   if re:
