@@ -1,5 +1,5 @@
 variables:
-  title_pack: 'testobstacle@smokegun'
+  title_pack: 'obstacle@smokegun'
   user_config_url: 'https://onedrive.live.com/download?cid=2EC0D2E0D9DA402A&resid=2EC0D2E0D9DA402A%2113388&authkey=APoRojn5vQhBS60'
   tp_data_url: 'https://onedrive.live.com/download?cid=2EC0D2E0D9DA402A&resid=2EC0D2E0D9DA402A%2113525&authkey=AKLRq2DUxFhuFiU'
   maniaplanet_url: 'https://onedrive.live.com/download?cid=2EC0D2E0D9DA402A&resid=2EC0D2E0D9DA402A%2113389&authkey=AC0somuBOCqaAAc'
@@ -47,7 +47,7 @@ steps:
     script: |
       import time, subprocess, glob, os, sys
 
-      tp = '$(title_pack)'
+      tp = 'obstacle@smokegun'
       tp_path = f"./User/Packs/{tp}.Title.Pack.Gbx"
       program = f"./Maniaplanet/ManiaplanetLogs.exe /userdir=User /profile=vince /createpack={tp} /windowless /inputless /silent"
       logs = './User/Maniaplanet*.txt'
@@ -67,6 +67,7 @@ steps:
           p = subprocess.Popen(program)
           needs_restart = False
           to_remove = []
+          lines = {}
 
           while p.poll() is None:
               time.sleep(0.5)
@@ -75,13 +76,27 @@ steps:
                   f = open(filename, 'r')
                   er, re = False, False
 
-                  print(filename)
+
+                  if filename not in lines:
+                      lines[filename] = 0
+
+                  i = 0
+                  to_print = []
                   for line in f.readlines():
                       if 'Console' in line:
-                          print(line, end="")
+                          if i >= lines[filename]:
+                              to_print.append(line)
+                              lines[filename] += 1
                           er = er or is_error(line)
                           re = re or 'restart' in line
+                          i += 1
                   f.close()
+
+                  if len(to_print) > 0:
+                      print(filename)
+                      for l in to_print:
+                          print(l, end="")
+                      print()
 
                   if er:
                       fail('It failed');
@@ -101,8 +116,10 @@ steps:
 
           return needs_restart
 
-      should_restart = build_tp()
+      for filename in [f for f in glob.glob(logs, recursive=True)]:
+          os.remove(filename)
 
+      should_restart = build_tp()
       if should_restart:
           build_tp()
 
