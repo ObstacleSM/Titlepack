@@ -1,12 +1,12 @@
 <maniaplanet_title version="4">
 	<id>obstacle@smokegun</id>
-	<name>obstacle</name>
+	<name></name>
 	<desc></desc>
 	<url>ObstacleMP4</url>
 	<download_url></download_url>
-	<title_version>1.4</title_version>
+	<title_version>1.5</title_version>
 	<allowed_client_title_version></allowed_client_title_version>
-	<maker></maker>
+	<maker>SMStormMaker@nadeo</maker>
 	<base>SMStorm</base>
 	<player_model>ArenaPlayer</player_model>
 	<scriptcloud_enabled>false</scriptcloud_enabled>

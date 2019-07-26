@@ -1,7 +1,7 @@
 #Extends "Modes/ShootMania/Base/ModeShootMania.Script.txt"
 
 #Const CompatibleMapTypes "ObstacleArena,ObstacleTitleArena,ObstacleTitleArenaOld,TimeAttackArena,ObstacleBetaArena"
-#Const  Version           "0.4"
+#Const  Version           "0.5"
 #Const  ScriptName        "Modes/ShootMania/Sprint.Script.txt"
 
 // ---------------------------------- //
