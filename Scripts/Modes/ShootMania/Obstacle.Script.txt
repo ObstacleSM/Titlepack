@@ -56,7 +56,7 @@
 #Setting S_FullAmmoSpawn True as "<hidden>"
 #Setting S_LegacyRespawn False as "<hidden>"
 #Setting S_BestNewRecordMsg "%1$z made a new record ! (%2)" as "<hidden>"
-#Setting S_WorseNewRecordMsg "$zYou were too late by %4 (previous time was %3)!" as "<hidden>"
+#Setting S_WorseNewRecordMsg "$zToo late by %4 (previous was %3)!" as "<hidden>"
 
 #Setting S_ScriptEnvironment "development"
 

@@ -68,14 +68,28 @@ Boolean setUsedJump(CSmPlayer _Player, Boolean _Value) {
 }
 
 Ident getLastCheckpoint(CSmPlayer _Player) {
-    declare Ident LastCheckpointId for _Player;
-    return LastCheckpointId;
+    declare Ident[] LastCheckpointsIds for _Player;
+    declare netwrite Text[] LastCheckpointsIdsStr for _Player;
+
+    if (getCpProgress(_Player) == 0) {
+        LastCheckpointsIds.clear();
+        LastCheckpointsIdsStr.clear();
+        return NullId;
+    }
+
+    if (LastCheckpointsIds.count == 0) {
+        return NullId;
+    }
+
+    return LastCheckpointsIds[LastCheckpointsIds.count-1];
 }
 
-Ident setLastCheckpoint(CSmPlayer _Player, Ident _Value) {
-    declare Ident LastCheckpointId for _Player;
-    LastCheckpointId = _Value;
-    return LastCheckpointId;
+Void setLastCheckpoint(CSmPlayer _Player, Ident _Value) {
+    declare Ident[] LastCheckpointsIds for _Player;
+    declare netwrite Text[] LastCheckpointsIdsStr for _Player;
+
+    LastCheckpointsIds.add(_Value);
+    LastCheckpointsIdsStr.add(_Value^"");
 }
 
 Integer[Text] getBuffTimes(CSmPlayer _Player) {
@@ -212,7 +226,7 @@ Boolean wantsRestart(CSmPlayer _Player, Boolean _GiveUp) {
     if (Net_RespawnBehavior == Constants::C_RespawnBehavior_FullLocked)
         return False;
 
-    return (Net_RespawnBehavior == Constants::C_RespawnBehavior_FullRestart|| _GiveUp);
+    return (Net_RespawnBehavior == Constants::C_RespawnBehavior_FullRestart || _GiveUp);
 }
 
 Integer getTime(CSmPlayer _Player) {
