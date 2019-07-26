@@ -72,7 +72,7 @@ Integer GetMapTypeVersion() {
 
 
 Boolean IsEnabled(CSmMapLandmark _Landmark) {
-    if(GetMapTypeVersion() <= 2)
+    if (GetMapTypeVersion() <= 2)
         return _Landmark.Tag != "No-Function";
     declare metadata Meta_Enabled for _Landmark = True;
     return Meta_Enabled;
@@ -82,7 +82,7 @@ Boolean IsGoal(CSmMapLandmark _Landmark) {
     if (!IsEnabled(_Landmark))
         return False;
 
-    if(GetMapTypeVersion() <= 2)
+    if (GetMapTypeVersion() <= 2)
         return _Landmark.Tag == "Goal";
 
     declare metadata Meta_CPType for _Landmark = 0;
@@ -93,7 +93,7 @@ Boolean IsCheckpoint(CSmMapLandmark _Landmark) {
     if (!IsEnabled(_Landmark))
         return False;
 
-    if(GetMapTypeVersion() <= 2)
+    if (GetMapTypeVersion() <= 2)
         return "Checkpoint" == TL::SubText(_Landmark.Tag, 0, 10);
 
     declare metadata Meta_CPType for _Landmark = 0;
@@ -105,7 +105,7 @@ Boolean IsPortal(CSmMapLandmark _Landmark) {
     if (!IsEnabled(_Landmark))
         return False;
 
-    if(GetMapTypeVersion() <= 2)
+    if (GetMapTypeVersion() <= 2)
         return _Landmark.Tag == "Portal" || _Landmark.Tag == "CheckpointType3";
     declare metadata Meta_IsPortal for _Landmark = False;
     return Meta_IsPortal;

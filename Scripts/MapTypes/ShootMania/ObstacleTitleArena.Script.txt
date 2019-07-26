@@ -335,10 +335,10 @@ Void EditGoal(CAnchorData _Goal) {
         declare NeedUpdate = False;
         UpdateView();
 
-        while(True) {
+        while (True) {
             yield;
 
-            if(NeedUpdate) {
+            if (NeedUpdate) {
                 UpdateView();
                 NeedUpdate = False;
             }
@@ -401,7 +401,7 @@ Void EditCheckpoint(CAnchorData _Checkpoint) {
         declare Quad_Type_Selector <=> (Frame_Properties.GetFirstChild("Type_Selector") as CMlQuad);
         declare Entry_Order <=> (Frame_Properties.GetFirstChild("Entry_Order") as CMlEntry);
 
-        if(Enabled) {
+        if (Enabled) {
             Quad_Enabled_Selector.RelativePosition_V3.X = -20.;
             Frame_Properties.ZIndex = 1.;
         } else {
@@ -431,10 +431,10 @@ Void EditCheckpoint(CAnchorData _Checkpoint) {
         declare NeedUpdate = False;
         UpdateView();
 
-        while(True) {
+        while (True) {
             yield;
 
-            if(NeedUpdate) {
+            if (NeedUpdate) {
                 UpdateView();
                 NeedUpdate = False;
             }
@@ -512,7 +512,7 @@ Void EditSpawn(CAnchorData _Spawn) {
         declare Quad_Type_Selector <=> (Frame_Properties.GetFirstChild("Type_Selector") as CMlQuad);
         declare Entry_Order <=> (Frame_Properties.GetFirstChild("Entry_Order") as CMlEntry);
 
-        if(Enabled) {
+        if (Enabled) {
             Quad_Enabled_Selector.RelativePosition_V3.X = -20.;
             Frame_Properties.ZIndex = 1.;
         } else {
@@ -520,7 +520,7 @@ Void EditSpawn(CAnchorData _Spawn) {
             Frame_Properties.ZIndex = -1.;
         }
 
-        if(!IsCpSpawn)
+        if (!IsCpSpawn)
             Quad_Type_Selector.RelativePosition_V3.X = -20.;
         else
             Quad_Type_Selector.RelativePosition_V3.X = 0.;
@@ -697,7 +697,7 @@ Void EditAmmoItem(CAnchorData _Item) {
 
         declare Quad_Duration_Selector <=> (Page.GetFirstChild("Duration_Selector") as CMlQuad);
 
-        if(Duration == 0.) {
+        if (Duration == 0.) {
             Quad_Duration_Selector.RelativePosition_V3.X = -20.;
         } else {
             Quad_Duration_Selector.RelativePosition_V3.X = 0.;
@@ -718,10 +718,10 @@ Void EditAmmoItem(CAnchorData _Item) {
         declare NeedUpdate = False;
         UpdateView();
 
-        while(True) {
+        while (True) {
             yield;
 
-            if(NeedUpdate) {
+            if (NeedUpdate) {
                 UpdateView();
                 NeedUpdate = False;
             }
@@ -817,10 +817,10 @@ Void EditOffzoneShieldItem(CAnchorData _Item) {
         declare NeedUpdate = False;
         UpdateView();
 
-        while(True) {
+        while (True) {
             yield;
 
-            if(NeedUpdate) {
+            if (NeedUpdate) {
                 UpdateView();
                 NeedUpdate = False;
             }
@@ -852,10 +852,10 @@ Void EditOffzoneShieldItem(CAnchorData _Item) {
     """;
 }
 Void SaveCheckpointSettings() {
-    if(!AnchorData.existskey(G_LastAnchorId)) return;
+    if (!AnchorData.existskey(G_LastAnchorId)) return;
 
     declare Anchor <=> AnchorData[G_LastAnchorId];
-    if(Anchor.Tag != "Checkpoint") return;
+    if (Anchor.Tag != "Checkpoint") return;
 
     declare Integer Order for ManialinkPage;
     Anchor.Order = Order;
@@ -872,10 +872,10 @@ Void SaveCheckpointSettings() {
 }
 
 Void SaveSpawnSettings() {
-    if(!AnchorData.existskey(G_LastAnchorId)) return;
+    if (!AnchorData.existskey(G_LastAnchorId)) return;
 
     declare Anchor <=> AnchorData[G_LastAnchorId];
-    if(Anchor.Tag != "Spawn") return;
+    if (Anchor.Tag != "Spawn") return;
 
     declare Integer Order for ManialinkPage;
     Anchor.Order = Order;
@@ -889,19 +889,19 @@ Void SaveSpawnSettings() {
 }
 
 Void SaveGoalSettings() {
-    if(!AnchorData.existskey(G_LastAnchorId)) return;
+    if (!AnchorData.existskey(G_LastAnchorId)) return;
 
     declare Anchor <=> AnchorData[G_LastAnchorId];
-    if(Anchor.Tag != "Goal") return;
+    if (Anchor.Tag != "Goal") return;
 
     SaveBasePageVariables(Anchor);
 }
 
 Void SaveAmmoItemSettings() {
-    if(!AnchorData.existskey(G_LastAnchorId)) return;
+    if (!AnchorData.existskey(G_LastAnchorId)) return;
 
     declare Anchor <=> AnchorData[G_LastAnchorId];
-    if(Anchor.Tag != "Ammo") return;
+    if (Anchor.Tag != "Ammo") return;
 
     declare Real Amount for ManialinkPage;
     declare metadata Meta_GrantAmmoAmount for Anchor = 1.;
@@ -913,10 +913,10 @@ Void SaveAmmoItemSettings() {
 }
 
 Void SaveOffzoneShieldItemSettings() {
-    if(!AnchorData.existskey(G_LastAnchorId)) return;
+    if (!AnchorData.existskey(G_LastAnchorId)) return;
 
     declare Anchor <=> AnchorData[G_LastAnchorId];
-    if(Anchor.Tag != "OffzoneShield") return;
+    if (Anchor.Tag != "OffzoneShield") return;
 
     declare Real Duration for ManialinkPage;
 	  declare metadata Meta_BuffDuration for Anchor = 0.;
@@ -928,13 +928,13 @@ Void UpdateValidability() {
     declare Goals = 0;
 
     foreach (Anchor in AnchorData) {
-        if(!IsEnabled(Anchor)) continue;
+        if (!IsEnabled(Anchor)) continue;
 
         switch(Anchor.Tag) {
             case "Spawn": {
-                if(!IsCpSpawn(Anchor)) {
+                if (!IsCpSpawn(Anchor)) {
                     StartSpawns += 1;
-                    if(StartSpawns > 1) {
+                    if (StartSpawns > 1) {
                         ValidationStatus = CSmMapType::ValidationStatus::NotValidable;
                         ValidabilityRequirementsMessage = _("You must place exactly one Start Spawn.");
                         return;
@@ -950,10 +950,10 @@ Void UpdateValidability() {
     }
 
 
-    if(StartSpawns == 0) {
+    if (StartSpawns == 0) {
         ValidationStatus = CSmMapType::ValidationStatus::NotValidable;
         ValidabilityRequirementsMessage = _("You must place at least one Start Spawn.");
-    } else if(Goals == 0) {
+    } else if (Goals == 0) {
         ValidationStatus = CSmMapType::ValidationStatus::NotValidable;
         ValidabilityRequirementsMessage = _("You must place at least one Goal.");
     } else {
@@ -1015,7 +1015,7 @@ DisplayDefaultSetObjectivesDialog ();
 main() {
     Load();
     Init();
-    while(True) {
+    while (True) {
         Loop();
         yield;
     }

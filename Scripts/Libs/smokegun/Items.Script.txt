@@ -40,7 +40,7 @@ Void Place() {
         declare ObjectName = AnchorLandmark.ObjectAnchor.ItemName;
 
         // should fix crash on aven unchained ?
-        if(!G_ItemIdents.existskey(ObjectName)) continue;
+        if (!G_ItemIdents.existskey(ObjectName)) continue;
 
         declare Object <=> ObjectCreate(G_ItemIdents[ObjectName]);
         if (Object == Null) continue;
@@ -105,7 +105,7 @@ Boolean PickupItems(CSmModeEvent _Event) {
 
             // Instant grant
             if (Duration <= 0.) {
-                if(ML::CeilingInteger(Amount) * _Event.Player.CurAmmoUnit +_Event.Player.CurAmmo > _Event.Player.CurAmmoMax) {
+                if (ML::CeilingInteger(Amount) * _Event.Player.CurAmmoUnit +_Event.Player.CurAmmo > _Event.Player.CurAmmoMax) {
                     SetPlayerAmmo(_Event.Player, SM::GetWeapon(_Event.Player.CurWeapon), _Event.Player.CurAmmoMax);
                 } else {
                     AddPlayerAmmo(_Event.Player, SM::GetWeapon(_Event.Player.CurWeapon), Amount);
@@ -157,7 +157,7 @@ Text CreateLayerItems() {
                 declare Index = 1;
                 declare netread Integer[Text] ItemBuffTimes for LocalPlayer = [];
                 if (LocalPlayer.SpawnStatus == CSmPlayer::ESpawnStatus::Spawned) {
-                    if(ItemBuffTimes.count == 0) {
+                    if (ItemBuffTimes.count == 0) {
                         Label_Info.Visible = False;
                     }
 
@@ -166,7 +166,7 @@ Text CreateLayerItems() {
                         if (Frame == Null) continue;
 
                         if (BuffTime < ArenaNow) {
-                            if(Label_Info.Visible) {
+                            if (Label_Info.Visible) {
                                 Label_Info.Visible = False;
                             }
                             continue;

@@ -159,7 +159,7 @@ Integer[Ident] clearBestCPTimes(CSmPlayer _Player) {
 
 Integer getBestTime(CSmPlayer _Player, Ident _Ident) {
     declare BestTimes = getBestCPTimes(_Player);
-    if(BestTimes.existskey(_Ident))
+    if (BestTimes.existskey(_Ident))
         return BestTimes[_Ident];
     return -1;
 }
@@ -222,10 +222,10 @@ Integer getTime(CSmPlayer _Player) {
 Text Private_CPTimesToJSON(Integer[Ident] _Times) {
     declare res = "{";
     declare i = 0;
-    foreach(CPId => CPTime in _Times) {
+    foreach (CPId => CPTime in _Times) {
         res ^= """ "{{{Json::GetInteger(MapLandmarks[CPId].Order)}}}" : {{{Json::GetInteger(CPTime)}}}""";
 
-        if(i < _Times.count-1)
+        if (i < _Times.count-1)
             res ^= ",";
         i += 1;
     }

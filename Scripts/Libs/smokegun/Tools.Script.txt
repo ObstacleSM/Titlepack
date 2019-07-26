@@ -29,7 +29,7 @@ Text GetPos(Vec2 _Pos) {
 }
 
 Boolean IsEnabled(CSmMapLandmark _Landmark) {
-    if(Map::GetMapTypeVersion() <= 2)
+    if (Map::GetMapTypeVersion() <= 2)
         return _Landmark.Tag != "No-Function";
     declare metadata Meta_Enabled for _Landmark = True;
     return Meta_Enabled;
@@ -39,7 +39,7 @@ Boolean IsGoal(CSmMapLandmark _Landmark) {
     if (!IsEnabled(_Landmark))
         return False;
 
-    if(Map::GetMapTypeVersion() <= 2)
+    if (Map::GetMapTypeVersion() <= 2)
    	    return _Landmark.Tag == "Goal";
 
     declare metadata Meta_CPType for _Landmark = 0;
@@ -50,7 +50,7 @@ Boolean IsCheckpoint(CSmMapLandmark _Landmark) {
     if (!IsEnabled(_Landmark))
         return False;
 
-    if(Map::GetMapTypeVersion() <= 2)
+    if (Map::GetMapTypeVersion() <= 2)
         return "Checkpoint" == TextLib::SubText(_Landmark.Tag, 0, 10);
 
     declare metadata Meta_CPType for _Landmark = 0;
@@ -62,7 +62,7 @@ Boolean IsPortal(CSmMapLandmark _Landmark) {
     if (!IsEnabled(_Landmark))
         return False;
 
-    if(Map::GetMapTypeVersion() <= 2)
+    if (Map::GetMapTypeVersion() <= 2)
         return _Landmark.Tag == "Portal" || _Landmark.Tag == "CheckpointType3";
     declare metadata Meta_IsPortal for _Landmark = False;
     return Meta_IsPortal;
@@ -72,7 +72,7 @@ Boolean IsCpSpawn(CSmMapLandmark _Landmark) {
     if (!IsEnabled(_Landmark))
         return False;
 
-    if(Map::GetMapTypeVersion() <= 2)
+    if (Map::GetMapTypeVersion() <= 2)
         return _Landmark.Tag == "CPSpawn";
     declare metadata Meta_IsCpSpawn for _Landmark = False;
     return Meta_IsCpSpawn;
@@ -82,7 +82,7 @@ Boolean IsSpawn(CSmMapLandmark _Landmark) {
     if (!IsEnabled(_Landmark))
         return False;
 
-    if(Map::GetMapTypeVersion() <= 2)
+    if (Map::GetMapTypeVersion() <= 2)
         return TextLib::SubString(_Landmark.Tag, 0, 5) == "Spawn";
     declare metadata Meta_IsCpSpawn for _Landmark = False;
     return !Meta_IsCpSpawn;
@@ -147,7 +147,7 @@ Integer GetPlayerRank(CSmPlayer _Player) {
     declare Ranking = Integer[Ident];
 
     // Player is finishing a run
-    if(CheckpointsTimeLast.count == 0) {
+    if (CheckpointsTimeLast.count == 0) {
 
         // Fill ranking with every player who has finished the map
         foreach (Score in Scores) {
@@ -167,7 +167,7 @@ Integer GetPlayerRank(CSmPlayer _Player) {
         }
     }
 
-    if(Ranking.count == 0) {
+    if (Ranking.count == 0) {
         return 0;
     }
 

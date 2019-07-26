@@ -180,7 +180,7 @@ declare Integer PrevWarmupRounds;
 ***
 DoNothing();
 // map is invalid
-if(!Obstacle::PrepareMap()) {
+if (!Obstacle::PrepareMap()) {
     MB_StopMap();
     break;
 }
@@ -190,7 +190,7 @@ Layers::Update("Markers", Markers::GetLayer());
 
 Obstacle::SetSettings(True, True, False, False, False, False);
 Items::Place();
-foreach(Player in AllPlayers) {
+foreach (Player in AllPlayers) {
     Player::setInitialized(Player, False);
     NewPlayer(Player);
 }
@@ -347,13 +347,13 @@ foreach (Player in Players) {
             
             // Unlimited stam
             declare StaminaUnlimited for Player = False;
-            if(StaminaUnlimited && Player.Stamina < 7500) {
+            if (StaminaUnlimited && Player.Stamina < 7500) {
                 Player.Stamina = 10800;
             }
 
             // Effects on respawn
             declare PlayerHasRespawned for Player = False;
-            if(PlayerHasRespawned) {
+            if (PlayerHasRespawned) {
                 Weapons::FillUpPlayerAmmo(Player);
                 PlayerHasRespawned = False;
             }
@@ -555,10 +555,10 @@ Void NewPlayer(CSmPlayer _Player)
     Ladder::AddPlayer(_Player.Score);
 
     declare UI <=> UIManager.GetUI(_Player);
-    if(UI == Null) return;
+    if (UI == Null) return;
     Tabs::UseTabs(UI, "ScoresTab");
 
-    if(Hud == Null || Hud.ScoresTable == Null) return;
+    if (Hud == Null || Hud.ScoresTable == Null) return;
     Hud.ScoresTable.SetColumnValue (_Player.Score, "BestTime", "--:--:--");
     Hud.ScoresTable.SetColumnValue (_Player.Score, "RS", 0);
 }
@@ -661,7 +661,7 @@ Void Private_HandleCapture(CSmPlayer _Player) {
     declare HasJumped = Player::usedJump(_Player);
     declare MessageToShow = "";
 
-    if(!Tools::IsEnabled(Landmark))
+    if (!Tools::IsEnabled(Landmark))
         return;
 
     declare time = Player::getTime(_Player);
@@ -670,7 +670,7 @@ Void Private_HandleCapture(CSmPlayer _Player) {
         return;
     }
 
-    if(Tools::IsGoal(Landmark)) {
+    if (Tools::IsGoal(Landmark)) {
         if (HasJumped) {
             MessageToShow =  _("You used a Jump! Your Time is invalid.");
         } else {
@@ -680,10 +680,10 @@ Void Private_HandleCapture(CSmPlayer _Player) {
             else
                 MessageToShow = "Missing "^CpMissing^" checkpoint(s)!";
         }
-    } else if(Tools::IsCheckpoint(Landmark)) {
+    } else if (Tools::IsCheckpoint(Landmark)) {
         // Take any checkpoints if player jumped
-        if(HasJumped) {
-            if(Landmark.Order != CpProgress) {
+        if (HasJumped) {
+            if (Landmark.Order != CpProgress) {
                 Obstacle::Private_HandleCheckpoint(_Player, Landmark.Id);
             }
         } else {
@@ -692,22 +692,22 @@ Void Private_HandleCapture(CSmPlayer _Player) {
 
             // Check if the checkpoint is the next one
             declare isNextCp = True;
-            if(Landmark.Order == 0) {
+            if (Landmark.Order == 0) {
                 isNextCp = !LastCpTimes.existskey(Landmark.Id);
             } else {
                 isNextCp = Landmark.Order == CpProgress + 1;
             }
 
-            if(isNextCp)
+            if (isNextCp)
                 Obstacle::Private_HandleCheckpoint(_Player, Landmark.Id);
         }
-    } else if(Tools::IsPortal(Landmark)) {
+    } else if (Tools::IsPortal(Landmark)) {
         Obstacle::Private_UsePortal(_Player, Landmark.Id);
     }
 
     // TODO: Change this to a separate function (in Tools or Player?)
     declare LastStatusMessage for _Player = Now;
-    if(MessageToShow != "" && LastStatusMessage + 2500 < Now) {
+    if (MessageToShow != "" && LastStatusMessage + 2500 < Now) {
         LastStatusMessage = Now;
         Message::SendBigMessage(_Player, MessageToShow, 2000, 0, CUIConfig::EUISound::Warning, 1);
     }

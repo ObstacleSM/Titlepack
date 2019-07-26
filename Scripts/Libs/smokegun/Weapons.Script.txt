@@ -66,7 +66,7 @@ Void ApplyEffects(CSmPlayer _Player, CSmMapLandmark _Anchor) {
 
     declare StaminaUnlimited for _Player = False;
     StaminaUnlimited = Meta_Stamina == 2;
-    if(StaminaUnlimited) {
+    if (StaminaUnlimited) {
         _Player.StaminaMax = 3.;
         _Player.StaminaGain = 1.;
     }
