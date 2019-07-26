@@ -79,6 +79,22 @@ Void NewPlayer(CSmPlayer _Player)
     Hud.ScoresTable.SetColumnValue (_Player.Score, "RS", 0);
 }
 
+Void UpdatePlayersSkin(Ident SkinId) {
+    foreach (Player in Players) {
+        if (Settings::GetForceInvisibleSkin() && Player.ForceModelId == NullId) {
+            Player.ForceModelId = SkinId;
+        }
+        
+        if (!Settings::GetForceInvisibleSkin() && Player.ForceModelId != NullId) {
+            Player.ForceModelId = NullId;
+        }
+
+        if (Player.IsHighlighted != Settings::GetEnablePlayerHighlight()) {
+            Player.IsHighlighted = Settings::GetEnablePlayerHighlight();
+        }
+    }
+}
+
 /**
  * Initialize the map (count cp, find spawn, send api request)
  *

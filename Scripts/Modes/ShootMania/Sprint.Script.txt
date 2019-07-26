@@ -56,6 +56,7 @@
 #Setting S_WarmupRounds 1 as _("Number of warmup rounds")
 #Setting S_MinTimeLeft 20 as _("Minimum time left (seconds)")
 #Setting S_MaxTimeLeft 120 as _("Maximum time left (seconds)")
+#Setting S_EnablePlayerHighlight True as "Highlight players"
 
 #Setting S_ScriptEnvironment "development"
 
@@ -85,6 +86,10 @@ UsePvPCollisions = False;
 UseClans = False;
 UseSameWallJump = True;
 UsePvPWeapons = S_PvPWeapons;
+
+Settings::SetFullAmmoSpawn(True);
+Settings::SetFastRespawn(True);
+Settings::SetForceInvisibleSkin(True);
 
 Env::Set(Env::Env_Development());
 ***
@@ -186,8 +191,6 @@ if (!Obstacle::PrepareMap()) {
 UIManager.UIAll.MarkersXML = Markers::GetXML();
 Layers::Update("Markers", Markers::GetLayer());
 
-Settings::SetFullAmmoSpawn(True);
-Settings::SetFastRespawn(True);
 UpdateSettings();
 
 Items::Place();
@@ -258,17 +261,7 @@ if (LastUpdate + C_SettingsUpdateInterval < Now) {
     UpdateSettings();
 }
 
-foreach (Player in Players) {
-declare LastModel for Player = Player.ForceModelId;
-
-if (LastModel != Player.ForceModelId) {
-    LastModel = Player.ForceModelId;
-}
-
-if (Player.ForceModelId == NullId){
-    Player.ForceModelId = G_InvisibleSkinId;
-}
-}
+Obstacle::UpdatePlayersSkin(G_InvisibleSkinId);
 
 if (G_State == C_State_Waiting) {
 if (EndTime > 0 && Now > EndTime || CurrentRound == 0 && AllPlayers.count >= S_MinPlayers) {
@@ -781,5 +774,9 @@ Void UpdateSettings() {
 
     if (S_MaxTimeLeft != Settings::GetMaxTimeLeft()) {
         Settings::SetMaxTimeLeft(S_MaxTimeLeft);
+    }    
+
+    if (S_EnablePlayerHighlight != Settings::GetEnablePlayerHighlight()) {
+        Settings::SetEnablePlayerHighlight(S_EnablePlayerHighlight);
     }
 }

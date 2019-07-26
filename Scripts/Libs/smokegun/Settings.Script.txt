@@ -20,6 +20,8 @@ declare Boolean G_EnableRecords;
 declare Boolean G_LegacyRespawn;	
 declare Boolean G_FullAmmoSpawn;	
 declare Boolean G_PointDistribution;	
+declare Boolean G_ForceInvisibleSkin;	
+declare Boolean G_EnablePlayerHighlight;	
 
 declare Real G_NextMapVotingRatio;	
 
@@ -170,6 +172,22 @@ Boolean GetPointDistribution() {
 
 Void SetPointDistribution(Boolean _Value) {
 	G_PointDistribution = _Value;
+}
+
+Boolean GetForceInvisibleSkin() {
+	return G_ForceInvisibleSkin;
+}
+
+Void SetForceInvisibleSkin(Boolean _Value) {
+	G_ForceInvisibleSkin = _Value;
+}
+
+Boolean GetEnablePlayerHighlight() {
+	return G_EnablePlayerHighlight;
+}
+
+Void SetEnablePlayerHighlight(Boolean _Value) {
+	G_EnablePlayerHighlight = _Value;
 }
 
 

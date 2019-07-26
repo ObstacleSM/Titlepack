@@ -49,6 +49,8 @@
 #Setting S_FastRespawn True as _("Fast respawn on the checkpoint")
 #Setting S_AllowJump True as _("Enable checkpoint jumping")
 #Setting S_EnableRecords True as "Enable records"
+#Setting S_ForceInvisibleSkin False as "Force invisible skin"
+#Setting S_EnablePlayerHighlight False as "Highlight players"
 
 #Setting S_NextMapVotingRatio 0.7 as "<hidden>"
 #Setting S_FullAmmoSpawn True as "<hidden>"
@@ -64,6 +66,8 @@
 #Const C_HudModulePath "Obstacle/UI.Module.Gbx"
 #Const C_SettingsUpdateInterval 1000
 
+
+declare Ident           G_InvisibleSkinId;
 
 ***Match_LogVersions***
 ***
@@ -146,13 +150,15 @@ SpawnScreen::CreateScores("Score.Points");
 
 ***Match_InitServer***
 ***
-DoNothing();
+ItemList_Begin();
+G_InvisibleSkinId = ItemList_Add("InvisibleBot.Item.Gbx");
+Items::LoadItems();
+ItemList_End();
 ***
 
 ***Match_StartServer***
 ***
 SM::SetupDefaultVisibility();
-Items::Init();
 CreateUI();
 
 if (S_EnableRecords) {
@@ -205,6 +211,12 @@ NextMapVote::Yield(S_NextMapVotingRatio);
 
 ***Match_PlayLoop***
 ***
+if (LastUpdate + C_SettingsUpdateInterval < Now) {
+    LastUpdate = Now;
+    UpdateSettings();
+}
+
+Obstacle::UpdatePlayersSkin(G_InvisibleSkinId);
 
 if (S_EnableRecords) {
     API::Loop(S_BestNewRecordMsg, S_WorseNewRecordMsg);
@@ -326,11 +338,6 @@ foreach (Player in Players) {
         }
 
     }
-}
-
-if (LastUpdate + C_SettingsUpdateInterval < Now) {
-    LastUpdate = Now;
-    UpdateSettings();
 }
 ***
 
@@ -494,5 +501,13 @@ Void UpdateSettings() {
 
     if (S_WorseNewRecordMsg != Settings::GetWorseNewRecordMsg()) {
         Settings::SetWorseNewRecordMsg(S_WorseNewRecordMsg);
+    }
+
+    if (S_ForceInvisibleSkin != Settings::GetForceInvisibleSkin()) {
+        Settings::SetForceInvisibleSkin(S_ForceInvisibleSkin);
+    }
+
+    if (S_EnablePlayerHighlight != Settings::GetEnablePlayerHighlight()) {
+        Settings::SetEnablePlayerHighlight(S_EnablePlayerHighlight);
     }
 }
