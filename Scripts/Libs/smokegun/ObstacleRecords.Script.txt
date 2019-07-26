@@ -186,7 +186,7 @@ Void Loop(Text _BestRecordMsg, Text _WorseRecordMsg) {
         /*
         * We wait for each post request's response
         */
-        foreach(reqId => data in G_CurrRequest) {
+        foreach (reqId => data in G_CurrRequest) {
             declare request <=> Http.Requests[reqId];
             if (!request.IsCompleted) continue;
 

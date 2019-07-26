@@ -146,7 +146,7 @@ Text GetLayer() {
             foreach (Event in PendingEvents) {
                switch (Event.Type) {
                     case CMlScriptEvent::Type::MouseClick: {
-                        OpenLink("{{{Constants::C_WebsiteUrl}}}#!/map/"^Map.Id,  CMlScript::LinkType::ExternalBrowser);
+                        OpenLink("{{{Constants::C_WebsiteUrl}}}/maps/"^Map.Id,  CMlScript::LinkType::ExternalBrowser);
                     }
                 }
             }

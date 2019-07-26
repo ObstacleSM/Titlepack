@@ -72,38 +72,33 @@ Text GetLayer() {
         while (True) {
             yield;
 
-            declare LocalPlayer <=> InputPlayer;
-            if (GUIPlayer != Null) LocalPlayer <=> GUIPlayer;
-
             // Toggle respawn behavior
-            if (LocalPlayer == InputPlayer) {
-                foreach (Event in PendingEvents) {
-                    switch (Event.Type) {
-                        case CMlScriptEvent::Type::KeyPress: {
-                            switch (Event.CharPressed) {
-                                // F4 - Change respawn behavior
-                                case "2686976": {
-                                    if (Net_RespawnBehavior == {{{Constants::C_RespawnBehavior_FullRestart}}})
-                                        Net_RespawnBehavior = {{{Constants::C_RespawnBehavior_Normal}}};
-                                    else
-                                        Net_RespawnBehavior = {{{Constants::C_RespawnBehavior_FullRestart}}};
-                                }
+            foreach (Event in PendingEvents) {
+                switch (Event.Type) {
+                    case CMlScriptEvent::Type::KeyPress: {
+                        switch (Event.CharPressed) {
+                            // F4 - Change respawn behavior
+                            case "2686976": {
+                                if (Net_RespawnBehavior == {{{Constants::C_RespawnBehavior_FullRestart}}})
+                                    Net_RespawnBehavior = {{{Constants::C_RespawnBehavior_Normal}}};
+                                else
+                                    Net_RespawnBehavior = {{{Constants::C_RespawnBehavior_FullRestart}}};
+                            }
 
-                                // F5 - Change respawn lock
-                                case "2752512": {
-                                    if (Net_RespawnBehavior == {{{Constants::C_RespawnBehavior_FullLocked}}})
-                                        Net_RespawnBehavior = {{{Constants::C_RespawnBehavior_Normal}}};
-                                    else
-                                        Net_RespawnBehavior = {{{Constants::C_RespawnBehavior_FullLocked}}};
-                                }
+                            // F5 - Change respawn lock
+                            case "2752512": {
+                                if (Net_RespawnBehavior == {{{Constants::C_RespawnBehavior_FullLocked}}})
+                                    Net_RespawnBehavior = {{{Constants::C_RespawnBehavior_Normal}}};
+                                else
+                                    Net_RespawnBehavior = {{{Constants::C_RespawnBehavior_FullLocked}}};
                             }
                         }
-                        case CMlScriptEvent::Type::MouseClick: {
-                            if (Frame_Infos.Visible)
-                                HideInfos();
-                            else
-                                ShowInfos();
-                        }
+                    }
+                    case CMlScriptEvent::Type::MouseClick: {
+                        if (Frame_Infos.Visible)
+                            HideInfos();
+                        else
+                            ShowInfos();
                     }
                 }
             }

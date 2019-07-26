@@ -1,7 +1,7 @@
 #Extends "Modes/ShootMania/Base/ModeShootMania.Script.txt"
 
 #Const CompatibleMapTypes "ObstacleArena,ObstacleTitleArena,ObstacleTitleArenaOld,TimeAttackArena,ObstacleBetaArena"
-#Const  Version           "1.4"
+#Const  Version           "1.5"
 #Const  ScriptName        "Modes/ShootMania/Obstacle.Script.txt"
 
 // ---------------------------------- //
@@ -32,11 +32,13 @@
 #Include "Libs/smokegun/UI/RespawnBehavior.Script.txt" as RespawnBehavior
 #Include "Libs/smokegun/UI/SpecKeys.Script.txt" as SpecKeys
 
+#Include "Libs/smokegun/CPTimes.Script.txt" as CPTimes
+
 #Include "Libs/smokegun/Items.Script.txt" as Items
 #Include "Libs/smokegun/ObstacleRecords.Script.txt" as API
 #Include "Libs/smokegun/Weapons.Script.txt" as Weapons
+#Include "Libs/smokegun/Settings.Script.txt" as Settings
 
-#Include "Libs/smokegun/CPTimes.Script.txt" as CPTimes
 
 
 // ---------------------------------- //
@@ -44,25 +46,28 @@
 // ---------------------------------- //
 #Setting S_TimeLimit -1 as _("Time limit")
 #Setting S_PvPWeapons False as _("Enable PvP Weapons")
-#Setting S_FullAmmoSpawn True as _("Spawning with full Ammunition")
 #Setting S_FastRespawn True as _("Fast respawn on the checkpoint")
 #Setting S_AllowJump True as _("Enable checkpoint jumping")
-#Setting S_LegacyRespawn False as _("LEGACY: Enable old respawn")
-#Setting S_BestNewRecordMsg "%1$z made a new record ! (%2)" as _("New record message (1: name, 2: new time)")
-#Setting S_WorseNewRecordMsg "$zYou were too late by %4 !" as _("Worse record message (3: old time, 4: diff time")
-
 #Setting S_EnableRecords True as "Enable records"
-#Setting S_NextMapVotingRatio 0.7 as "<hidden>"
+#Setting S_ForceInvisibleSkin False as "Force invisible skin"
+#Setting S_EnablePlayerHighlight False as "Highlight players"
 
-#Setting S_ScriptEnvironment "production"
+#Setting S_NextMapVotingRatio 0.7 as "<hidden>"
+#Setting S_FullAmmoSpawn True as "<hidden>"
+#Setting S_LegacyRespawn False as "<hidden>"
+#Setting S_BestNewRecordMsg "%1$z made a new record ! (%2)" as "<hidden>"
+#Setting S_WorseNewRecordMsg "$zToo late by %4 (previous was %3)!" as "<hidden>"
+
+#Setting S_ScriptEnvironment "development"
 
 // ---------------------------------- //
 // Constants
 // ---------------------------------- //
-#Const C_HudModulePath "Obstacle/UI.Module.Gbx" ///< Path to the hud module
-#Const Description _("Finish map as fast as possible !")
+#Const C_HudModulePath "Obstacle/UI.Module.Gbx"
+#Const C_SettingsUpdateInterval 1000
 
-declare Boolean G_Records_Enabled;
+
+declare Ident           G_InvisibleSkinId;
 
 ***Match_LogVersions***
 ***
@@ -145,26 +150,26 @@ SpawnScreen::CreateScores("Score.Points");
 
 ***Match_InitServer***
 ***
-declare Integer G_LastUpdate = 0;
+ItemList_Begin();
+G_InvisibleSkinId = ItemList_Add("InvisibleBot.Item.Gbx");
+Items::LoadItems();
+ItemList_End();
 ***
 
 ***Match_StartServer***
 ***
 SM::SetupDefaultVisibility();
-
-Spectators::ForceCamera(Spectators::Camera_FirstPerson());
-Items::Init();
 CreateUI();
 
-G_Records_Enabled = S_EnableRecords;
-if (G_Records_Enabled)
+if (S_EnableRecords) {
     API::Init();
+}
 ***
 
 ***Match_InitMap***
 ***
-declare Integer PrevTimeLimit = -1;
-declare Boolean PrevPvPWeapons = S_PvPWeapons;
+declare PrevTimeLimit = -1;
+declare PrevPvPWeapons = S_PvPWeapons;
 declare LastUpdate = -1;
 ***
 
@@ -172,10 +177,10 @@ declare LastUpdate = -1;
 ***
 
 // This needs to be called before PrepareMap to have the right settings
-Obstacle::SetSettings(S_FullAmmoSpawn, S_FastRespawn, S_LegacyRespawn, S_AllowJump, True, S_EnableRecords);
+UpdateSettings();
 
 // map is invalid
-if(!Obstacle::PrepareMap())
+if (!Obstacle::PrepareMap())
 {
     MB_Private_StopMap();
 }
@@ -185,7 +190,7 @@ Layers::Update("Markers", Markers::GetLayer());
 
 Items::Place();
 
-foreach(Player in AllPlayers) {
+foreach (Player in AllPlayers) {
     Player::setInitialized(Player, False);
     Obstacle::NewPlayer(Player);
 }
@@ -206,17 +211,24 @@ NextMapVote::Yield(S_NextMapVotingRatio);
 
 ***Match_PlayLoop***
 ***
+if (LastUpdate + C_SettingsUpdateInterval < Now) {
+    LastUpdate = Now;
+    UpdateSettings();
+}
 
-if (G_Records_Enabled)
+Obstacle::UpdatePlayersSkin(G_InvisibleSkinId);
+
+if (S_EnableRecords) {
     API::Loop(S_BestNewRecordMsg, S_WorseNewRecordMsg);
+}
 
 if (EndTime > 0 && Now > EndTime) {
     Message::SendBigMessage(_("Time limit reached"),    2000, 3, CUIConfig::EUISound::Silence, 0);
     MB_Private_StopMatch();
 }
 
-foreach(Event in UIManager.PendingEvents) {
-    if(Event.Type == CUIConfigEvent::EType::OnLayerCustomEvent) {
+foreach (Event in UIManager.PendingEvents) {
+    if (Event.Type == CUIConfigEvent::EType::OnLayerCustomEvent) {
         switch(Event.CustomEventType) {
             case "jump_request": {
                 declare Player = SM::GetPlayer(Event.CustomEventData[0]);
@@ -266,6 +278,7 @@ foreach (Event in PendingEvents) {
 
         case CSmModeEvent::EType::OnPlayerTriggersSector: {
             Obstacle::HandleCapture(Event.Player);
+            PassOn(Event);
         }
 
         default: {
@@ -279,8 +292,9 @@ foreach (Player in Players) {
     switch (Player.SpawnStatus) {
 
         case CSmPlayer::ESpawnStatus::NotSpawned: {
-            if(!Player::isInitialized(Player))
+            if (!Player::isInitialized(Player)) {
                 Obstacle::NewPlayer(Player);
+            }
 
             if (!Player.RequestsSpectate) {
                 Obstacle::RespawnPlayer(Player);
@@ -292,14 +306,14 @@ foreach (Player in Players) {
 
             // Unlimited stam
             declare StaminaUnlimited for Player = False;
-            if(StaminaUnlimited && Player.Stamina < 7500) {
+            if (StaminaUnlimited && Player.Stamina < 7500) {
                 Player.Stamina = 10800;
             }
 
             // Effects on respawn
             declare PlayerHasRespawned for Player = False;
-            if(PlayerHasRespawned) {
-                if(S_FullAmmoSpawn) {
+            if (PlayerHasRespawned) {
+                if (S_FullAmmoSpawn) {
                     Weapons::FillUpPlayerAmmo(Player);
                 }
 
@@ -325,47 +339,22 @@ foreach (Player in Players) {
 
     }
 }
-
-// Update settings at runtime
-if (PrevTimeLimit != S_TimeLimit) {
-    PrevTimeLimit = S_TimeLimit;
-
-  if (Hud != Null && Hud.ScoresTable != Null) {
-    Hud.ScoresTable.SetFooterText(TL::Compose("%1 "^TL::TimeToText(S_TimeLimit * 60 * 1000), _("Time limit : ")));
-  }
-
-    if (S_TimeLimit > 0) {
-        EndTime = StartTime + (S_TimeLimit * 60 * 1000);
-    } else {
-        EndTime = -1;
-    }
-}
-
-if (PrevPvPWeapons != S_PvPWeapons) {
-    PrevPvPWeapons = S_PvPWeapons;
-    UsePvPWeapons = S_PvPWeapons;
-}
-
-if (LastUpdate + 1000 < Now) {
-    LastUpdate = Now;
-
-    Obstacle::SetSettings(S_FullAmmoSpawn, S_FastRespawn, S_LegacyRespawn, S_AllowJump, True, G_Records_Enabled);
-}
 ***
 
 
 ***Match_EndMap***
 ***
-Items::Destroy();
 EndTime = -1;
 
+Items::Destroy();
 UIManager.UIAll.MarkersXML = "";
 SM::UnspawnAllPlayers();
 
 declare BestPlayerScore <=> Scores::GetBestPlayerMapPoints(Scores::C_Order_Descending);
 if (BestPlayerScore != Null) {
     Scores::SetPlayerWinner(BestPlayerScore);
-} else {
+}
+else {
     Scores::ResetPlayerWinner();
 }
 ***
@@ -380,14 +369,14 @@ foreach (Score in Scores) {
     if (BestRun > 0) {
         Score.LadderRankSortValue = BestRun;
 
-        if(BestRun > WorstRun) WorstRun = BestRun;
+        if (BestRun > WorstRun) WorstRun = BestRun;
     }
     else {
         Unranked.add(Score);
     }
 }
 
-foreach(Score in Unranked) {
+foreach (Score in Unranked) {
     Score.LadderRankSortValue = WorstRun + 1;
 }
 ***
@@ -401,14 +390,7 @@ DoNothing();
 ***
 SpawnScreen::DestroyRules();
 SpawnScreen::DestroyMapInfo();
-
-Layers::Detach("Info");
-Layers::Detach("TimeDiff");
-Layers::Detach("Utils");
-Layers::Detach("Markers");
-Layers::Detach("Items");
-Layers::Detach("Records");
-UIManager.UILayerDestroyAll();
+DestroyUI();
 ***
 
 // ---------------------------------- //
@@ -431,8 +413,9 @@ Void CreateUI() {
     Layers::SetType("Markers", CUILayer::EUILayerType::Markers);
     Layers::Create("Items", Items::CreateLayerItems());
 
-    if (S_EnableRecords)
+    if (S_EnableRecords) {
         Layers::Create("Records", RecordsWidget::GetLayer());
+    }
 
     Layers::Attach("Chrono");
     Layers::Attach("TimeDiff");
@@ -455,8 +438,9 @@ Void DestroyUI() {
     Layers::Detach("Markers");
     Layers::Detach("Items");
     
-    if (S_EnableRecords)
+    if (S_EnableRecords) {
         Layers::Detach("Records");
+    }
 
     Layers::Detach("SpectatorCount");
     Layers::Detach("NextMapVote");
@@ -464,4 +448,66 @@ Void DestroyUI() {
     Layers::Detach("SpecKeys");
 
     UIManager.UILayerDestroyAll();
+}
+
+Void UpdateSettings() {
+    if (S_TimeLimit != Settings::GetTimeLimit()) {
+        Settings::SetTimeLimit(S_TimeLimit);
+
+        if (Hud != Null && Hud.ScoresTable != Null) {
+            Hud.ScoresTable.SetFooterText(TL::Compose("%1 "^TL::TimeToText(S_TimeLimit * 60 * 1000), _("Time limit : ")));
+        }
+
+        if (S_TimeLimit > 0) {
+            EndTime = StartTime + (S_TimeLimit * 60 * 1000);
+        } else {
+            EndTime = -1;
+        }
+    }
+
+    if (S_PvPWeapons != Settings::GetPvPWeapons()) {
+        Settings::SetPvPWeapons(S_PvPWeapons);
+
+        UsePvPWeapons = S_PvPWeapons;
+    }
+
+    if (S_FastRespawn != Settings::GetFastRespawn()) {
+        Settings::SetFastRespawn(S_FastRespawn);
+    }
+
+    if (S_AllowJump != Settings::GetAllowJump()) {
+        Settings::SetAllowJump(S_AllowJump);
+    }
+
+    if (S_EnableRecords != Settings::GetEnableRecords()) {
+        Settings::SetEnableRecords(S_EnableRecords);
+    }
+
+    if (S_NextMapVotingRatio != Settings::GetNextMapVotingRatio()) {
+        Settings::SetNextMapVotingRatio(S_NextMapVotingRatio);
+    }
+
+    if (S_FullAmmoSpawn != Settings::GetFullAmmoSpawn()) {
+        Settings::SetFullAmmoSpawn(S_FullAmmoSpawn);
+    }
+
+    if (S_LegacyRespawn != Settings::GetLegacyRespawn()) {
+        Settings::SetLegacyRespawn(S_LegacyRespawn);
+    }
+
+    if (S_BestNewRecordMsg != Settings::GetBestNewRecordMsg()) {
+        Settings::SetBestNewRecordMsg(S_BestNewRecordMsg);
+    }
+
+    if (S_WorseNewRecordMsg != Settings::GetWorseNewRecordMsg()) {
+        Settings::SetWorseNewRecordMsg(S_WorseNewRecordMsg);
+    }
+
+    if (S_ForceInvisibleSkin != Settings::GetForceInvisibleSkin()) {
+        Settings::SetForceInvisibleSkin(S_ForceInvisibleSkin);
+    }
+
+    if (S_EnablePlayerHighlight != Settings::GetEnablePlayerHighlight()) {
+        Settings::SetEnablePlayerHighlight(S_EnablePlayerHighlight);
+    }
 }

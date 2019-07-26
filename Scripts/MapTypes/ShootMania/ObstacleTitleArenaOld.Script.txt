@@ -255,7 +255,7 @@ Void EditGoalAnchor(CAnchorData _Anchor) {
 			while (Finish == 0) {
 				yield;
 				
-				foreach(Button in Buttons) {
+				foreach (Button in Buttons) {
 					if (AnchorTag == Button.ControlId) {
 						Button.Value = "$090"^Button.ControlId;
 					} else {

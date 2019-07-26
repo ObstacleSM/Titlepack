@@ -1,0 +1,219 @@
+// Generated from Settings.py and Settings.tmpl
+
+
+declare Integer G_TimeLimit;	
+declare Integer G_RoundLimit;	
+declare Integer G_MinPlayers;	
+declare Integer G_PointLimit;	
+declare Integer G_PointsMax;	
+declare Integer G_PointsMin;	
+declare Integer G_PointsDeduced;	
+declare Integer G_RoundCooldown;	
+declare Integer G_WarmupRounds;	
+declare Integer G_MinTimeLeft;	
+declare Integer G_MaxTimeLeft;	
+
+declare Boolean G_PvPWeapons;	
+declare Boolean G_FastRespawn;	
+declare Boolean G_AllowJump;	
+declare Boolean G_EnableRecords;	
+declare Boolean G_LegacyRespawn;	
+declare Boolean G_FullAmmoSpawn;	
+declare Boolean G_PointDistribution;	
+declare Boolean G_ForceInvisibleSkin;	
+declare Boolean G_EnablePlayerHighlight;	
+
+declare Real G_NextMapVotingRatio;	
+
+declare Text G_BestNewRecordMsg;	
+declare Text G_WorseNewRecordMsg;	
+
+
+Integer GetTimeLimit() {
+	return G_TimeLimit;
+}
+
+Void SetTimeLimit(Integer _Value) {
+	G_TimeLimit = _Value;
+}
+
+Integer GetRoundLimit() {
+	return G_RoundLimit;
+}
+
+Void SetRoundLimit(Integer _Value) {
+	G_RoundLimit = _Value;
+}
+
+Integer GetMinPlayers() {
+	return G_MinPlayers;
+}
+
+Void SetMinPlayers(Integer _Value) {
+	G_MinPlayers = _Value;
+}
+
+Integer GetPointLimit() {
+	return G_PointLimit;
+}
+
+Void SetPointLimit(Integer _Value) {
+	G_PointLimit = _Value;
+}
+
+Integer GetPointsMax() {
+	return G_PointsMax;
+}
+
+Void SetPointsMax(Integer _Value) {
+	G_PointsMax = _Value;
+}
+
+Integer GetPointsMin() {
+	return G_PointsMin;
+}
+
+Void SetPointsMin(Integer _Value) {
+	G_PointsMin = _Value;
+}
+
+Integer GetPointsDeduced() {
+	return G_PointsDeduced;
+}
+
+Void SetPointsDeduced(Integer _Value) {
+	G_PointsDeduced = _Value;
+}
+
+Integer GetRoundCooldown() {
+	return G_RoundCooldown;
+}
+
+Void SetRoundCooldown(Integer _Value) {
+	G_RoundCooldown = _Value;
+}
+
+Integer GetWarmupRounds() {
+	return G_WarmupRounds;
+}
+
+Void SetWarmupRounds(Integer _Value) {
+	G_WarmupRounds = _Value;
+}
+
+Integer GetMinTimeLeft() {
+	return G_MinTimeLeft;
+}
+
+Void SetMinTimeLeft(Integer _Value) {
+	G_MinTimeLeft = _Value;
+}
+
+Integer GetMaxTimeLeft() {
+	return G_MaxTimeLeft;
+}
+
+Void SetMaxTimeLeft(Integer _Value) {
+	G_MaxTimeLeft = _Value;
+}
+
+
+Boolean GetPvPWeapons() {
+	return G_PvPWeapons;
+}
+
+Void SetPvPWeapons(Boolean _Value) {
+	G_PvPWeapons = _Value;
+}
+
+Boolean GetFastRespawn() {
+	return G_FastRespawn;
+}
+
+Void SetFastRespawn(Boolean _Value) {
+	G_FastRespawn = _Value;
+}
+
+Boolean GetAllowJump() {
+	return G_AllowJump;
+}
+
+Void SetAllowJump(Boolean _Value) {
+	G_AllowJump = _Value;
+}
+
+Boolean GetEnableRecords() {
+	return G_EnableRecords;
+}
+
+Void SetEnableRecords(Boolean _Value) {
+	G_EnableRecords = _Value;
+}
+
+Boolean GetLegacyRespawn() {
+	return G_LegacyRespawn;
+}
+
+Void SetLegacyRespawn(Boolean _Value) {
+	G_LegacyRespawn = _Value;
+}
+
+Boolean GetFullAmmoSpawn() {
+	return G_FullAmmoSpawn;
+}
+
+Void SetFullAmmoSpawn(Boolean _Value) {
+	G_FullAmmoSpawn = _Value;
+}
+
+Boolean GetPointDistribution() {
+	return G_PointDistribution;
+}
+
+Void SetPointDistribution(Boolean _Value) {
+	G_PointDistribution = _Value;
+}
+
+Boolean GetForceInvisibleSkin() {
+	return G_ForceInvisibleSkin;
+}
+
+Void SetForceInvisibleSkin(Boolean _Value) {
+	G_ForceInvisibleSkin = _Value;
+}
+
+Boolean GetEnablePlayerHighlight() {
+	return G_EnablePlayerHighlight;
+}
+
+Void SetEnablePlayerHighlight(Boolean _Value) {
+	G_EnablePlayerHighlight = _Value;
+}
+
+
+Real GetNextMapVotingRatio() {
+	return G_NextMapVotingRatio;
+}
+
+Void SetNextMapVotingRatio(Real _Value) {
+	G_NextMapVotingRatio = _Value;
+}
+
+
+Text GetBestNewRecordMsg() {
+	return G_BestNewRecordMsg;
+}
+
+Void SetBestNewRecordMsg(Text _Value) {
+	G_BestNewRecordMsg = _Value;
+}
+
+Text GetWorseNewRecordMsg() {
+	return G_WorseNewRecordMsg;
+}
+
+Void SetWorseNewRecordMsg(Text _Value) {
+	G_WorseNewRecordMsg = _Value;
+}
+
+

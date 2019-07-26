@@ -125,7 +125,7 @@ if (MB_Settings_UseDefaultObjects) {
 	Objects::SetAutoPickUp(True);
 }
 
-if(MB_Settings_UseDefaultDispenserObjects) {
+if (MB_Settings_UseDefaultDispenserObjects) {
 	Dispenser::SetAutoPickUp(True);
 	Dispenser::UseDefaultObjects();
 }
@@ -165,7 +165,7 @@ if (MB_Settings_UseDefaultObjects) {
 	Objects::SpawnAnchorsObjects();
 }
 
-if(MB_Settings_UseDefaultDispenserObjects) {
+if (MB_Settings_UseDefaultDispenserObjects) {
 	Dispenser::CreateAnchorsObjects();
 	Dispenser::SpawnAnchorsObjects();
 }
@@ -302,7 +302,7 @@ if (MB_Settings_UseDefaultObjects) {
 	Objects::DestroyAnchorsObjects();
 }
 
-if(MB_Settings_UseDefaultDispenserObjects) {
+if (MB_Settings_UseDefaultDispenserObjects) {
 	Dispenser::DestroyAnchorsObjects();
 }
 ***

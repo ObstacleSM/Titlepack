@@ -86,7 +86,7 @@ Text GetLayer() {
 
             declare Boolean ShowCurrentTab = _TabsLib_AltLayerIsVisible && (_TabsLib_CurrentTab == TabKey);
 
-            if(TabKey == _TabsLib_ScoresTableTab)
+            if (TabKey == _TabsLib_ScoresTableTab)
             {
                 // log("_TabsLib_ScoresTableTab: "^_TabsLib_ScoresTableTab);
                 ShowCurrentTab = _TabsLib_ScoresLayerIsVisible ||
@@ -94,9 +94,9 @@ Text GetLayer() {
             }
 
             declare MainFrame <=> (Page.GetFirstChild(FrameTabId) as CMlFrame);
-            if(MainFrame == Null) return;
+            if (MainFrame == Null) return;
 
-            if(ShowCurrentTab) {
+            if (ShowCurrentTab) {
                 MainFrame.Show();
             } else {
                 MainFrame.Hide();
@@ -105,17 +105,17 @@ Text GetLayer() {
 
         Void ChangePage(Integer dir) {
             declare first_cp_number = (G_PageNb+dir)*6 + 1;
-            if(first_cp_number < 0 || first_cp_number > G_CheckpointsTotal) return;
+            if (first_cp_number < 0 || first_cp_number > G_CheckpointsTotal) return;
 
             G_PageNb += dir;
 
             declare frame = (Page.GetFirstChild("Frame_Checkpoints") as CMlFrame);
 
-            foreach(CheckpointId => Control in frame.Controls) {
+            foreach (CheckpointId => Control in frame.Controls) {
                 declare cp_number = first_cp_number + CheckpointId;
 
                 // Hide checkpoints that doesnt exist
-                if(cp_number > G_CheckpointsTotal) {
+                if (cp_number > G_CheckpointsTotal) {
                     Control.Hide();
                     continue;
                 }
@@ -126,7 +126,7 @@ Text GetLayer() {
                 declare title = (checkpoint.GetFirstChild("title") as CMlLabel);
 
                 // Set checkpoints number or goal
-                if(cp_number == G_CheckpointsTotal)
+                if (cp_number == G_CheckpointsTotal)
                     title.SetText("Goal");
                 else
                     title.SetText(""^cp_number);
@@ -135,13 +135,13 @@ Text GetLayer() {
                 Cp_Number = title.Value;
 
                 // Update times
-                foreach(RecordId => ControlR in records.Controls) {
+                foreach (RecordId => ControlR in records.Controls) {
                     declare record = (ControlR as CMlFrame);
                     declare rank = (record.GetFirstChild("rank") as CMlLabel);
                     declare name = (record.GetFirstChild("name") as CMlLabel);
                     declare time = (record.GetFirstChild("time") as CMlLabel);
 
-                    if(RecordId < G_RecordsName[cp_number-1].count) {
+                    if (RecordId < G_RecordsName[cp_number-1].count) {
                         // CP1 is at the index 0
                         rank.SetText((RecordId+1)^".");
                         name.SetText(G_RecordsName[cp_number-1][RecordId]);
@@ -161,21 +161,21 @@ Text GetLayer() {
             declare LastUpdate = -1;
             declare LastTimesUpdate = -1;
 
-            while(True) {
+            while (True) {
                 yield;
 
                 UpdateFrameTab(UI, Page, "CPTimes", "Frame_CPTimes");
 
-                foreach(Event in PendingEvents) {
+                foreach (Event in PendingEvents) {
                     switch(Event.Type) {
                         case CMlScriptEvent::Type::MouseOver: {
-                            if(Event.Control.ControlId == "title") {
+                            if (Event.Control.ControlId == "title") {
                                 declare title = (Event.Control as CMlLabel);
                                 title.SetText("JUMP");
                             }
                         }
                         case CMlScriptEvent::Type::MouseOut: {
-                            if(Event.Control.ControlId == "title") {
+                            if (Event.Control.ControlId == "title") {
                                 declare title = (Event.Control as CMlLabel);
                                 declare Cp_Number for title = "";
                                 title.SetText(Cp_Number);
@@ -198,16 +198,16 @@ Text GetLayer() {
                     }
                 }
 
-                if(LastUpdate + 500 < GameTime) {
+                if (LastUpdate + 500 < GameTime) {
 
                     // It may be a new map
                     declare netread Integer Net_CheckpointsTotal for Teams[0];
-                    if(G_CheckpointsTotal != Net_CheckpointsTotal + 1) {
+                    if (G_CheckpointsTotal != Net_CheckpointsTotal + 1) {
                         G_CheckpointsTotal = Net_CheckpointsTotal + 1;
                     }
 
                     declare netread Net_CPTimesUpdated for Teams[0] = -1;
-                    if(Net_CPTimesUpdated != LastTimesUpdate) {
+                    if (Net_CPTimesUpdated != LastTimesUpdate) {
                         LastTimesUpdate = Net_CPTimesUpdated;
 
                         declare netread Text[][] Net_CPTimes_RecordsName for Teams[0];
@@ -241,7 +241,7 @@ Void UpdateLayer(CSmPlayer _Player) {
 
     declare nth_cp = 0;
 
-    foreach(Id => CPTime in LastCPTimes) {
+    foreach (Id => CPTime in LastCPTimes) {
         // declare Landmark <=> MapLandmarks_Gauge[Id];
 
         // declare Time = CPTime - TimeToSub;
@@ -253,7 +253,7 @@ Void UpdateLayer(CSmPlayer _Player) {
         declare Idx = nth_cp;
 
         // Remove previous time if it exists
-        if(Net_CPTimes_RecordsName[Idx].exists(_Player.User.Name)) {
+        if (Net_CPTimes_RecordsName[Idx].exists(_Player.User.Name)) {
             declare prev = Net_CPTimes_RecordsName[Idx].keyof(_Player.User.Name);
             Net_CPTimes_RecordsName[Idx].removekey(prev);
             Net_CPTimes_RecordsTime[Idx].removekey(prev);
@@ -261,13 +261,13 @@ Void UpdateLayer(CSmPlayer _Player) {
 
         // Find player rank
         declare rank = 0;
-        while(rank < Net_CPTimes_RecordsTime[Idx].count && Net_CPTimes_RecordsTime[Idx][rank] < Time) {
+        while (rank < Net_CPTimes_RecordsTime[Idx].count && Net_CPTimes_RecordsTime[Idx][rank] < Time) {
             rank += 1;
         }
 
-        if(rank > 5) return;
+        if (rank > 5) return;
 
-        if(Net_CPTimes_RecordsName[Idx].count < 6) {
+        if (Net_CPTimes_RecordsName[Idx].count < 6) {
             // Add the player's time at the end
             Net_CPTimes_RecordsName[Idx].add(_Player.User.Name);
             Net_CPTimes_RecordsTime[Idx].add(Time);
@@ -278,7 +278,7 @@ Void UpdateLayer(CSmPlayer _Player) {
 
         // And move it to the desired rank
         declare i = Net_CPTimes_RecordsName[Idx].count - 1;
-        while(i > rank) {
+        while (i > rank) {
             declare tmp_name = Net_CPTimes_RecordsName[Idx][i];
             declare tmp_time = Net_CPTimes_RecordsTime[Idx][i];
 
@@ -307,7 +307,7 @@ Void StartMap(Integer _CheckpointsNb) {
     Net_CPTimes_RecordsName.clear();
     Net_CPTimes_RecordsTime.clear();
 
-    for(i, 0, _CheckpointsNb) {
+    for (i, 0, _CheckpointsNb) {
         Net_CPTimes_RecordsName.add(Text[]);
         Net_CPTimes_RecordsTime.add(Integer[]);
     }
