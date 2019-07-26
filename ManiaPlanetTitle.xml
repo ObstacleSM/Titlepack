@@ -85,13 +85,13 @@
 	<hud3dfont name=""/>
 	<files/>
 	<folders>
-		<folder name="Blocks" public="false" internal="true"/>
-		<folder name="Items" public="false" internal="true"/>
-		<folder name="Maps" public="false" internal="true"/>
-		<folder name="Materials" public="false" internal="true"/>
-		<folder name="Media" public="false" internal="true"/>
-		<folder name="Modules" public="false" internal="true"/>
-		<folder name="Scripts" public="false" internal="true"/>
+		<folder name="Blocks" public="true" internal="false"/>
+		<folder name="Items" public="true" internal="false"/>
+		<folder name="Maps" public="true" internal="false"/>
+		<folder name="Materials" public="true" internal="false"/>
+		<folder name="Media" public="false" internal="false"/>
+		<folder name="Modules" public="false" internal="false"/>
+		<folder name="Scripts" public="false" internal="false"/>
 		<folder name="Skins" public="true" internal="false"/>
 	</folders>
 	<hud_default_module name=""/>
