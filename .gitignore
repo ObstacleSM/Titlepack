@@ -3,3 +3,4 @@ Items/
 Materials/
 Media/Manialinks/Keyboard
 *.Map.Gbx
+__pycache__

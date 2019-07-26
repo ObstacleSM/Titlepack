@@ -26,6 +26,7 @@
 #Include "Libs/smokegun/CPTimes.Script.txt" as CPTimes
 
 #Include "Libs/smokegun/UI/TimeDiff.Script.txt" as TimeDiff
+#Include "Libs/smokegun/Settings.Script.txt" as Settings
 
 
 /*********************************************
@@ -43,17 +44,6 @@
 // Map
 declare Ident G_StartSpawnId;
 declare Integer G_CheckpointsTotal;
-
-// Settings
-declare Boolean G_FullAmmoSpawn;
-declare Boolean G_FastRespawn;
-declare Boolean G_LegacyRespawn;
-declare Boolean G_AllowJump;
-declare Boolean G_UseRecords;
-
-// Should update the map scores of player to order them
-declare Boolean G_UseMapRanking;
-
 declare Integer G_Mode;
 
 
@@ -61,22 +51,12 @@ declare Integer G_Mode;
   FUNCTIONS
  *********************************************/
 
-// TODO: handle settings better
-Void SetSettings(Boolean _FullAmmoSpawn, Boolean _FastRespawn, Boolean _LegacyRespawn, Boolean _AllowJump, Boolean _UseMapRanking, Boolean _UseRecords) {
-    G_FullAmmoSpawn = _FullAmmoSpawn;
-    G_FastRespawn = _FastRespawn;
-    G_LegacyRespawn = _LegacyRespawn;
-    G_AllowJump = _AllowJump;
-    G_UseMapRanking = _UseMapRanking;
-    G_UseRecords = _UseRecords;
-}
-
 Void SetMode(Integer _Mode) {
-   G_Mode = _Mode;
+    G_Mode = _Mode;
 }
 
 Integer GetMode() {
-return G_Mode;
+    return G_Mode;
 }
 
 /**
@@ -86,8 +66,9 @@ return G_Mode;
 Void NewPlayer(CSmPlayer _Player)
 {
     Player::InitPlayer(_Player);
-    if (G_UseRecords)
+    if (Settings::GetEnableRecords()) {
         API::ReplaceOrCreatePlayer(_Player);
+    }
     Ladder::AddPlayer(_Player.Score);
 
     declare UI <=> UIManager.GetUI(_Player);
@@ -104,8 +85,9 @@ Void NewPlayer(CSmPlayer _Player)
  * Returns: boolean is the map valid
  */
 Boolean PrepareMap() {
-    if (G_UseRecords)
+    if (Settings::GetEnableRecords()) {
         API::ReplaceOrCreateMap();
+    }
 
     G_StartSpawnId = NullId;
     G_CheckpointsTotal = 0;
@@ -198,8 +180,9 @@ Void Private_SendXmlRpcCallback(Text _CallbackName, CSmPlayer _Player, Integer _
  */
 Void Private_SendFinishedRun(CSmPlayer _Player, Integer _Run, Ident _GoalId) {
     Private_SendXmlRpcCallback("OnFinish", _Player, _Run, _GoalId);
-    if (G_UseRecords)
+    if (Settings::GetEnableRecords()) {
         API::PlayerFinished(_Player);
+    }
 }
 
 /////////////////////////////////////////////////////////////////
@@ -211,7 +194,9 @@ Void Private_SendFinishedRun(CSmPlayer _Player, Integer _Run, Ident _GoalId) {
  *
  */
 Void Private_UpdateRanking() {
-    if (!G_UseMapRanking) return;
+    if (G_Mode != Constants::C_Mode_Obstacle) {
+        return;
+    }
 
     declare Finished = Integer[Ident];
     declare Unfinished = CSmPlayer[];
@@ -311,7 +296,7 @@ Void Private_CpRestart(CSmPlayer _Player, Integer _Delay, Ident _LastCheckpoint,
 
     declare Checkpoint <=> MapLandmarks[_LastCheckpoint];
     declare Spawn <=> MapLandmarks_PlayerSpawn[_CPSpawn];
-    declare CanFastRespawn = G_FastRespawn;
+    declare CanFastRespawn = Settings::GetFastRespawn();
 
     // Check if fast respawn is possible
     if (CanFastRespawn) {
@@ -417,7 +402,7 @@ Void RespawnPlayer(CSmPlayer _Player, Boolean _forceRestart) {
 
     Player::clearBuffTimes(_Player);
 
-    if (G_FullAmmoSpawn) {
+    if (Settings::GetFullAmmoSpawn()) {
         Weapons::FillUpPlayerAmmo(_Player);
     }
 }
@@ -465,7 +450,7 @@ Void JumpToCheckpoint(CSmPlayer _Player, Integer _Target) {
     if (_Player.SpawnStatus != CSmPlayer::ESpawnStatus::Spawned || UI == Null)
         return;
 
-    if (!G_AllowJump) {
+    if (!Settings::GetAllowJump()) {
         UI.SendChat("$f00Jumping is disabled!$z");
         return;
     }
@@ -513,7 +498,7 @@ Void JumpToCheckpoint(CSmPlayer _Player, Integer _Target) {
     // TODO: Below is copy pasted in common behaviour after respawn
     Player::clearBuffTimes(_Player);
 
-    if (G_FullAmmoSpawn) {
+    if (Settings::GetFullAmmoSpawn()) {
         Weapons::FillUpPlayerAmmo(_Player);
     }
 }

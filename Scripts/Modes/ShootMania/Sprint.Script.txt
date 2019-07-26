@@ -37,6 +37,7 @@
 #Include "Libs/smokegun/Weapons.Script.txt" as Weapons
 
 #Include "Libs/smokegun/CPTimes.Script.txt" as CPTimes
+#Include "Libs/smokegun/Settings.Script.txt" as Settings
 
 
 // ---------------------------------- //
@@ -61,10 +62,10 @@
 // ---------------------------------- //
 // Constants
 // ---------------------------------- //
-#Const C_HudModulePath "Sprint/UI.Module.Gbx" ///< Path to the hud module
-#Const Description _("Be careful, you only have one try...")
+#Const C_HudModulePath "Sprint/UI.Module.Gbx"
 #Const C_State_Playing 0
 #Const C_State_Waiting 1
+#Const C_SettingsUpdateInterval 1000
 
 declare Ident           G_FirstPlayer;
 declare Integer         G_State;
@@ -170,10 +171,7 @@ CreateUI();
 ***Match_InitMap***
 ***
 declare Integer CurrentRound;
-declare Integer PrevTimeLimit;
-declare Integer PrevRoundLimit;
-declare Integer PrevPointLimit;
-declare Integer PrevWarmupRounds;
+declare LastUpdate = -1;
 ***
 
 ***Match_StartMap***
@@ -188,7 +186,10 @@ if (!Obstacle::PrepareMap()) {
 UIManager.UIAll.MarkersXML = Markers::GetXML();
 Layers::Update("Markers", Markers::GetLayer());
 
-Obstacle::SetSettings(True, True, False, False, False, False);
+Settings::SetFullAmmoSpawn(True);
+Settings::SetFastRespawn(True);
+UpdateSettings();
+
 Items::Place();
 foreach (Player in AllPlayers) {
     Player::setInitialized(Player, False);
@@ -200,10 +201,6 @@ G_State = C_State_Waiting;
 Message::SendBigMessage("Waiting for "^S_MinPlayers^" players...", 2000, 0, CUIConfig::EUISound::Default, 1);
 
 CurrentRound = 0;
-PrevTimeLimit = S_TimeLimit;
-PrevRoundLimit = S_RoundLimit;
-PrevPointLimit = S_PointLimit;
-PrevWarmupRounds = S_WarmupRounds;
 ***
 
 ***Match_InitRound***
@@ -256,25 +253,20 @@ SpectatorCount::Yield();
 
 ***Match_PlayLoop***
 ***
-if (PrevTimeLimit != S_TimeLimit || PrevRoundLimit != S_RoundLimit || PrevPointLimit != S_PointLimit || PrevWarmupRounds != S_WarmupRounds) {
-    PrevTimeLimit = S_TimeLimit;
-    PrevRoundLimit = S_RoundLimit;
-    PrevPointLimit = S_PointLimit;
-    PrevWarmupRounds = S_WarmupRounds;
-    Hud.ScoresTable.SetFooterText("Time limit: "^TL::TimeToText(S_TimeLimit*60*1000)^" | Round limit: "^S_RoundLimit^" | Point limit: "^S_PointLimit^" | Warmup round: "^S_WarmupRounds);
+if (LastUpdate + C_SettingsUpdateInterval < Now) {
+    LastUpdate = Now;
+    UpdateSettings();
 }
 
 foreach (Player in Players) {
 declare LastModel for Player = Player.ForceModelId;
 
 if (LastModel != Player.ForceModelId) {
-log("Old skin: "^LastModel^"| New skin: "^Player.ForceModelId);
-LastModel = Player.ForceModelId;
+    LastModel = Player.ForceModelId;
 }
 
 if (Player.ForceModelId == NullId){
-log("Setting invisible skin...");
-Player.ForceModelId = G_InvisibleSkinId;
+    Player.ForceModelId = G_InvisibleSkinId;
 }
 }
 
@@ -713,3 +705,81 @@ Void Private_HandleCapture(CSmPlayer _Player) {
     }
 }
 
+
+Void UpdateSettings() {
+    if (S_TimeLimit != Settings::GetTimeLimit()) {
+        Settings::SetTimeLimit(S_TimeLimit);
+
+        if (Hud != Null && Hud.ScoresTable != Null) {
+            Hud.ScoresTable.SetFooterText("Time limit: "^TL::TimeToText(S_TimeLimit*60*1000)^" | Round limit: "^S_RoundLimit^" | Point limit: "^S_PointLimit^" | Warmup round: "^S_WarmupRounds);
+        }
+
+        if (S_TimeLimit > 0) {
+            EndTime = StartTime + (S_TimeLimit * 60 * 1000);
+        } else {
+            EndTime = -1;
+        }
+    }
+
+    if (S_RoundLimit != Settings::GetRoundLimit()) {
+        Settings::SetRoundLimit(S_RoundLimit);
+
+        if (Hud != Null && Hud.ScoresTable != Null) {
+            Hud.ScoresTable.SetFooterText("Time limit: "^TL::TimeToText(S_TimeLimit*60*1000)^" | Round limit: "^S_RoundLimit^" | Point limit: "^S_PointLimit^" | Warmup round: "^S_WarmupRounds);
+        }
+    }
+
+    if (S_MinPlayers != Settings::GetMinPlayers()) {
+        Settings::SetMinPlayers(S_MinPlayers);
+    }
+
+    if (S_PointDistribution != Settings::GetPointDistribution()) {
+        Settings::SetPointDistribution(S_PointDistribution);
+    }
+
+    if (S_PointLimit != Settings::GetPointLimit()) {
+        Settings::SetPointLimit(S_PointLimit);
+
+        if (Hud != Null && Hud.ScoresTable != Null) {
+            Hud.ScoresTable.SetFooterText("Time limit: "^TL::TimeToText(S_TimeLimit*60*1000)^" | Round limit: "^S_RoundLimit^" | Point limit: "^S_PointLimit^" | Warmup round: "^S_WarmupRounds);
+        }
+    }
+
+    if (S_PointsMax != Settings::GetPointsMax()) {
+        Settings::SetPointsMax(S_PointsMax);
+    }
+
+    if (S_PointsMin != Settings::GetPointsMin()) {
+        Settings::SetPointsMin(S_PointsMin);
+    }
+
+    if (S_PointsDeduced != Settings::GetPointsDeduced()) {
+        Settings::SetPointsDeduced(S_PointsDeduced);
+    }
+
+    if (S_PvPWeapons != Settings::GetPvPWeapons()) {
+        Settings::SetPvPWeapons(S_PvPWeapons);
+
+        UsePvPWeapons = S_PvPWeapons;
+    }
+
+    if (S_RoundCooldown != Settings::GetRoundCooldown()) {
+        Settings::SetRoundCooldown(S_RoundCooldown);
+    }
+
+    if (S_WarmupRounds != Settings::GetWarmupRounds()) {
+        Settings::SetWarmupRounds(S_WarmupRounds);
+
+        if (Hud != Null && Hud.ScoresTable != Null) {
+            Hud.ScoresTable.SetFooterText("Time limit: "^TL::TimeToText(S_TimeLimit*60*1000)^" | Round limit: "^S_RoundLimit^" | Point limit: "^S_PointLimit^" | Warmup round: "^S_WarmupRounds);
+        }
+    }
+
+    if (S_MinTimeLeft != Settings::GetMinTimeLeft()) {
+        Settings::SetMinTimeLeft(S_MinTimeLeft);
+    }
+
+    if (S_MaxTimeLeft != Settings::GetMaxTimeLeft()) {
+        Settings::SetMaxTimeLeft(S_MaxTimeLeft);
+    }
+}

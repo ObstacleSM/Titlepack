@@ -1,7 +1,6 @@
-Items
-Blocks
-Materials
-Media/Manialinks
-Media/Images
-Skins
-*.Gbx
+Blocks/
+Items/
+Materials/
+Media/Manialinks/Keyboard
+*.Map.Gbx
+__pycache__
