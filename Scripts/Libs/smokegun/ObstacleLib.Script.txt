@@ -388,8 +388,9 @@ Void RespawnPlayer(CSmPlayer _Player, Boolean _forceRestart) {
     if (_Player.RequestsSpectate)
         return;
 
-    if (!Player::isInitialized(_Player))
+    if (!Player::isInitialized(_Player)) {
         NewPlayer(_Player);
+    }
 
     declare shouldRestart = Player::wantsRestart(_Player, _forceRestart);
     declare LastCP = Player::getLastCheckpoint(_Player);
@@ -526,15 +527,15 @@ Void JumpToCheckpoint(CSmPlayer _Player, Integer _Target) {
  *            Ident     _GoalId Goal
  */
 Void Private_HandleFinish(CSmPlayer _Player, Ident _GoalId) {
+    declare Goal <=> MapLandmarks[_GoalId];
+
     declare LastCPTimes = Player::getLastCPTimes(_Player);
     declare BestCPTimes = Player::getBestCPTimes(_Player);
-    declare Goal <=> MapLandmarks[_GoalId];
     declare BestRun = Player::getBestRun(_Player);
+    declare Time = Player::getTime(_Player);
 
-    declare time = Player::getTime(_Player);
-    declare LastRun = Player::setLastRun(_Player, time);
-
-    LastCPTimes = Player::setLastCPTimes(_Player, _GoalId, time);
+    declare LastRun = Player::setLastRun(_Player, Time);
+    LastCPTimes = Player::setLastCPTimes(_Player, _GoalId, Time);
 
     // Update time diff before updating best run
     TimeDiff::UpdateLayer(_Player, LastRun, BestRun);
@@ -545,7 +546,6 @@ Void Private_HandleFinish(CSmPlayer _Player, Ident _GoalId) {
         BestCPTimes = Player::setBestCPTimes(_Player, LastCPTimes);
 
         CPTimes::UpdateLayer(_Player);
-
         Private_UpdatePlayerRsCounter(_Player);
     }
 
@@ -553,7 +553,6 @@ Void Private_HandleFinish(CSmPlayer _Player, Ident _GoalId) {
     Private_SendFinishedRun(_Player, LastRun, _GoalId);
     XmlRpc.SendCallback("Obstacle_OnFinish", Player::ToJSON(_Player));
 
-    // BELOW IS OBSTACLE ONLY
     //Update UI
     declare UI <=> UIManager.GetUI(_Player);
     if (UI != Null) {
@@ -572,8 +571,6 @@ Void Private_HandleFinish(CSmPlayer _Player, Ident _GoalId) {
                 CUIConfig::ENoticeLevel::PlayerInfo, _Player.User, CUIConfig::EAvatarVariant::Default,
                 CUIConfig::EUISound::Finish, Variant);
     }
-
-    RespawnPlayer(_Player, True);
 }
 
 /* TODO: Make a separate checkpoint lib ?
@@ -666,40 +663,50 @@ Void Private_HandleCheckpoint(CSmPlayer _Player, Ident _CheckpointId) {
  * Manage interactions between player and landmarks (checkpoints, goals, portals, more?)
  *
  * Arguments: CSmPlayer _Player Player who captured a landmark
+ * Returns: True if the player captured a goal
  */
-Void HandleCapture(CSmPlayer _Player) {
+Boolean HandleCapture(CSmPlayer _Player) {
+    declare HasCapturedGoal = False;
+
     declare Landmark <=> _Player.CapturedLandmark;
     declare MapVersion = Map::GetMapTypeVersion();
     declare CpProgress = Player::getCpProgress(_Player);
     declare HasJumped = Player::usedJump(_Player);
     declare MessageToShow = "";
 
-    if (!Tools::IsEnabled(Landmark))
-        return;
+    if (!Tools::IsEnabled(Landmark)) {
+        return HasCapturedGoal;
+    }
 
-    declare time = Player::getTime(_Player);
-    if (time < 0) {
+    declare Time = Player::getTime(_Player);
+    if (Time < 0) {
         RespawnPlayer(_Player, True);
-        return;
+        return HasCapturedGoal;
     }
 
     if (Tools::IsGoal(Landmark)) {
         if (HasJumped) {
             MessageToShow =  _("You used a Jump! Your Time is invalid.");
-        } else {
-            declare CpMissing = G_CheckpointsTotal - CpProgress;
-            if (CpMissing == 0)
-                Private_HandleFinish(_Player, Landmark.Id);
-            else
-                MessageToShow = "Missing "^CpMissing^" checkpoint(s)!";
         }
-    } else if (Tools::IsCheckpoint(Landmark)) {
+        else {
+            declare CpMissing = G_CheckpointsTotal - CpProgress;
+            if (CpMissing == 0) {
+                Private_HandleFinish(_Player, Landmark.Id);
+                HasCapturedGoal = True;
+            }
+            else {
+                MessageToShow = "Missing "^CpMissing^" checkpoint(s)!";
+            }
+        }
+    }
+    else if (Tools::IsCheckpoint(Landmark)) {
         // Take any checkpoints if player jumped
         if (HasJumped) {
             if (Landmark.Order != CpProgress) {
                 Private_HandleCheckpoint(_Player, Landmark.Id);
             }
-        } else {
+        }
+        else {
             declare LastCpTimes = Player::getLastCPTimes(_Player);
             declare LastCheckpoint = Player::getLastCheckpoint(_Player);
 
@@ -711,8 +718,9 @@ Void HandleCapture(CSmPlayer _Player) {
                 isNextCp = Landmark.Order == CpProgress + 1;
             }
 
-            if (isNextCp)
+            if (isNextCp) {
                 Private_HandleCheckpoint(_Player, Landmark.Id);
+            }
         }
     } else if (Tools::IsPortal(Landmark)) {
         Private_UsePortal(_Player, Landmark.Id);
@@ -724,4 +732,6 @@ Void HandleCapture(CSmPlayer _Player) {
         LastStatusMessage = Now;
         Message::SendBigMessage(_Player, MessageToShow, 2000, 0, CUIConfig::EUISound::Warning, 1);
     }
+
+    return HasCapturedGoal; 
 }

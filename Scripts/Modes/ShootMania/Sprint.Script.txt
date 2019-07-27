@@ -56,7 +56,7 @@
 #Setting S_WarmupRounds 1 as _("Number of warmup rounds")
 #Setting S_MinTimeLeft 20 as _("Minimum time left (seconds)")
 #Setting S_MaxTimeLeft 120 as _("Maximum time left (seconds)")
-#Setting S_EnablePlayerHighlight True as "Highlight players"
+#Setting S_EnablePlayerHighlight False as "Highlight players"
 
 #Setting S_ScriptEnvironment "development"
 
@@ -169,7 +169,6 @@ ItemList_End();
 ***Match_StartServer***
 ***
 Obstacle::SetMode(Constants::C_Mode_Sprint);
-Spectators::ForceCamera(Spectators::Camera_FirstPerson());
 CreateUI();
 ***
 
@@ -196,7 +195,7 @@ UpdateSettings();
 Items::Place();
 foreach (Player in AllPlayers) {
     Player::setInitialized(Player, False);
-    NewPlayer(Player);
+    Obstacle::NewPlayer(Player);
 }
 
 G_State = C_State_Waiting;
@@ -216,36 +215,37 @@ declare Integer NumberOfPlayerRound;
 ***
 if (G_State == C_State_Waiting) {
 
-} else {
-CurrentRound += 1;
-
-G_FirstPlayer = NullId;
-LastFinished = False;
-NumberOfPlayerRound = Players.count;
-G_FinishedScores.clear();
-
-foreach (Player in Players) {
-   Player_NewRound(Player);
-   G_FinishedScores[Player.Score.Id] = False;
-}
-
-StartTime = Now;
-if (S_TimeLimit > 0) {
-    EndTime = (StartTime + S_TimeLimit * 1000 * 60);
 }
 else {
-    EndTime = -1;
-}
+    CurrentRound += 1;
 
-declare netwrite Net_IsWarmup for Teams[0] = False;
-Net_IsWarmup = CurrentRound <= S_WarmupRounds;
+    G_FirstPlayer = NullId;
+    LastFinished = False;
+    NumberOfPlayerRound = Players.count;
+    G_FinishedScores.clear();
 
-if (Net_IsWarmup) {
-    Message::SendBigMessage("Warmup round "^ CurrentRound ^"!", 2000, 0, CUIConfig::EUISound::StartRound, 1);
-}
-else {
-    Message::SendBigMessage("Starting round "^ CurrentRound - S_WarmupRounds ^"!", 2000, 0, CUIConfig::EUISound::StartRound, 1);
-}
+    foreach (Player in Players) {
+       Player_NewRound(Player);
+       G_FinishedScores[Player.Score.Id] = False;
+    }
+
+    StartTime = Now;
+    if (S_TimeLimit > 0) {
+        EndTime = (StartTime + S_TimeLimit * 1000 * 60);
+    }
+    else {
+        EndTime = -1;
+    }
+
+    declare netwrite Net_IsWarmup for Teams[0] = False;
+    Net_IsWarmup = CurrentRound <= S_WarmupRounds;
+
+    if (Net_IsWarmup) {
+        Message::SendBigMessage("Warmup round "^ CurrentRound ^"!", 2000, 0, CUIConfig::EUISound::StartRound, 1);
+    }
+    else {
+        Message::SendBigMessage("Starting round "^ CurrentRound - S_WarmupRounds ^"!", 2000, 0, CUIConfig::EUISound::StartRound, 1);
+    }
 }
 ***
 
@@ -264,108 +264,135 @@ if (LastUpdate + C_SettingsUpdateInterval < Now) {
 Obstacle::UpdatePlayersSkin(G_InvisibleSkinId);
 
 if (G_State == C_State_Waiting) {
-if (EndTime > 0 && Now > EndTime || CurrentRound == 0 && AllPlayers.count >= S_MinPlayers) {
-    MB_StopRound();
+    if (EndTime > 0 && Now > EndTime || CurrentRound == 0 && AllPlayers.count >= S_MinPlayers) {
+        MB_StopRound();
+    }
 }
-} else {
-foreach (Event in PendingEvents) {
-    switch (Event.Type) {
+else {
+    foreach (Event in PendingEvents) {
+        switch (Event.Type) {
 
-        case CSmModeEvent::EType::OnArmorEmpty: {
-            // Discard the defaut behaviour (e.g Player is eliminated)
+            case CSmModeEvent::EType::OnArmorEmpty: {
+                // Discard the defaut behaviour (e.g Player is eliminated)
 
-            // Dont respawn if the player has the offzone item
-            if (Event.Victim.IsInOffZone) {
-                declare ItemBuffs = Player::getBuffTimes(Event.Victim);
-                if (ItemBuffs.existskey(Constants::C_ItemOffzone) && ItemBuffs[Constants::C_ItemOffzone] >= Now) {
-                    continue;
+                // Dont respawn if the player has the offzone item
+                if (Event.Victim.IsInOffZone) {
+                    declare ItemBuffs = Player::getBuffTimes(Event.Victim);
+                    if (ItemBuffs.existskey(Constants::C_ItemOffzone) && ItemBuffs[Constants::C_ItemOffzone] >= Now) {
+                        continue;
+                    }
+                }
+
+                Obstacle::RespawnPlayer(Event.Victim);
+                Events::Invalid(Event);
+            }
+
+            case CSmModeEvent::EType::OnHit: {
+                // Disable the loose of armor when hit
+                Events::Invalid(Event);
+            }
+
+            case CSmModeEvent::EType::OnPlayerRequestRespawn: {
+                // Only spawn players that were present during the round's start and haven't finished yet
+                declare ScoreId = Event.Player.Score.Id;
+
+                if (G_FinishedScores.existskey(ScoreId) && !G_FinishedScores[ScoreId])
+                    Obstacle::RespawnPlayer(Event.Player);
+
+                Events::Invalid(Event);
+            }
+
+            case CSmModeEvent::EType::OnPlayerTouchesObject: {
+                if (Event.Object != Null && Event.Player != Null && Items::PickupItems(Event)) {
+                    Events::Valid(Event);
+                } else {
+                    Events::Invalid(Event);
                 }
             }
 
-            Obstacle::RespawnPlayer(Event.Victim);
-            Events::Invalid(Event);
-        }
+            case CSmModeEvent::EType::OnPlayerTriggersSector: {
+                declare TookGoal = Obstacle::HandleCapture(Event.Player);
+                if (TookGoal) {
+                    declare LastRun = Player::getLastRun(Event.Player);
 
-        case CSmModeEvent::EType::OnHit: {
-            // Disable the loose of armor when hit
-            Events::Invalid(Event);
-        }
+                    if (G_FirstPlayer == NullId) {
+                        declare TimeLeft = LastRun / 3;
+                        if (TimeLeft > S_MaxTimeLeft * 1000)
+                            TimeLeft = S_MaxTimeLeft * 1000;
+                        else if (TimeLeft < S_MinTimeLeft * 1000)
+                            TimeLeft = S_MinTimeLeft * 1000;
 
-        case CSmModeEvent::EType::OnPlayerRequestRespawn: {
-            // Only spawn players that were present during the round's start and haven't finished yet
-            declare ScoreId = Event.Player.Score.Id;
+                        EndTime = Now + TimeLeft;
+                        G_FirstPlayer = Event.Player.Score.Id;
+                    }
+                    G_FinishedScores[Event.Player.Score.Id] = True;
 
-            if (G_FinishedScores.existskey(ScoreId) && !G_FinishedScores[ScoreId])
-                Obstacle::RespawnPlayer(Event.Player);
+                    declare FinishedCount = 0;
+                    foreach (ScoreId => HasFinished in G_FinishedScores) {
+                        if (HasFinished) FinishedCount += 1;
+                    }
 
-            Events::Invalid(Event);
-        }
+                    if (FinishedCount == G_FinishedScores.count) {
+                        EndTime = Now + 1;
+                    }
 
-        case CSmModeEvent::EType::OnPlayerTouchesObject: {
-            if (Event.Object != Null && Event.Player != Null && Items::PickupItems(Event)) {
+                    UnspawnPlayer(Event.Player);
+                }
+                PassOn(Event);
+            }
+
+            default: {
                 Events::Valid(Event);
-            } else {
-                Events::Invalid(Event);
             }
-        }
 
-        case CSmModeEvent::EType::OnPlayerTriggersSector: {
-            Private_HandleCapture(Event.Player);
-            Events::Valid(Event);
         }
-
-        default: {
-            Events::Valid(Event);
-        }
-
     }
-}
 
 
-foreach (Player in Players) {
-    switch (Player.SpawnStatus) {
-        case CSmPlayer::ESpawnStatus::NotSpawned: {
-        }
-
-        case CSmPlayer::ESpawnStatus::Spawned: {
-            SpecKeys::UpdateLayer(Player);
-            
-            // Unlimited stam
-            declare StaminaUnlimited for Player = False;
-            if (StaminaUnlimited && Player.Stamina < 7500) {
-                Player.Stamina = 10800;
+    foreach (Player in Players) {
+        switch (Player.SpawnStatus) {
+            case CSmPlayer::ESpawnStatus::NotSpawned: {
             }
 
-            // Effects on respawn
-            declare PlayerHasRespawned for Player = False;
-            if (PlayerHasRespawned) {
-                Weapons::FillUpPlayerAmmo(Player);
-                PlayerHasRespawned = False;
-            }
+            case CSmPlayer::ESpawnStatus::Spawned: {
+                SpecKeys::UpdateLayer(Player);
+                
+                // Unlimited stam
+                declare StaminaUnlimited for Player = False;
+                if (StaminaUnlimited && Player.Stamina < 7500) {
+                    Player.Stamina = 10800;
+                }
 
-            // Manage item effects
-            declare ItemBuff = Player::getBuffTimes(Player);
-            foreach (Name => Time in ItemBuff) {
-                if (Time < Now) continue;
-                switch (Name) {
-                    // Progressively grant ammo
-                    case Constants::C_ItemAmmo: {
-                        declare AmmoItemBuffDuration for Player = 0.;
-                        if (AmmoItemBuffDuration <= 0.) continue;
-                        declare AmmoItemBuffAmount for Player = 1.;
-                        declare TickAmount = AmmoItemBuffAmount / (AmmoItemBuffDuration * 1000. / Period);
-                        AddPlayerAmmo(Player, SM::GetWeapon(Player.CurWeapon), TickAmount);
+                // Effects on respawn
+                declare PlayerHasRespawned for Player = False;
+                if (PlayerHasRespawned) {
+                    Weapons::FillUpPlayerAmmo(Player);
+                    PlayerHasRespawned = False;
+                }
+
+                // Manage item effects
+                declare ItemBuff = Player::getBuffTimes(Player);
+                foreach (Name => Time in ItemBuff) {
+                    if (Time < Now) continue;
+                    switch (Name) {
+                        // Progressively grant ammo
+                        case Constants::C_ItemAmmo: {
+                            declare AmmoItemBuffDuration for Player = 0.;
+                            if (AmmoItemBuffDuration <= 0.) continue;
+                            declare AmmoItemBuffAmount for Player = 1.;
+                            declare TickAmount = AmmoItemBuffAmount / (AmmoItemBuffDuration * 1000. / Period);
+                            AddPlayerAmmo(Player, SM::GetWeapon(Player.CurWeapon), TickAmount);
+                        }
                     }
                 }
             }
         }
     }
-}
 
-if (EndTime > 0 && Now > EndTime) {
-    Message::SendBigMessage(_("Time limit reached."), 2000, 0, CUIConfig::EUISound::Warning, 1);
-    MB_StopRound();
-}
+    if (EndTime > 0 && Now > EndTime) {
+        Message::SendBigMessage(_("Time limit reached."), 2000, 0, CUIConfig::EUISound::Warning, 1);
+        MB_StopRound();
+    }
 }
 ***
 
@@ -373,89 +400,90 @@ if (EndTime > 0 && Now > EndTime) {
 ***
 // state playing
 if (G_State == C_State_Playing) {
-SM::UnspawnAllPlayers();
+    SM::UnspawnAllPlayers();
 
-declare Message = _("|Match|Draw");
-if (Scores.existskey(G_FirstPlayer)) {
-//    Scores::AddPlayerRoundPoints(Scores[G_FirstPlayer], 1);
-    Message = MM_TL::Compose(_("$<%1$> wins the round!"), Scores[G_FirstPlayer].User.Name);
-}
+    declare Message = _("|Match|Draw");
+    if (Scores.existskey(G_FirstPlayer)) {
+        Message = MM_TL::Compose(_("$<%1$> wins the round!"), Scores[G_FirstPlayer].User.Name);
+    }
 
-if (CurrentRound > S_WarmupRounds) {
-declare Integer[Ident] FinishedScores = [];
-foreach (ScoreId => HasFinished in G_FinishedScores) {
-    if (HasFinished) FinishedScores[ScoreId] = Player::getLastRunS(Scores[ScoreId]);
-}
+    if (CurrentRound > S_WarmupRounds) {
+        declare Integer[Ident] FinishedScores = [];
+        foreach (ScoreId => HasFinished in G_FinishedScores) {
+            if (HasFinished) FinishedScores[ScoreId] = Player::getLastRunS(Scores[ScoreId]);
+        }
 
-FinishedScores = FinishedScores.sort();
+        FinishedScores = FinishedScores.sort();
 
-if (FinishedScores.count > 0) {
-    if (!S_PointDistribution) {
-        declare PointsToAdd = S_PointsMax;
-        declare PreviousRun = -1;
+        if (FinishedScores.count > 0) {
+            if (!S_PointDistribution) {
+                declare PointsToAdd = S_PointsMax;
+                declare PreviousRun = -1;
 
-        foreach (ScoreId => LastRun in FinishedScores) {
-            Scores::AddPlayerRoundPoints(Scores[ScoreId], PointsToAdd);
+                foreach (ScoreId => LastRun in FinishedScores) {
+                    Scores::AddPlayerRoundPoints(Scores[ScoreId], PointsToAdd);
 
 
-            if (LastRun != PreviousRun) {
-                if (PointsToAdd - S_PointsDeduced > S_PointsMin) {
-                    PointsToAdd -= S_PointsDeduced;
-                }
-                else {
-                    PointsToAdd = S_PointsMin;
+                    if (LastRun != PreviousRun) {
+                        if (PointsToAdd - S_PointsDeduced > S_PointsMin) {
+                            PointsToAdd -= S_PointsDeduced;
+                        }
+                        else {
+                            PointsToAdd = S_PointsMin;
+                        }
+                    }
+                    PreviousRun = LastRun;
                 }
             }
-            PreviousRun = LastRun;
-        }
-    }
-    else if (FinishedScores.count > 0) {
-        declare PointsToAdd = NumberOfPlayerRound;
-        declare PreviousRun = -1;
-        foreach (ScoreId => LastRun in FinishedScores) {
-            Scores::AddPlayerRoundPoints(Scores[ScoreId], PointsToAdd);
+            else if (FinishedScores.count > 0) {
+                declare PointsToAdd = NumberOfPlayerRound;
+                declare PreviousRun = -1;
+                foreach (ScoreId => LastRun in FinishedScores) {
+                    Scores::AddPlayerRoundPoints(Scores[ScoreId], PointsToAdd);
 
-            if (LastRun != PreviousRun) {
-                PointsToAdd -= 1;
+                    if (LastRun != PreviousRun) {
+                        PointsToAdd -= 1;
+                    }
+                    PreviousRun = LastRun;
+                }
             }
-            PreviousRun = LastRun;
         }
     }
-}
-}
 
 
-Message::SendBigMessage(Message, 2000, 0, CUIConfig::EUISound::EndRound, 0);
-MB_Sleep(3000);
+    Message::SendBigMessage(Message, 2000, 0, CUIConfig::EUISound::EndRound, 0);
+    MB_Sleep(3000);
 
-Scores::AffectPlayersRoundToMapPoints();
+    Scores::AffectPlayersRoundToMapPoints();
 
 
-declare BestPlayerScore <=> Scores::GetBestPlayerMapPoints(Scores::C_Order_Descending);
+    declare BestPlayerScore <=> Scores::GetBestPlayerMapPoints(Scores::C_Order_Descending);
 
-declare MostPointsScore <=> Scores[0];
-foreach (Score in Scores) {
-    if (Score.Points > MostPointsScore.Points) {
-        MostPointsScore <=> Score;
+    declare MostPointsScore <=> Scores[0];
+    foreach (Score in Scores) {
+        if (Score.Points > MostPointsScore.Points) {
+            MostPointsScore <=> Score;
+        }
     }
-}
 
-if (BestPlayerScore == Null && (MostPointsScore.Points >= S_PointLimit || CurrentRound >= S_RoundLimit)) {
-     Message::SendBigMessage("Draw! A new round will start while there is a draw.", 5000, 0, CUIConfig::EUISound::Warning, 1);
-}
+    if (BestPlayerScore == Null && (MostPointsScore.Points >= S_PointLimit || CurrentRound >= S_RoundLimit)) {
+         Message::SendBigMessage("Draw! A new round will start while there is a draw.", 5000, 0, CUIConfig::EUISound::Warning, 1);
+    }
 
-if (BestPlayerScore != Null && (BestPlayerScore.Points >= S_PointLimit || CurrentRound >= S_RoundLimit)) {
-    MB_StopMap();
-} else {
-    G_State = C_State_Waiting;
+    if (BestPlayerScore != Null && (BestPlayerScore.Points >= S_PointLimit || CurrentRound >= S_RoundLimit)) {
+        MB_StopMap();
+    }
+    else {
+        G_State = C_State_Waiting;
 
-    if (S_RoundCooldown > 0) {
-        EndTime = Now + S_RoundCooldown * 1000;
+        if (S_RoundCooldown > 0) {
+            EndTime = Now + S_RoundCooldown * 1000;
+        }
     }
 }
 
 // State waiting
-} else {
+else {
     G_State = C_State_Playing;
 }
 ***
@@ -534,20 +562,6 @@ Void DestroyUI() {
     UIManager.UILayerDestroyAll();
 }
 
-Void NewPlayer(CSmPlayer _Player)
-{
-    Player::InitPlayer(_Player);
-    Ladder::AddPlayer(_Player.Score);
-
-    declare UI <=> UIManager.GetUI(_Player);
-    if (UI == Null) return;
-    Tabs::UseTabs(UI, "ScoresTab");
-
-    if (Hud == Null || Hud.ScoresTable == Null) return;
-    Hud.ScoresTable.SetColumnValue (_Player.Score, "BestTime", "--:--:--");
-    Hud.ScoresTable.SetColumnValue (_Player.Score, "RS", 0);
-}
-
 Void Player_NewRound(CSmPlayer _Player)
 {
     Player::setStartTime(_Player, 0);
@@ -567,137 +581,6 @@ Void Player_NewRound(CSmPlayer _Player)
     Obstacle::Private_UpdatePlayerRsCounter(_Player);
     Obstacle::Private_UpdatePlayerBestTime(_Player);
 }
-
-Void Private_HandleFinish(CSmPlayer _Player, Ident _GoalId) {
-    declare Goal <=> MapLandmarks[_GoalId];
-
-    declare LastCPTimes = Player::getLastCPTimes(_Player);
-    declare BestCPTimes = Player::getBestCPTimes(_Player);
-    declare BestRun = Player::getBestRun(_Player);
-    declare Time = Player::getTime(_Player);
-
-    declare LastRun = Player::setLastRun(_Player, Time);
-
-    LastCPTimes = Player::setLastCPTimes(_Player, _GoalId, Time);
-
-    TimeDiff::UpdateLayer(_Player, LastRun, BestRun);
-
-    // Check if last run is  if last run is better
-    if (LastRun < BestRun || BestRun < 0) {
-        BestRun = Player::setBestRun(_Player, LastRun);
-        BestCPTimes = Player::setBestCPTimes(_Player, LastCPTimes);
-
-        CPTimes::UpdateLayer(_Player);
-        Obstacle::Private_UpdatePlayerRsCounter(_Player);
-    }
-
-    // Set the end timer when the first player finishes
-    if (G_FirstPlayer == NullId) {
-        declare TimeLeft = Time / 3;
-        if (TimeLeft > S_MaxTimeLeft * 1000)
-            TimeLeft = S_MaxTimeLeft * 1000;
-        else if (TimeLeft < S_MinTimeLeft * 1000)
-            TimeLeft = S_MinTimeLeft * 1000;
-
-        EndTime = Now + TimeLeft;
-        G_FirstPlayer = _Player.Score.Id;
-    }
-    G_FinishedScores[_Player.Score.Id] = True;
-
-    declare FinishedCount = 0;
-    foreach (ScoreId => HasFinished in G_FinishedScores) {
-        if (HasFinished) FinishedCount += 1;
-    }
-
-    if (FinishedCount == G_FinishedScores.count)
-        EndTime = Now + 1;
-
-    UnspawnPlayer(_Player);
-
-    // Send score
-    Obstacle::Private_SendFinishedRun(_Player, LastRun, _GoalId);
-    XmlRpc.SendCallback("Obstacle_OnFinish", Player::ToJSON(_Player));
-
-    //Update UI
-    Obstacle::Private_UpdatePlayerBestTime(_Player);
-    declare UI <=> UIManager.GetUI(_Player);
-    if (UI != Null) {
-        declare Time = TL::TimeToText(LastRun, True);
-        declare Variant = 1;
-        declare Color = "$f00";
-
-        declare message = "";
-        if (BestRun == LastRun) {
-            Variant = 0;
-            Color = "$00f";
-            message = _("(New Best Time!)");
-        }
-
-        UI.SendNotice(TL::Compose("%1: $<%2$> %3", _("|Goal|Finish"), Color^Time, message),
-                CUIConfig::ENoticeLevel::PlayerInfo, _Player.User, CUIConfig::EAvatarVariant::Default,
-                CUIConfig::EUISound::Finish, Variant);
-    }
-}
-
-Void Private_HandleCapture(CSmPlayer _Player) {
-    declare Landmark <=> _Player.CapturedLandmark;
-    declare MapVersion = Map::GetMapTypeVersion();
-    declare CpProgress = Player::getCpProgress(_Player);
-    declare HasJumped = Player::usedJump(_Player);
-    declare MessageToShow = "";
-
-    if (!Tools::IsEnabled(Landmark))
-        return;
-
-    declare time = Player::getTime(_Player);
-    if (time < 0) {
-        Obstacle::RespawnPlayer(_Player, True);
-        return;
-    }
-
-    if (Tools::IsGoal(Landmark)) {
-        if (HasJumped) {
-            MessageToShow =  _("You used a Jump! Your Time is invalid.");
-        } else {
-            declare CpMissing = Obstacle::GetCheckpointsTotal() - CpProgress;
-            if (CpMissing == 0)
-                Private_HandleFinish(_Player, Landmark.Id);
-            else
-                MessageToShow = "Missing "^CpMissing^" checkpoint(s)!";
-        }
-    } else if (Tools::IsCheckpoint(Landmark)) {
-        // Take any checkpoints if player jumped
-        if (HasJumped) {
-            if (Landmark.Order != CpProgress) {
-                Obstacle::Private_HandleCheckpoint(_Player, Landmark.Id);
-            }
-        } else {
-            declare LastCpTimes = Player::getLastCPTimes(_Player);
-            declare LastCheckpoint = Player::getLastCheckpoint(_Player);
-
-            // Check if the checkpoint is the next one
-            declare isNextCp = True;
-            if (Landmark.Order == 0) {
-                isNextCp = !LastCpTimes.existskey(Landmark.Id);
-            } else {
-                isNextCp = Landmark.Order == CpProgress + 1;
-            }
-
-            if (isNextCp)
-                Obstacle::Private_HandleCheckpoint(_Player, Landmark.Id);
-        }
-    } else if (Tools::IsPortal(Landmark)) {
-        Obstacle::Private_UsePortal(_Player, Landmark.Id);
-    }
-
-    // TODO: Change this to a separate function (in Tools or Player?)
-    declare LastStatusMessage for _Player = Now;
-    if (MessageToShow != "" && LastStatusMessage + 2500 < Now) {
-        LastStatusMessage = Now;
-        Message::SendBigMessage(_Player, MessageToShow, 2000, 0, CUIConfig::EUISound::Warning, 1);
-    }
-}
-
 
 Void UpdateSettings() {
     if (S_TimeLimit != Settings::GetTimeLimit()) {

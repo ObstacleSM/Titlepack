@@ -277,7 +277,10 @@ foreach (Event in PendingEvents) {
         }
 
         case CSmModeEvent::EType::OnPlayerTriggersSector: {
-            Obstacle::HandleCapture(Event.Player);
+            declare TookGoal = Obstacle::HandleCapture(Event.Player);
+            if (TookGoal) {
+                Obstacle::RespawnPlayer(Event.Player, True);
+            }
             PassOn(Event);
         }
 
