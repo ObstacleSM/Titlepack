@@ -121,17 +121,25 @@ steps:
           os.remove(filename)
 
       p, should_restart = build_tp()
-
       p.kill()
       while p.poll() is None:
         pass
+      print("Maniaplanet.exe was killed properly")
 
-      if should_restart:
-          p, _ = build_tp()
+      attemps = 1
+      while should_restart:
+          p, should_restart = build_tp()
+          attemps += 1
           
           p.kill()
           while p.poll() is None:
             pass
+
+          print("Maniaplanet.exe was killed properly")
+
+          if attemps > 10:
+            print("Stopped trying after 10 attemps...")
+            break
 
       if os.path.exists(tp_path):
           print("The titlepack was built correctly.")
