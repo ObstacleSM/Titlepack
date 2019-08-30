@@ -115,14 +115,23 @@ steps:
           if not os.path.exists(tp_path) and not needs_restart:
               fail(f"The titlepack file is not here. ({tp_path})")
 
-          return needs_restart
+          return p, needs_restart
 
       for filename in [f for f in glob.glob(logs, recursive=True)]:
           os.remove(filename)
 
-      should_restart = build_tp()
+      p, should_restart = build_tp()
+
+      p.kill()
+      while p.poll() is None:
+        pass
+
       if should_restart:
-          build_tp()
+          p, _ = build_tp()
+          
+          p.kill()
+          while p.poll() is None:
+            pass
 
       if os.path.exists(tp_path):
           print("The titlepack was built correctly.")
