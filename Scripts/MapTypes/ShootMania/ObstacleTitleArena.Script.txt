@@ -8,29 +8,35 @@
 declare Ident G_LastAnchorId;
 
 
-Boolean IsEnabled(CAnchorData _Landmark) {
+Boolean IsEnabled(CAnchorData _Landmark)
+{
     declare metadata Meta_Enabled for _Landmark = True;
     return Meta_Enabled;
 }
 
-Boolean IsGoal(CAnchorData _Landmark) {
+
+Boolean IsGoal(CAnchorData _Landmark)
+{
     if (!IsEnabled(_Landmark))
         return False;
 
     declare metadata Meta_CPType for _Landmark = 0;
-   	return _Landmark.Tag == "Goal" || Meta_CPType == 2;
+    return _Landmark.Tag == "Goal" || Meta_CPType == 2;
 }
 
-Boolean IsCheckpoint(CAnchorData _Landmark) {
+
+Boolean IsCheckpoint(CAnchorData _Landmark)
+{
     if (!IsEnabled(_Landmark))
         return False;
 
     declare metadata Meta_CPType for _Landmark = 0;
-   	return _Landmark.Tag == "Checkpoint"
-           && (Meta_CPType == 0 || Meta_CPType == 1);
+    return _Landmark.Tag == "Checkpoint" && (Meta_CPType == 0 || Meta_CPType == 1);
 }
 
-Boolean IsPortal(CAnchorData _Landmark) {
+
+Boolean IsPortal(CAnchorData _Landmark)
+{
     if (!IsEnabled(_Landmark))
         return False;
 
@@ -38,7 +44,9 @@ Boolean IsPortal(CAnchorData _Landmark) {
     return Meta_IsPortal;
 }
 
-Boolean IsCpSpawn(CAnchorData _Landmark) {
+
+Boolean IsCpSpawn(CAnchorData _Landmark)
+{
     if (!IsEnabled(_Landmark))
         return False;
 
@@ -46,7 +54,9 @@ Boolean IsCpSpawn(CAnchorData _Landmark) {
     return Meta_IsCpSpawn;
 }
 
-Text Private_WeaponML() {
+
+Text Private_WeaponML()
+{
     return """
 <frame id="Weapon" pos="0 -35">
             <label pos="0 18" size="75 7" class="text" text="Weapon" textsize="4" halign="center" valign="center2"/>
@@ -100,7 +110,9 @@ Text Private_WeaponML() {
     """;
 }
 
-Text Private_WeaponUpdate() {
+
+Text Private_WeaponUpdate()
+{
     return """
     declare Integer Weapon for Page;
     declare Real Weapon_Gain for Page;
@@ -126,7 +138,9 @@ Text Private_WeaponUpdate() {
     """;
 }
 
-Text Get_EditCheckpoint() {
+
+Text Get_EditCheckpoint()
+{
     return """
 <stylesheet>
     <style class="text" bgcolor="FFFF" textfont="Oswald" style="TextTitle3" focusareacolor1="0000" focusareacolor2="0000" textcolor="FFFFFFFF"/>
@@ -170,7 +184,9 @@ Text Get_EditCheckpoint() {
     """;
 }
 
-Text Get_EditSpawn() {
+
+Text Get_EditSpawn()
+{
     return """
 <stylesheet>
     <style class="text" bgcolor="FFFF" textfont="Oswald" style="TextTitle3" focusareacolor1="0000" focusareacolor2="0000" textcolor="FFFFFFFF"/>
@@ -212,7 +228,9 @@ Text Get_EditSpawn() {
     """;
 }
 
-Text Get_EditGoal() {
+
+Text Get_EditGoal()
+{
     return """
 <stylesheet>
     <style class="text" bgcolor="FFFF" textfont="Oswald" style="TextTitle3" focusareacolor1="0000" focusareacolor2="0000" textcolor="FFFFFFFF"/>
@@ -235,36 +253,48 @@ Text Get_EditGoal() {
     """;
 }
 
-Void Load() {
-    log(Now^"> Loaded.");
+
+Void Load()
+{
+    log(Now ^ "> Loaded.");
     if (Map.TMObjective_AuthorTime == -1)
-		    Map.TMObjective_AuthorTime = 1;
+        Map.TMObjective_AuthorTime = 1;
 }
 
-Void Unload() {
+
+Void Unload()
+{
 }
 
-Void Init() {
+
+Void Init()
+{
     MapType::SetVersion(3);
     CustomEditAnchorData = True;
     ValidationStatus = CMapType::ValidationStatus::Validated;
 }
 
-Void InitBasePageVariables(CAnchorData _Anchor) {
+
+Void InitBasePageVariables(CAnchorData _Anchor)
+{
     declare Boolean Enabled for ManialinkPage;
     declare metadata Meta_Enabled for _Anchor = True;
 
     Enabled = Meta_Enabled;
 }
 
-Void SaveBasePageVariables(CAnchorData _Anchor) {
+
+Void SaveBasePageVariables(CAnchorData _Anchor)
+{
     declare Boolean Enabled for ManialinkPage;
     declare metadata Meta_Enabled for _Anchor = True;
 
     Meta_Enabled = Enabled;
 }
 
-Void InitWeaponPageVariables(CAnchorData _Anchor) {
+
+Void InitWeaponPageVariables(CAnchorData _Anchor)
+{
     declare Integer Weapon for ManialinkPage;
     declare Real Weapon_Gain for ManialinkPage;
     declare Integer Weapon_Amount for ManialinkPage;
@@ -287,7 +317,9 @@ Void InitWeaponPageVariables(CAnchorData _Anchor) {
     Stamina_Amount = Meta_Stamina_Amount;
 }
 
-Void SaveWeaponPageVariables(CAnchorData _Anchor) {
+
+Void SaveWeaponPageVariables(CAnchorData _Anchor)
+{
     declare Integer Weapon for ManialinkPage;
     declare Real Weapon_Gain for ManialinkPage;
     declare Integer Weapon_Amount for ManialinkPage;
@@ -310,7 +342,9 @@ Void SaveWeaponPageVariables(CAnchorData _Anchor) {
     Meta_Stamina_Amount = Stamina_Amount;
 }
 
-Void EditGoal(CAnchorData _Goal) {
+
+Void EditGoal(CAnchorData _Goal)
+{
     InitBasePageVariables(_Goal);
 
     ManialinkText = """
@@ -369,7 +403,9 @@ Void EditGoal(CAnchorData _Goal) {
     """;
 }
 
-Void EditCheckpoint(CAnchorData _Checkpoint) {
+
+Void EditCheckpoint(CAnchorData _Checkpoint)
+{
     InitBasePageVariables(_Checkpoint);
 
     declare Integer Order for ManialinkPage;
@@ -484,7 +520,9 @@ Void EditCheckpoint(CAnchorData _Checkpoint) {
     """;
 }
 
-Void EditSpawn(CAnchorData _Spawn) {
+
+Void EditSpawn(CAnchorData _Spawn)
+{
     InitBasePageVariables(_Spawn);
 
     declare Integer Order for ManialinkPage;
@@ -634,15 +672,17 @@ Void EditSpawn(CAnchorData _Spawn) {
     """;
 }
 
-Void EditAmmoItem(CAnchorData _Item) {
-    
+
+Void EditAmmoItem(CAnchorData _Item)
+{
+
     declare Real Amount for ManialinkPage;
     declare metadata Meta_GrantAmmoAmount for _Item = 1.;
     Amount = Meta_GrantAmmoAmount;
 
     declare Real Duration for ManialinkPage;
-	  declare metadata Meta_GrantAmmoDuration for _Item = 0.;
-	  Duration = Meta_GrantAmmoDuration;
+    declare metadata Meta_GrantAmmoDuration for _Item = 0.;
+    Duration = Meta_GrantAmmoDuration;
 
     ManialinkText = """
     <manialink version="3" name="Obstacle:EditAmmoItem">
@@ -665,7 +705,7 @@ Void EditAmmoItem(CAnchorData _Item) {
 		            	<quad id="Duration_Selector" pos="-20 0" size="20 5" bgcolor="292929AA"/>
 		            	<quad pos="0 0.5" size="41 6" bgcolor="797979AA" halign="center"/>
 	            </frame>
-	
+
 	            <label pos="0 -13" size="20 5" class="text" text="Duration" halign="center" textsize="3"/>
 	            <frame pos="0 -21">
 	                <label pos="9 0" size="6 3.5" class="text" text="" scriptevents="1" halign="center" valign="bottom" textsize="1"/>
@@ -673,8 +713,8 @@ Void EditAmmoItem(CAnchorData _Item) {
 	                <entry id="Entry_Duration" pos="0 0"size="20 5" class="entry" default="0" textfont="Oswald" halign="center" valign="center2"/>
 	                <quad pos="0 0" size="21 6" bgcolor="797979AA" halign="center" valign="center"/>
 	            </frame>
-	
-	
+
+
 	            <label pos="0 -26" size="20 5" class="text" text="Amount" halign="center" textsize="3"/>
 	            <frame pos="0 -34">
 	                <label pos="9 0" size="6 3.5" class="text" text="" scriptevents="1" halign="center" valign="bottom" textsize="1"/>
@@ -684,7 +724,7 @@ Void EditAmmoItem(CAnchorData _Item) {
 	            </frame>
 	        </frame>
 		    </frame>
-		
+
 		    <quad pos="-45 45" size="90 70" bgcolor="000000AA" scriptevents="1"/>
 		</frame>
     <script><!--
@@ -765,11 +805,13 @@ Void EditAmmoItem(CAnchorData _Item) {
     """;
 }
 
-Void EditOffzoneShieldItem(CAnchorData _Item) {
-    
+
+Void EditOffzoneShieldItem(CAnchorData _Item)
+{
+
     declare Real Duration for ManialinkPage;
-	  declare metadata Meta_BuffDuration for _Item = 0.;
-	  Duration = Meta_BuffDuration;
+    declare metadata Meta_BuffDuration for _Item = 0.;
+    Duration = Meta_BuffDuration;
 
     ManialinkText = """
     <manialink version="3" name="Obstacle:EditOffzoneShieldItem">
@@ -785,7 +827,7 @@ Void EditOffzoneShieldItem(CAnchorData _Item) {
 		    </frame>
 				<frame id="properties" pos="0 10">
 	        <frame id="Basic" pos="0 15">
-	
+
 	            <label pos="0 0" size="20 5" class="text" text="Duration" halign="center" textsize="3"/>
 	            <frame pos="0 -8">
 	                <label pos="9 0" size="6 3.5" class="text" text="" scriptevents="1" halign="center" valign="bottom" textsize="1"/>
@@ -796,7 +838,7 @@ Void EditOffzoneShieldItem(CAnchorData _Item) {
 
 	        </frame>
 		    </frame>
-		
+
 		    <quad pos="-45 45" size="90 45" bgcolor="000000AA" scriptevents="1"/>
 		</frame>
     <script><!--
@@ -808,7 +850,6 @@ Void EditOffzoneShieldItem(CAnchorData _Item) {
         declare Entry_Duration <=> (Page.GetFirstChild("Entry_Duration") as CMlEntry);
         if (TL::ToReal(Entry_Duration.Value) != Duration)
             Entry_Duration.Value = ""^Duration;
-
     }
 
     main() {
@@ -830,7 +871,7 @@ Void EditOffzoneShieldItem(CAnchorData _Item) {
                     case CMlScriptEvent::Type::MouseClick: {
                         switch (Event.ControlId) {
                             case "Save" : {
-                                SendCustomEvent("Event_Save_AmmoItem", Text[]);
+                                SendCustomEvent("Event_Save_OffzoneShieldItem", Text[]);
                             }
                         }
                     }
@@ -851,11 +892,16 @@ Void EditOffzoneShieldItem(CAnchorData _Item) {
     </manialink>
     """;
 }
-Void SaveCheckpointSettings() {
-    if (!AnchorData.existskey(G_LastAnchorId)) return;
+
+
+Void SaveCheckpointSettings()
+{
+    if (!AnchorData.existskey(G_LastAnchorId))
+        return;
 
     declare Anchor <=> AnchorData[G_LastAnchorId];
-    if (Anchor.Tag != "Checkpoint") return;
+    if (Anchor.Tag != "Checkpoint")
+        return;
 
     declare Integer Order for ManialinkPage;
     Anchor.Order = Order;
@@ -871,11 +917,15 @@ Void SaveCheckpointSettings() {
     SaveWeaponPageVariables(Anchor);
 }
 
-Void SaveSpawnSettings() {
-    if (!AnchorData.existskey(G_LastAnchorId)) return;
+
+Void SaveSpawnSettings()
+{
+    if (!AnchorData.existskey(G_LastAnchorId))
+        return;
 
     declare Anchor <=> AnchorData[G_LastAnchorId];
-    if (Anchor.Tag != "Spawn") return;
+    if (Anchor.Tag != "Spawn")
+        return;
 
     declare Integer Order for ManialinkPage;
     Anchor.Order = Order;
@@ -888,61 +938,83 @@ Void SaveSpawnSettings() {
     SaveWeaponPageVariables(Anchor);
 }
 
-Void SaveGoalSettings() {
-    if (!AnchorData.existskey(G_LastAnchorId)) return;
+
+Void SaveGoalSettings()
+{
+    if (!AnchorData.existskey(G_LastAnchorId))
+        return;
 
     declare Anchor <=> AnchorData[G_LastAnchorId];
-    if (Anchor.Tag != "Goal") return;
+    if (Anchor.Tag != "Goal")
+        return;
 
     SaveBasePageVariables(Anchor);
 }
 
-Void SaveAmmoItemSettings() {
-    if (!AnchorData.existskey(G_LastAnchorId)) return;
+
+Void SaveAmmoItemSettings()
+{
+    if (!AnchorData.existskey(G_LastAnchorId))
+        return;
 
     declare Anchor <=> AnchorData[G_LastAnchorId];
-    if (Anchor.Tag != "Ammo") return;
+    if (Anchor.Tag != "Ammo")
+        return;
 
     declare Real Amount for ManialinkPage;
     declare metadata Meta_GrantAmmoAmount for Anchor = 1.;
     Meta_GrantAmmoAmount = Amount;
 
     declare Real Duration for ManialinkPage;
-	  declare metadata Meta_GrantAmmoDuration for Anchor = 0.;
-	  Meta_GrantAmmoDuration = Duration;
+    declare metadata Meta_GrantAmmoDuration for Anchor = 0.;
+    Meta_GrantAmmoDuration = Duration;
 }
 
-Void SaveOffzoneShieldItemSettings() {
-    if (!AnchorData.existskey(G_LastAnchorId)) return;
+
+Void SaveOffzoneShieldItemSettings()
+{
+    if (!AnchorData.existskey(G_LastAnchorId))
+        return;
 
     declare Anchor <=> AnchorData[G_LastAnchorId];
-    if (Anchor.Tag != "OffzoneShield") return;
+    if (Anchor.Tag != "OffzoneShield")
+        return;
 
     declare Real Duration for ManialinkPage;
-	  declare metadata Meta_BuffDuration for Anchor = 0.;
-	  Meta_BuffDuration = Duration;
+    declare metadata Meta_BuffDuration for Anchor = 0.;
+    Meta_BuffDuration = Duration;
 }
 
-Void UpdateValidability() {
+
+Void UpdateValidability()
+{
     declare StartSpawns = 0;
     declare Goals = 0;
 
-    foreach (Anchor in AnchorData) {
-        if (!IsEnabled(Anchor)) continue;
+    foreach (Anchor in AnchorData)
+    {
+        if (!IsEnabled(Anchor))
+            continue;
 
-        switch(Anchor.Tag) {
-            case "Spawn": {
-                if (!IsCpSpawn(Anchor)) {
+        switch (Anchor.Tag)
+        {
+            case "Spawn":
+            {
+                if (!IsCpSpawn(Anchor))
+                {
                     StartSpawns += 1;
-                    if (StartSpawns > 1) {
+                    if (StartSpawns > 1)
+                    {
                         ValidationStatus = CSmMapType::ValidationStatus::NotValidable;
                         ValidabilityRequirementsMessage = _("You must place exactly one Start Spawn.");
                         return;
                     }
                 }
             }
-            default: {
-                if (IsGoal(Anchor)) {
+            default :
+            {
+                if (IsGoal(Anchor))
+                {
                     Goals += 1;
                 }
             }
@@ -950,75 +1022,106 @@ Void UpdateValidability() {
     }
 
 
-    if (StartSpawns == 0) {
+    if (StartSpawns == 0)
+    {
         ValidationStatus = CSmMapType::ValidationStatus::NotValidable;
         ValidabilityRequirementsMessage = _("You must place at least one Start Spawn.");
-    } else if (Goals == 0) {
+    }
+    else if (Goals == 0)
+    {
         ValidationStatus = CSmMapType::ValidationStatus::NotValidable;
         ValidabilityRequirementsMessage = _("You must place at least one Goal.");
-    } else {
+    }
+    else
+    {
         ValidationStatus = CSmMapType::ValidationStatus::Validated;
     }
 }
 
-Void Loop() {
 
-  foreach (Event in PendingEvents) {
-    switch (Event.Type) {
-      case CPluginEvent::Type::MapModified: {
-        UpdateValidability();
-      }
+Void Loop()
+{
 
-      case CPluginEvent::Type::EditAnchor: {
-        if (!AnchorData.existskey(Event.EditedAnchorDataId)) continue;
-
-        declare Anchor <=> AnchorData[Event.EditedAnchorDataId];
-        ManialinkText = "";
-
-        switch (Anchor.DefaultTag) {
-          case "Goal": EditGoal(Anchor);
-          case "Checkpoint": EditCheckpoint(Anchor);
-          case "Spawn": EditSpawn(Anchor);
-          case "Ammo": EditAmmoItem(Anchor);
-          case "OffzoneShield": EditOffzoneShieldItem(Anchor);
-          default: continue;
-        }
-
-        G_LastAnchorId = Anchor.Id;
-      }
-
-      case CPluginEvent::Type::StartValidation: {
-        TestMapWithMode("Obstacle.Script.txt");
-      }
-
-      case CPluginEvent::Type::EditObjectives: {
-DisplayDefaultSetObjectivesDialog ();
-      }
-
-      case CPluginEvent::Type::LayerCustomEvent: {
-            switch(Event.CustomEventType) {
-                case "Close": ManialinkText = "";
-                case "Event_Save_Goal": SaveGoalSettings();
-                case "Event_Save_Checkpoint": SaveCheckpointSettings();
-                case "Event_Save_Spawn": SaveSpawnSettings();
-                case "Event_Save_AmmoItem": SaveAmmoItemSettings();
-                case "Event_Save_OffzoneShieldItem": SaveOffzoneShieldItemSettings();
+    foreach (Event in PendingEvents)
+    {
+        switch (Event.Type)
+        {
+            case CMapEditorPluginEvent::Type::MapModified:
+            {
+                UpdateValidability();
             }
 
-            UpdateValidability();
-      }
+            case CMapEditorPluginEvent::Type::EditAnchor:
+            {
+                if (!AnchorData.existskey(Event.EditedAnchorDataId))
+                    continue;
 
+                declare Anchor <=> AnchorData[Event.EditedAnchorDataId];
+                ManialinkText = "";
+
+                switch (Anchor.DefaultTag)
+                {
+                    case "Goal":
+                        EditGoal(Anchor);
+                    case "Checkpoint":
+                        EditCheckpoint(Anchor);
+                    case "Spawn":
+                        EditSpawn(Anchor);
+                    case "Ammo":
+                        EditAmmoItem(Anchor);
+                    case "OffzoneShield":
+                        EditOffzoneShieldItem(Anchor);
+                    default :
+                        continue;
+                }
+
+                G_LastAnchorId = Anchor.Id;
+            }
+
+            case CMapEditorPluginEvent::Type::StartValidation:
+            {
+                TestMapWithMode("Obstacle.Script.txt");
+            }
+
+            case CMapEditorPluginEvent::Type::EditObjectives:
+            {
+                DisplayDefaultSetObjectivesDialog();
+            }
+
+            case CMapEditorPluginEvent::Type::LayerCustomEvent:
+            {
+                switch (Event.CustomEventType)
+                {
+                    case "Close":
+                        ManialinkText = "";
+                    case "Event_Save_Goal":
+                        SaveGoalSettings();
+                    case "Event_Save_Checkpoint":
+                        SaveCheckpointSettings();
+                    case "Event_Save_Spawn":
+                        SaveSpawnSettings();
+                    case "Event_Save_AmmoItem":
+                        SaveAmmoItemSettings();
+                    case "Event_Save_OffzoneShieldItem":
+                        SaveOffzoneShieldItemSettings();
+                }
+
+                UpdateValidability();
+            }
+
+        }
     }
-  }
 }
 
-main() {
+
+main()
+{
     Load();
     Init();
-    while (True) {
+    while (True)
+    {
         Loop();
         yield;
     }
     Unload();
 }
-
