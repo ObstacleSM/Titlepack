@@ -45,106 +45,117 @@ steps:
     workingDirectory: $(Build.StagingDirectory)
     failOnStderr: true
     script: |
-      import time, subprocess, glob, os, sys
+        import time
+        import subprocess
+        import glob
+        import os
+        import sys
 
-      tp = 'obstacle@smokegun'
-      tp_path = f"./User/Packs/{tp}.Title.Pack.Gbx"
-      program = f"./Maniaplanet/ManiaplanetLogs.exe /userdir=User /profile=vince /createpack={tp} /windowless /inputless /silent"
-      logs = './User/Maniaplanet*.txt'
-
-      def is_error(line):
-          return 'error' in line \
-              or 'Error' in line \
-              or 'ERROR' in line \
-              or 'failed' in line
-
-      def fail(msg):
-          print(msg)
-          print(msg, file=sys.stderr)
-          exit(1)
-
-      def build_tp():
-          p = subprocess.Popen(program)
-          needs_restart = False
-          to_remove = []
-          lines = {}
-
-          while p.poll() is None:
-              time.sleep(0.5)
-
-              for filename in [f for f in glob.glob(logs, recursive=True)]:
-                  f = open(filename, 'r')
-                  er, re = False, False
+        tp = 'obstacle@smokegun'
+        tp_path = f"./User/Packs/{tp}.Title.Pack.Gbx"
+        program = f"./Maniaplanet/ManiaplanetLogs.exe /userdir=User /profile=vince /createpack={tp} /windowless /inputless /silent"
+        logs = './User/Maniaplanet*.txt'
 
 
-                  if filename not in lines:
-                      lines[filename] = 0
+        def is_error(line):
+            return 'error' in line \
+                or 'Error' in line \
+                or 'ERROR' in line \
+                or 'failed' in line
 
-                  i = 0
-                  to_print = []
-                  for line in f.readlines():
-                      if 'Console' in line:
-                          if i >= lines[filename]:
-                              to_print.append(line)
-                              lines[filename] += 1
-                          er = er or is_error(line)
-                          re = re or 'restart' in line
-                          i += 1
-                  f.close()
+        def kill_wait(p):
+            p.kill()
+            while p.poll() is None:
+                continue
+            print("Maniaplanet.exe was killed properly")
 
-                  if len(to_print) > 0:
-                      print(filename)
-                      for l in to_print:
-                          print(l, end="")
-                      print()
+        def fail(msg, p = None):
+            if p is not None:
+                kill_wait(p)
+            print(msg)
+            exit(1)
 
-                  if er:
-                      p.kill()
-                      fail('It failed');
+        def build_tp():
+            # Remove existing logs if any
+            for filename in [f for f in glob.glob(logs, recursive=True)]:
+                os.remove(filename)
 
-                  if re:
-                      p.kill()
-                      to_remove.append(filename)
-                      print("Maniaplanet needs to restart.")
-                      needs_restart = True
+            p = subprocess.Popen(program)
+            needs_restart = False
+            last_line = 0
 
-          for f in to_remove:
-              if os.path.exists(f):
-                  os.remove(f)
+            # While Maniaplanet.exe is running
+            while p.poll() is None:
+                time.sleep(0.25)
 
-          if not os.path.exists(tp_path) and not needs_restart:
-              fail(f"The titlepack file is not here. ({tp_path})")
+                # Find the log file
+                log_files = [f for f in glob.glob(logs, recursive=True)]
+                if len(log_files) != 1:
+                    fail("There is more than one log file.", p)
 
-          return p, needs_restart
+                # Open the log file
+                log = open(log_files[0], 'r')
 
-      for filename in [f for f in glob.glob(logs, recursive=True)]:
-          os.remove(filename)
 
-      p, should_restart = build_tp()
-      p.kill()
-      while p.poll() is None:
-        pass
-      print("Maniaplanet.exe was killed properly")
+                error = False
+                restart = False
+                to_print = []
 
-      attemps = 1
-      while should_restart:
-          p, should_restart = build_tp()
-          attemps += 1
-          
-          p.kill()
-          while p.poll() is None:
-            pass
+                # Read log file to display new lines
+                # and check if there is an error
+                # or if it needs to be restarted
+                i = 0
+                for line in log.readlines():
+                    if 'Console' in line:
+                        if i >= last_line:
+                            to_print.append(line)
+                            last_line += 1
+                        error = error or is_error(line)
+                        restart = restart or 'restart' in line
+                        i += 1
+                log.close()
 
-          print("Maniaplanet.exe was killed properly")
+                # Print the new lines
+                if len(to_print) > 0:
+                    print(log_files[0])
+                    for l in to_print:
+                        print(l, end="")
+                    print()
 
-          if attemps > 10:
-            print("Stopped trying after 10 attemps...")
-            break
+                if error:
+                    print('There is an error in the log file.')
+                    break
 
-      if os.path.exists(tp_path):
-          print("The titlepack was built correctly.")
-      else:
-          fail(f"The titlepack file is not here. ({tp_path})")
+                if restart:
+                    print("Maniaplanet needs to restart.")
+                    needs_restart = True
+                    break
+
+            kill_wait(p)
+
+            return needs_restart
+
+
+
+        if __name__ == "__main__":
+            should_restart = build_tp()
+            attempts = 1
+            while should_restart:
+                print()
+                print(f"Attempt {attempts}")
+
+                should_restart = build_tp()
+                attempts += 1
+
+                if attempts > 10:
+                    print("Stopped trying after 10 attemps...")
+                    break
+
+            if os.path.exists(tp_path):
+                print("The titlepack was built correctly.")
+            else:
+                fail(f"The titlepack was not built correctly. (no {tp_path})")
+
 
 - publish: $(Build.StagingDirectory)/User/Packs/$(title_pack).Title.Pack.Gbx
   artifact: Titlepack
