@@ -1,9 +1,9 @@
 variables:
   title_pack: 'obstacle@smokegun'
-  user_config_url: 'https://onedrive.live.com/download?cid=2EC0D2E0D9DA402A&resid=2EC0D2E0D9DA402A%2113388&authkey=APoRojn5vQhBS60'
-  tp_data_url:     'https://onedrive.live.com/download?cid=2EC0D2E0D9DA402A&resid=2EC0D2E0D9DA402A%2113525&authkey=AKLRq2DUxFhuFiU'
-  maniaplanet_url: 'https://onedrive.live.com/download?cid=2EC0D2E0D9DA402A&resid=2EC0D2E0D9DA402A%2113389&authkey=AC0somuBOCqaAAc'
-  maker_files_url: 'https://onedrive.live.com/download?cid=2EC0D2E0D9DA402A&resid=2EC0D2E0D9DA402A%2113524&authkey=ALyh4OiUekTaLPI'
+  user_config_url: 'http://onedrive.live.com/download?cid=2EC0D2E0D9DA402A&resid=2EC0D2E0D9DA402A%2113388&authkey=APoRojn5vQhBS60'
+  tp_data_url:     'http://onedrive.live.com/download?cid=2EC0D2E0D9DA402A&resid=2EC0D2E0D9DA402A%2113525&authkey=AKLRq2DUxFhuFiU'
+  maniaplanet_url: 'http://onedrive.live.com/download?cid=2EC0D2E0D9DA402A&resid=2EC0D2E0D9DA402A%2113389&authkey=AC0somuBOCqaAAc'
+  maker_files_url: 'http://onedrive.live.com/download?cid=2EC0D2E0D9DA402A&resid=2EC0D2E0D9DA402A%2113524&authkey=ALyh4OiUekTaLPI'
 
 trigger:
 - master
