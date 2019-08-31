@@ -341,6 +341,7 @@ else {
                         EndTime = Now + 1;
                     }
 
+                    Obstacle::Private_UpdatePlayerBestTime(Event.Player);
                     UnspawnPlayer(Event.Player);
                 }
                 Events::Valid(Event);
