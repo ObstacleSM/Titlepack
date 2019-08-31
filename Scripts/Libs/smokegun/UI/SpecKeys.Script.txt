@@ -137,7 +137,6 @@ Text GetLayer() {
         if (LocalPlayer == Null) return;
 
         declare netread Keys LastKeys for LocalPlayer;
-        log("Spec "^LastKeys);
 
         if ( LastKeys.Up && Quad_Up.Opacity != 1.0)
             Quad_Up.Opacity = 1.0;
