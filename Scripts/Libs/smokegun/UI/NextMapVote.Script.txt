@@ -69,6 +69,7 @@ Text GetLayer(Real _NextMapVotingRatio) {
 
             declare LocalPlayer <=> InputPlayer;
             if (GUIPlayer != Null) LocalPlayer <=> GUIPlayer;
+            if (LocalPlayer == Null) continue;
 
             // Process events
             foreach (Event in PendingEvents) {

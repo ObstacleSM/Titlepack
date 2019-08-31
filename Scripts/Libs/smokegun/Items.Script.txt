@@ -153,6 +153,7 @@ Text CreateLayerItems() {
 
                 declare LocalPlayer <=> InputPlayer;
                 if (GUIPlayer != Null && GUIPlayer != LocalPlayer) LocalPlayer <=> GUIPlayer;
+                if (LocalPlayer == Null) continue;
 
                 declare Index = 1;
                 declare netread Integer[Text] ItemBuffTimes for LocalPlayer = [];
@@ -207,11 +208,11 @@ Text CreateLayerItems() {
 	                            Ratio = 1.;
 	                        }
 	                        Gauge_Item.Ratio = Ratio;
-	
+
 	                        declare TimeDiffText = ML::NearestInteger(TimeDiff / 100.) / 10.;
 	                        Label_Time.Value = TimeDiffText^"s";
                         }
-                        
+
                         declare ItemParts = TL::Split("\\", ItemName);
                         ItemParts = TL::Split(".", ItemParts[ItemParts.count-1]);
                         Label_Item.Value = ItemParts[0];

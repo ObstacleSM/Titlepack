@@ -43,6 +43,7 @@ Text GetLayer() {
 
                 declare LocalPlayer <=> InputPlayer;
                 if (GUIPlayer != Null) LocalPlayer <=> GUIPlayer;
+                if (LocalPlayer == Null) continue;
 
                 declare netread Net_LayerTimeDiffUpdated for LocalPlayer = 0;
                 declare netread Net_Time1 for LocalPlayer = 0;

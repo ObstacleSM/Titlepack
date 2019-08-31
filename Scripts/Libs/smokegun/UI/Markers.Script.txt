@@ -123,6 +123,7 @@ main() {
 
         declare LocalPlayer <=> InputPlayer;
         if (GUIPlayer != Null) LocalPlayer <=> GUIPlayer;
+        if (LocalPlayer == Null) continue;
 
         declare netread Integer Net_CpProgress for LocalPlayer;
         declare netread Text[] LastCheckpointsIdsStr for LocalPlayer;

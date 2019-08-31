@@ -246,6 +246,10 @@ foreach (Event in PendingEvents) {
             // Discard the defaut behaviour (e.g Player is eliminated)
             Discard(Event);
 
+            if (Event.Victim == Null) {
+               continue;
+            }
+
             // Dont respawn if the player has the offzone item
             if (Event.Victim.IsInOffZone) {
                 declare ItemBuffs = Player::getBuffTimes(Event.Victim);

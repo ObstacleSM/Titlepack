@@ -43,6 +43,7 @@ Text GetLayer() {
 
             declare LocalPlayer <=> InputPlayer;
             if (GUIPlayer != Null) LocalPlayer <=> GUIPlayer;
+            if (LocalPlayer == Null) continue;
 
             declare netread Net_CheckpointsTotal for Teams[0] = -1;
             declare netread Net_StartTime for LocalPlayer = -1;

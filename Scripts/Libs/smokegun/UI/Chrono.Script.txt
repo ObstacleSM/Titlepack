@@ -40,6 +40,7 @@ Text GetLayer() {
 
             declare LocalPlayer <=> InputPlayer;
             if (GUIPlayer != Null) LocalPlayer <=> GUIPlayer;
+            if (LocalPlayer == Null) continue;
 
             declare netread Net_UsedJump for LocalPlayer = False;
             if (PrevUsedJump != Net_UsedJump) {

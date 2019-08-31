@@ -134,6 +134,7 @@ Text GetLayer() {
     Void UpdateSpec() {
         declare LocalPlayer <=> InputPlayer;
         if (GUIPlayer != Null) LocalPlayer <=> GUIPlayer;
+        if (LocalPlayer == Null) return;
 
         declare netread Keys LastKeys for LocalPlayer;
         log("Spec "^LastKeys);
