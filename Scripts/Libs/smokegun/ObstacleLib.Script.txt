@@ -84,7 +84,7 @@ Void UpdatePlayersSkin(Ident SkinId) {
         if (Settings::GetForceInvisibleSkin() && Player.ForceModelId == NullId) {
             Player.ForceModelId = SkinId;
         }
-        
+
         if (!Settings::GetForceInvisibleSkin() && Player.ForceModelId != NullId) {
             Player.ForceModelId = NullId;
         }
@@ -110,7 +110,7 @@ Boolean PrepareMap() {
 
     // Count checkpoints and init markers for portals
     // We save checkpoints to CheckpointOrders to count multiple checkpoints with the same order once
-    declare CheckpointOrders = Integer[];
+    declare Integer[] CheckpointOrders = [];
 
     foreach (Landmark in MapLandmarks) {
         if (Landmark.Gauge != Null)
@@ -215,7 +215,7 @@ Void Private_UpdateRanking() {
     }
 
     declare Finished = Integer[Ident];
-    declare Unfinished = CSmPlayer[];
+    declare CSmPlayer[] Unfinished = [];
 
     // Split finished and unfinished players
     foreach (Player in AllPlayers) {
@@ -654,7 +654,7 @@ Void Private_HandleCheckpoint(CSmPlayer _Player, Ident _CheckpointId) {
     UI.SendNotice("",
             CUIConfig::ENoticeLevel::PlayerInfo, _Player.User, CUIConfig::EAvatarVariant::Default,
             CUIConfig::EUISound::Checkpoint, Variant);
-    
+
     // BELOW IS OBSTACLE ONLY
     Private_UpdateRanking();
 }
@@ -733,5 +733,5 @@ Boolean HandleCapture(CSmPlayer _Player) {
         Message::SendBigMessage(_Player, MessageToShow, 2000, 0, CUIConfig::EUISound::Warning, 1);
     }
 
-    return HasCapturedGoal; 
+    return HasCapturedGoal;
 }

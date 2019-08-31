@@ -68,18 +68,17 @@ Ident MakePost(Text _Url, Text _Data) {
     if (Http.Requests.count >= Http.SlotsAvailable) {
         return NullId;
     }
-    Log::Log("Made request '"^Constants::C_HostUrl^_Url^"' with headers:\n"^G_PostHeaders);
     declare request <=> Http.CreatePost(Constants::C_HostUrl^_Url, _Data, G_PostHeaders);
     return request.Id;
 }
 
 Void SendPost(Text _Url, Text _Data) {
     if (!G_IsLoggedIn || G_LastRequestAttempt + 500 > Now) {
-        Log::Log("Cant do req now "^_Url);
+        Log::Log("Cannot send request "^_Url);
         G_ToPost_Url.add(_Url);
         G_ToPost_Data.add(_Data);
     } else {
-        Log::Log("Send req "^_Url);
+        Log::Log("Send request to "^_Url);
         G_CurrRequest[MakePost(_Url, _Data)] = _Data;
     }
 }
@@ -159,7 +158,6 @@ Void PlayerFinished(CSmPlayer _Player) {
 Void Loop(Text _BestRecordMsg, Text _WorseRecordMsg) {
 
     if (G_PreviousState != G_State) {
-        Log::Log(State(G_PreviousState)^" ===> "^State(G_State));
         G_PreviousState = G_State;
     }
 
@@ -191,7 +189,6 @@ Void Loop(Text _BestRecordMsg, Text _WorseRecordMsg) {
             if (!request.IsCompleted) continue;
 
             Log::Log("Request done: ("^request.StatusCode^") "^request.Url);
-            Log::Log(request.Result);
 
             // Request failed
             if (request.StatusCode == 401) {
@@ -258,7 +255,6 @@ Void Loop(Text _BestRecordMsg, Text _WorseRecordMsg) {
             {
                 if (LoginRequest.StatusCode == 200)
                 {
-                    Log::Log("Logged in: ("^LoginRequest.StatusCode^") "^LoginRequest.Result);
                     declare XmlResponse = Xml.Create(LoginRequest.Result);
                     if (XmlResponse != Null) {
                         if (XmlResponse.Root != Null) {

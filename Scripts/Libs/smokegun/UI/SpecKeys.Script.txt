@@ -16,6 +16,7 @@
 Void UpdateLayer(CSmPlayer _Player)
 {
     declare UI = UIManager.GetUI(_Player);
+
     if (UI == Null)
         return;
     declare netread Keys MyKeys for UI;
@@ -210,7 +211,7 @@ Text GetLayer() {
             }
             else {
                 UpdateSpec();
-            } 
+            }
 
         }
     }

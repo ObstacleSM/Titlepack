@@ -1,8 +1,8 @@
 #Extends "Modes/ShootMania/Base/ModeShootMania.Script.txt"
 
 #Const CompatibleMapTypes "ObstacleArena,ObstacleTitleArena,ObstacleTitleArenaOld,TimeAttackArena,ObstacleBetaArena"
-#Const  Version           "1.5"
-#Const  ScriptName        "Modes/ShootMania/Obstacle.Script.txt"
+#Const Version           "1.5"
+#Const ScriptName        "Modes/ShootMania/Obstacle.Script.txt"
 
 // ---------------------------------- //
 // Libraries
@@ -67,7 +67,7 @@
 #Const C_SettingsUpdateInterval 1000
 
 
-declare Ident           G_InvisibleSkinId;
+declare Ident G_InvisibleSkinId;
 
 ***Match_LogVersions***
 ***
@@ -136,8 +136,8 @@ if (Hud != Null && Hud.ScoresTable != Null) {
     Tabs::Load();
     declare TabsLayer <=> Tabs::CreateTabPaneLayer(
         [ "ScoresTab" => "Rankings"
-        , "CPTimes" => "Race"
-        ], 15, 7, False);
+        , "CPTimes" => "Race"]
+        , 15, 7, False);
     TabsLayer.Type = CUILayer::EUILayerType::AltMenu;
     UIManager.UIAll.UILayers.add(TabsLayer);
 }
@@ -364,7 +364,7 @@ else {
 
 ***Match_BeforeCloseLadder***
 ***
-declare Unranked = CSmScore[];
+declare CSmScore[] Unranked = [];
 
 declare WorstRun = -1;
 foreach (Score in Scores) {
@@ -440,7 +440,7 @@ Void DestroyUI() {
     Layers::Detach("CPTimes");
     Layers::Detach("Markers");
     Layers::Detach("Items");
-    
+
     if (S_EnableRecords) {
         Layers::Detach("Records");
     }

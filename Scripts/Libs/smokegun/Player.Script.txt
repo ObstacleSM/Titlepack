@@ -88,8 +88,14 @@ Void setLastCheckpoint(CSmPlayer _Player, Ident _Value) {
     declare Ident[] LastCheckpointsIds for _Player;
     declare netwrite Text[] LastCheckpointsIdsStr for _Player;
 
-    LastCheckpointsIds.add(_Value);
-    LastCheckpointsIdsStr.add(_Value^"");
+    if (_Value != NullId) {
+        LastCheckpointsIds.add(_Value);
+        LastCheckpointsIdsStr.add(_Value^"");
+    }
+    else {
+         LastCheckpointsIds.clear();
+         LastCheckpointsIdsStr.clear();
+    }
 }
 
 Integer[Text] getBuffTimes(CSmPlayer _Player) {
