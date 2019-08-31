@@ -472,11 +472,11 @@ if (G_State == C_State_Playing) {
         }
     }
 
-    if (BestPlayerScore == Null && (MostPointsScore.Points >= S_PointLimit || CurrentRound >= S_RoundLimit)) {
+    if (BestPlayerScore == Null && (MostPointsScore.Points >= S_PointLimit || CurrentRound - S_WarmupRounds >= S_RoundLimit)) {
          Message::SendBigMessage("Draw! A new round will start while there is a draw.", 5000, 0, CUIConfig::EUISound::Warning, 1);
     }
 
-    if (BestPlayerScore != Null && (BestPlayerScore.Points >= S_PointLimit || CurrentRound >= S_RoundLimit)) {
+    if (BestPlayerScore != Null && (BestPlayerScore.Points >= S_PointLimit || CurrentRound - S_WarmupRounds >= S_RoundLimit)) {
         MB_StopMap();
     }
     else {
