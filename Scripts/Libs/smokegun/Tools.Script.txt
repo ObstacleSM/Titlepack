@@ -120,7 +120,7 @@ Ident Private_GetClosestSpawn(Ident _CheckPointId, Ident[] _SpawnIds) {
 
 Ident GetClosestSpawn(Ident _CheckPointId) {
     declare Checkpoint <=> MapLandmarks[_CheckPointId];
-    declare SpawnIds = Ident[];
+    declare Ident[] SpawnIds = [];
 
     foreach (Spawn in MapLandmarks_PlayerSpawn) {
         if (IsCpSpawn(Spawn) && (Checkpoint.Order == 0 || Checkpoint.Order == Spawn.Order))
@@ -143,8 +143,8 @@ Ident GetClosestSpawn(Ident _CheckPointId) {
 Integer GetPlayerRank(CSmPlayer _Player) {
     declare LastCheckpointId for _Player = NullId;
     declare BestRun for _Player.Score = -1;
-    declare CheckpointsTimeLast for _Player.Score = Integer[Ident];
-    declare Ranking = Integer[Ident];
+    declare Integer[Ident] CheckpointsTimeLast for _Player.Score = [];
+    declare Integer[Ident] Ranking = [];
 
     // Player is finishing a run
     if (CheckpointsTimeLast.count == 0) {
@@ -161,7 +161,7 @@ Integer GetPlayerRank(CSmPlayer _Player) {
 
         // Fill ranking with every player who has best time at last checkpoint
         foreach (Score in Scores) {
-            declare CheckpointsTimeBest for Score = Integer[Ident];
+            declare Integer[Ident] CheckpointsTimeBest for Score = [];
             if (!CheckpointsTimeBest.existskey(LastCheckpointId)) continue;
             Ranking[Score.User.Id] = CheckpointsTimeBest[LastCheckpointId];
         }

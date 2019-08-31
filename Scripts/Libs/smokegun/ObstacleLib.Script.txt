@@ -214,7 +214,7 @@ Void Private_UpdateRanking() {
         return;
     }
 
-    declare Finished = Integer[Ident];
+    declare Integer[Ident] Finished = [];
     declare CSmPlayer[] Unfinished = [];
 
     // Split finished and unfinished players
@@ -323,7 +323,7 @@ Void Private_CpRestart(CSmPlayer _Player, Integer _Delay, Ident _LastCheckpoint,
 
     // Respawn player
     if (_Player.SpawnStatus == CSmPlayer::ESpawnStatus::Spawned && CanFastRespawn)
-        RespawnPlayer(_Player, Checkpoint);
+        RespawnPlayer(_Player, Checkpoint.Waypoint);
     else
         SM::SpawnNoLadder(_Player, 0, Spawn.PlayerSpawn, Now + _Delay);
 
@@ -384,7 +384,7 @@ Void Private_FullRestart(CSmPlayer _Player, Integer _Delay) {
  * Arguments: CSmPlayer _Player       Player to respawn
  *            Boolean   _forceRestart Force spawn to the beginning of the map
  */
-Void RespawnPlayer(CSmPlayer _Player, Boolean _forceRestart) {
+Void ObsRespawnPlayer(CSmPlayer _Player, Boolean _forceRestart) {
     if (_Player.RequestsSpectate)
         return;
 
@@ -429,8 +429,8 @@ Void RespawnPlayer(CSmPlayer _Player, Boolean _forceRestart) {
  *
  * Arguments: CSmPlayer _Player       Player to respawn
  */
-Void RespawnPlayer(CSmPlayer _Player) {
-    RespawnPlayer(_Player, False);
+Void ObsRespawnPlayer(CSmPlayer _Player) {
+    ObsRespawnPlayer(_Player, False);
 }
 
 /////////////////////////////////////////////////////////////////
@@ -529,45 +529,43 @@ Void JumpToCheckpoint(CSmPlayer _Player, Integer _Target) {
 Void Private_HandleFinish(CSmPlayer _Player, Ident _GoalId) {
     declare Goal <=> MapLandmarks[_GoalId];
 
-    declare LastCPTimes = Player::getLastCPTimes(_Player);
-    declare BestCPTimes = Player::getBestCPTimes(_Player);
     declare BestRun = Player::getBestRun(_Player);
     declare Time = Player::getTime(_Player);
 
-    declare LastRun = Player::setLastRun(_Player, Time);
-    LastCPTimes = Player::setLastCPTimes(_Player, _GoalId, Time);
+    Player::setLastRun(_Player, Time);
+    Player::setLastCPTimes(_Player, _GoalId, Time);
 
     // Update time diff before updating best run
-    TimeDiff::UpdateLayer(_Player, LastRun, BestRun);
+    TimeDiff::UpdateLayer(_Player, Time, BestRun);
 
     // Check if last run is  if last run is better
-    if (LastRun < BestRun || BestRun < 0) {
-        BestRun = Player::setBestRun(_Player, LastRun);
-        BestCPTimes = Player::setBestCPTimes(_Player, LastCPTimes);
+    if (Time < BestRun || BestRun < 0) {
+        Player::setBestRun(_Player, Time);
+        Player::setBestCPTimes(_Player, Player::getLastCPTimes(_Player));
 
         CPTimes::UpdateLayer(_Player);
         Private_UpdatePlayerRsCounter(_Player);
     }
 
     // Send score
-    Private_SendFinishedRun(_Player, LastRun, _GoalId);
+    Private_SendFinishedRun(_Player, Time, _GoalId);
     XmlRpc.SendCallback("Obstacle_OnFinish", Player::ToJSON(_Player));
 
     //Update UI
     declare UI <=> UIManager.GetUI(_Player);
     if (UI != Null) {
-        declare Time = TL::TimeToText(LastRun, True);
+        declare TimeStr = TL::TimeToText(Time, True);
         declare Variant = 1;
         declare Color = "$f00";
 
         declare message = "";
-        if (BestRun == LastRun) {
+        if (Player::getBestRun(_Player) == Time) {
             Variant = 0;
             Color = "$00f";
             message = _("(New Best Time!)");
         }
 
-        UI.SendNotice(TL::Compose("%1: $<%2$> %3", _("|Goal|Finish"), Color^Time, message),
+        UI.SendNotice(TL::Compose("%1: $<%2$> %3", _("|Goal|Finish"), Color^TimeStr, message),
                 CUIConfig::ENoticeLevel::PlayerInfo, _Player.User, CUIConfig::EAvatarVariant::Default,
                 CUIConfig::EUISound::Finish, Variant);
     }
@@ -680,7 +678,7 @@ Boolean HandleCapture(CSmPlayer _Player) {
 
     declare Time = Player::getTime(_Player);
     if (Time < 0) {
-        RespawnPlayer(_Player, True);
+        ObsRespawnPlayer(_Player, True);
         return HasCapturedGoal;
     }
 

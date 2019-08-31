@@ -237,7 +237,7 @@ Void UpdateLayer(CSmPlayer _Player) {
 
     // Make sure times are sorted to get the right cp order
     // But they should be automatically sorted in theory
-    LastCPTimes.sort();
+    LastCPTimes = LastCPTimes.sort();
 
     declare nth_cp = 0;
 
@@ -255,8 +255,8 @@ Void UpdateLayer(CSmPlayer _Player) {
         // Remove previous time if it exists
         if (Net_CPTimes_RecordsName[Idx].exists(_Player.User.Name)) {
             declare prev = Net_CPTimes_RecordsName[Idx].keyof(_Player.User.Name);
-            Net_CPTimes_RecordsName[Idx].removekey(prev);
-            Net_CPTimes_RecordsTime[Idx].removekey(prev);
+            declare Removed = Net_CPTimes_RecordsName[Idx].removekey(prev);
+            Removed = Net_CPTimes_RecordsTime[Idx].removekey(prev);
         }
 
         // Find player rank
@@ -308,8 +308,8 @@ Void StartMap(Integer _CheckpointsNb) {
     Net_CPTimes_RecordsTime.clear();
 
     for (i, 0, _CheckpointsNb) {
-        Net_CPTimes_RecordsName.add(Text[]);
-        Net_CPTimes_RecordsTime.add(Integer[]);
+        Net_CPTimes_RecordsName.add([]);
+        Net_CPTimes_RecordsTime.add([]);
     }
 
     declare netwrite Integer Net_CPTimesUpdated for Teams[0] = 0;

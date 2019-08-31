@@ -3,7 +3,7 @@
 
 
 Void Yield() {
-    declare SpeccedPlayers = Integer[Text];
+    declare Integer[Text] SpeccedPlayers = [];
 
     foreach (Player in Spectators) {
         declare UI <=> UIManager.GetUI(Player);
@@ -24,8 +24,8 @@ Void Yield() {
         if (UI == Null) continue;
 
         declare netwrite Integer Net_NbSpectating for Player = 0;
-        if (SpeccedPlayers.existskey(Player.Login)) {
-            Net_NbSpectating = SpeccedPlayers[Player.Login];
+        if (SpeccedPlayers.existskey(Player.User.Login)) {
+            Net_NbSpectating = SpeccedPlayers[Player.User.Login];
         } else if (Net_NbSpectating != 0) {
             Net_NbSpectating = 0;
         }

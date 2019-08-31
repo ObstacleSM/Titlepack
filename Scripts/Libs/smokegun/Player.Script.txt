@@ -28,10 +28,9 @@ Boolean isInitialized(CSmPlayer _Player) {
     return isInitialized;
 }
 
-Boolean setInitialized(CSmPlayer _Player, Boolean _Value) {
+Void setInitialized(CSmPlayer _Player, Boolean _Value) {
     declare Boolean isInitialized for _Player = False;
     isInitialized = _Value;
-    return isInitialized;
 }
 
 Integer getStartTime(CSmPlayer _Player) {
@@ -39,10 +38,9 @@ Integer getStartTime(CSmPlayer _Player) {
     return Net_StartTime;
 }
 
-Integer setStartTime(CSmPlayer _Player, Integer _Value) {
+Void setStartTime(CSmPlayer _Player, Integer _Value) {
     declare netwrite Integer Net_StartTime for _Player;
     Net_StartTime = _Value;
-    return Net_StartTime;
 }
 
 Integer getCpProgress(CSmPlayer _Player) {
@@ -50,10 +48,9 @@ Integer getCpProgress(CSmPlayer _Player) {
     return Net_CpProgress;
 }
 
-Integer setCpProgress(CSmPlayer _Player, Integer _Value) {
+Void setCpProgress(CSmPlayer _Player, Integer _Value) {
     declare netwrite Integer Net_CpProgress for _Player;
     Net_CpProgress = _Value;
-    return Net_CpProgress;
 }
 
 Boolean usedJump(CSmPlayer _Player) {
@@ -61,10 +58,9 @@ Boolean usedJump(CSmPlayer _Player) {
     return Net_UsedJump;
 }
 
-Boolean setUsedJump(CSmPlayer _Player, Boolean _Value) {
+Void setUsedJump(CSmPlayer _Player, Boolean _Value) {
     declare netwrite Boolean Net_UsedJump for _Player = False;
     Net_UsedJump = _Value;
-    return Net_UsedJump;
 }
 
 Ident getLastCheckpoint(CSmPlayer _Player) {
@@ -99,21 +95,19 @@ Void setLastCheckpoint(CSmPlayer _Player, Ident _Value) {
 }
 
 Integer[Text] getBuffTimes(CSmPlayer _Player) {
-    declare netwrite ItemBuffTimes for _Player = Integer[Text];
+    declare netwrite Integer[Text] ItemBuffTimes for _Player = [];
     return ItemBuffTimes;
 }
 
-Integer[Text] setBuffTime(CSmPlayer _Player, Text _Key, Integer _Value) {
-    declare netwrite ItemBuffTimes for _Player = Integer[Text];
+Void setBuffTime(CSmPlayer _Player, Text _Key, Integer _Value) {
+    declare netwrite Integer[Text] ItemBuffTimes for _Player = [];
     ItemBuffTimes[_Key] = _Value;
-    return ItemBuffTimes;
 
 }
 
-Integer[Text] clearBuffTimes(CSmPlayer _Player) {
-    declare netwrite ItemBuffTimes for _Player = Integer[Text];
+Void clearBuffTimes(CSmPlayer _Player) {
+    declare netwrite Integer[Text] ItemBuffTimes for _Player = [];
     ItemBuffTimes.clear();
-    return ItemBuffTimes;
 }
 
 Integer getBestRun(CSmPlayer _Player) {
@@ -121,10 +115,9 @@ Integer getBestRun(CSmPlayer _Player) {
     return BestRun;
 }
 
-Integer setBestRun(CSmPlayer _Player, Integer _Value) {
+Void setBestRun(CSmPlayer _Player, Integer _Value) {
     declare Integer BestRun for _Player.Score;
     BestRun = _Value;
-    return BestRun;
 }
 
 Integer getLastRunS(CSmScore _Score) {
@@ -137,10 +130,9 @@ Integer getLastRun(CSmPlayer _Player) {
     return LastRun;
 }
 
-Integer setLastRun(CSmPlayer _Player, Integer _Value) {
+Void setLastRun(CSmPlayer _Player, Integer _Value) {
     declare Integer LastRun for _Player.Score;
     LastRun = _Value;
-    return LastRun;
 }
 
 Integer getRespawnCount(CSmPlayer _Player) {
@@ -148,16 +140,14 @@ Integer getRespawnCount(CSmPlayer _Player) {
     return RespawnCount;
 }
 
-Integer setRespawnCount(CSmPlayer _Player, Integer _Value) {
+Void setRespawnCount(CSmPlayer _Player, Integer _Value) {
     declare Integer RespawnCount for _Player.Score;
     RespawnCount = _Value;
-    return RespawnCount;
 }
 
-Integer incrementRespawnCount(CSmPlayer _Player) {
+Void incrementRespawnCount(CSmPlayer _Player) {
     declare Integer RespawnCount for _Player.Score;
     RespawnCount += 1;
-    return RespawnCount;
 }
 
 Integer[Ident] getBestCPTimes(CSmPlayer _Player) {
@@ -165,16 +155,14 @@ Integer[Ident] getBestCPTimes(CSmPlayer _Player) {
     return CheckpointsTimeBest;
 }
 
-Integer[Ident] setBestCPTimes(CSmPlayer _Player, Integer[Ident] _Value) {
+Void setBestCPTimes(CSmPlayer _Player, Integer[Ident] _Value) {
     declare Integer[Ident] CheckpointsTimeBest for _Player.Score;
     CheckpointsTimeBest = _Value;
-    return CheckpointsTimeBest;
 }
 
-Integer[Ident] clearBestCPTimes(CSmPlayer _Player) {
+Void clearBestCPTimes(CSmPlayer _Player) {
     declare Integer[Ident] CheckpointsTimeBest for _Player.Score;
     CheckpointsTimeBest.clear();
-    return CheckpointsTimeBest;
 }
 
 Integer getBestTime(CSmPlayer _Player, Ident _Ident) {
@@ -189,16 +177,14 @@ Integer[Ident] getLastCPTimes(CSmPlayer _Player) {
     return CheckpointsTimeLast;
 }
 
-Integer[Ident] setLastCPTimes(CSmPlayer _Player, Ident _Key, Integer _Value) {
+Void setLastCPTimes(CSmPlayer _Player, Ident _Key, Integer _Value) {
     declare Integer[Ident] CheckpointsTimeLast for _Player.Score;
     CheckpointsTimeLast[_Key] = _Value;
-    return CheckpointsTimeLast;
 }
 
-Integer[Ident] clearLastCPTimes(CSmPlayer _Player) {
+Void clearLastCPTimes(CSmPlayer _Player) {
     declare Integer[Ident] CheckpointsTimeLast for _Player.Score;
     CheckpointsTimeLast.clear();
-    return CheckpointsTimeLast;
 }
 
 // Declare player's variable

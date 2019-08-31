@@ -10,14 +10,8 @@
 #Include "TextLib" as TL
 #Include "MathLib" as ML
 
-#Include "Libs/Nadeo/Message.Script.txt" as Message
-#Include "Libs/Nadeo/Spectators.Script.txt" as Spectators
-#Include "Libs/Nadeo/Layers2.Script.txt" as Layers
 #Include "Libs/Nadeo/CustomUI.Script.txt" as CustomUI
 #Include "Libs/Nadeo/TabsServer.Script.txt" as Tabs
-#Include "Libs/Nadeo/ShootMania/Scores.Script.txt" as Scores
-#Include "Libs/Nadeo/ShootMania/SM3.Script.txt" as SM
-#Include "Libs/Nadeo/ShootMania/SpawnScreen.Script.txt" as SpawnScreen
 #Include "Libs/Nadeo/ShootMania/Map.Script.txt" as Map
 
 #Include "Libs/smokegun/Tools.Script.txt" as Tools
@@ -273,17 +267,28 @@ else {
         switch (Event.Type) {
 
             case CSmModeEvent::EType::OnArmorEmpty: {
-                // Discard the defaut behaviour (e.g Player is eliminated)
+                declare CSmPlayer Victim = Null;
+                switchtype (Event.VictimEntity) {
+                    case CSmPlayer: {
+                        Victim = (Event.VictimEntity as CSmPlayer);
+                    }
+                }
+
+                if (Victim == Null) {
+                   continue;
+                }
+
 
                 // Dont respawn if the player has the offzone item
-                if (Event.Victim.IsInOffZone) {
-                    declare ItemBuffs = Player::getBuffTimes(Event.Victim);
+                if (Victim.IsInOffZone) {
+                    declare ItemBuffs = Player::getBuffTimes(Victim);
                     if (ItemBuffs.existskey(Constants::C_ItemOffzone) && ItemBuffs[Constants::C_ItemOffzone] >= Now) {
                         continue;
                     }
                 }
 
-                Obstacle::RespawnPlayer(Event.Victim);
+                Obstacle::ObsRespawnPlayer(Victim);
+                // Discard the defaut behaviour (e.g Player is eliminated)
                 Events::Invalid(Event);
             }
 
@@ -297,7 +302,7 @@ else {
                 declare ScoreId = Event.Player.Score.Id;
 
                 if (G_FinishedScores.existskey(ScoreId) && !G_FinishedScores[ScoreId])
-                    Obstacle::RespawnPlayer(Event.Player);
+                    Obstacle::ObsRespawnPlayer(Event.Player);
 
                 Events::Invalid(Event);
             }
@@ -338,7 +343,7 @@ else {
 
                     UnspawnPlayer(Event.Player);
                 }
-                PassOn(Event);
+                Events::Valid(Event);
             }
 
             default: {
@@ -356,7 +361,7 @@ else {
 
             case CSmPlayer::ESpawnStatus::Spawned: {
                 SpecKeys::UpdateLayer(Player);
-                
+
                 // Unlimited stam
                 declare StaminaUnlimited for Player = False;
                 if (StaminaUnlimited && Player.Stamina < 7500) {
@@ -573,7 +578,7 @@ Void Player_NewRound(CSmPlayer _Player)
     Player::setRespawnCount(_Player, 0);
     Player::clearLastCPTimes(_Player);
 
-    Obstacle::RespawnPlayer(_Player);
+    Obstacle::ObsRespawnPlayer(_Player);
 
     Player::setCpProgress(_Player, 0);
     Player::setBestRun(_Player, -1);
@@ -657,7 +662,7 @@ Void UpdateSettings() {
 
     if (S_MaxTimeLeft != Settings::GetMaxTimeLeft()) {
         Settings::SetMaxTimeLeft(S_MaxTimeLeft);
-    }    
+    }
 
     if (S_EnablePlayerHighlight != Settings::GetEnablePlayerHighlight()) {
         Settings::SetEnablePlayerHighlight(S_EnablePlayerHighlight);

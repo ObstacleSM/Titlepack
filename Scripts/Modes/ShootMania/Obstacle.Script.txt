@@ -10,13 +10,7 @@
 #Include "TextLib" as TL
 #Include "MathLib" as ML
 
-#Include "Libs/Nadeo/Message.Script.txt" as Message
-#Include "Libs/Nadeo/Spectators.Script.txt" as Spectators
-#Include "Libs/Nadeo/Layers2.Script.txt" as Layers
 #Include "Libs/Nadeo/TabsServer.Script.txt" as Tabs
-#Include "Libs/Nadeo/ShootMania/Scores.Script.txt" as Scores
-#Include "Libs/Nadeo/ShootMania/SM3.Script.txt" as SM
-#Include "Libs/Nadeo/ShootMania/SpawnScreen.Script.txt" as SpawnScreen
 
 #Include "Libs/smokegun/Player.Script.txt" as Player
 #Include "Libs/smokegun/ObstacleLib.Script.txt" as Obstacle
@@ -243,53 +237,59 @@ foreach (Event in PendingEvents) {
     switch (Event.Type) {
 
         case CSmModeEvent::EType::OnArmorEmpty: {
-            // Discard the defaut behaviour (e.g Player is eliminated)
-            Discard(Event);
+            declare CSmPlayer Victim = Null;
+            switchtype (Event.VictimEntity) {
+                case CSmPlayer: {
+                    Victim = (Event.VictimEntity as CSmPlayer);
+                }
+            }
 
-            if (Event.Victim == Null) {
+            if (Victim == Null) {
                continue;
             }
 
             // Dont respawn if the player has the offzone item
-            if (Event.Victim.IsInOffZone) {
-                declare ItemBuffs = Player::getBuffTimes(Event.Victim);
+            if (Victim.IsInOffZone) {
+                declare ItemBuffs = Player::getBuffTimes(Victim);
                 if (ItemBuffs.existskey(Constants::C_ItemOffzone) && ItemBuffs[Constants::C_ItemOffzone] >= Now) {
                     continue;
                 }
             }
 
-            Obstacle::RespawnPlayer(Event.Victim);
+            Obstacle::ObsRespawnPlayer(Victim);
+            // Discard the defaut behaviour (e.g Player is eliminated)
+            Events::Invalid(Event);
         }
 
         case CSmModeEvent::EType::OnHit: {
             // Disable the loose of armor when hit
-            Discard(Event);
+            Events::Invalid(Event);
         }
 
         case CSmModeEvent::EType::OnPlayerRequestRespawn: {
-            Obstacle::RespawnPlayer(Event.Player, Event.GiveUp);
-            Discard(Event);
+            Obstacle::ObsRespawnPlayer(Event.Player, Event.GiveUp);
+            Events::Invalid(Event);
         }
 
         case CSmModeEvent::EType::OnPlayerTouchesObject: {
             if (Event.Object != Null && Event.Player != Null && Items::PickupItems(Event)) {
-                PassOn(Event);
+                 Events::Valid(Event);
             }
             else {
-                Discard(Event);
+                 Events::Invalid(Event);
             }
         }
 
         case CSmModeEvent::EType::OnPlayerTriggersSector: {
             declare TookGoal = Obstacle::HandleCapture(Event.Player);
             if (TookGoal) {
-                Obstacle::RespawnPlayer(Event.Player, True);
+                Obstacle::ObsRespawnPlayer(Event.Player, True);
             }
-            PassOn(Event);
+            Events::Valid(Event);
         }
 
         default: {
-            PassOn(Event);
+            Events::Valid(Event);
         }
 
     }
@@ -304,7 +304,7 @@ foreach (Player in Players) {
             }
 
             if (!Player.RequestsSpectate) {
-                Obstacle::RespawnPlayer(Player);
+                Obstacle::ObsRespawnPlayer(Player);
             }
         }
 

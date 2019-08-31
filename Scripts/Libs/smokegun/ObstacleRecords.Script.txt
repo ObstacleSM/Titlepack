@@ -175,10 +175,11 @@ Void Loop(Text _BestRecordMsg, Text _WorseRecordMsg) {
                 Log::Error("G_ToPost_Url and G_ToPost_Data have different sizes!");
             }
 
+
             SendPost(G_ToPost_Url[0], G_ToPost_Data[0]);
 
-            G_ToPost_Url.removekey(0);
-            G_ToPost_Data.removekey(0);
+            declare Removed = G_ToPost_Url.removekey(0);
+            Removed = G_ToPost_Data.removekey(0);
         }
 
         /*
@@ -237,7 +238,7 @@ Void Loop(Text _BestRecordMsg, Text _WorseRecordMsg) {
             }
 
             // Destroy requests when they are done
-            G_CurrRequest.removekey(reqId);
+            declare Removed = G_CurrRequest.removekey(reqId);
             Http.Destroy(request);
 
         }
