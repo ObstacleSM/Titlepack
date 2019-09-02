@@ -267,29 +267,30 @@ else {
         switch (Event.Type) {
 
             case CSmModeEvent::EType::OnArmorEmpty: {
+                // Discard the defaut behaviour (e.g Player is eliminated)
+                Events::Invalid(Event);
+
                 declare CSmPlayer Victim = Null;
+
                 switchtype (Event.VictimEntity) {
                     case CSmPlayer: {
                         Victim = (Event.VictimEntity as CSmPlayer);
                     }
+                    default: {
+                        continue;
+                    }
                 }
-
-                if (Victim == Null) {
-                   continue;
-                }
-
 
                 // Dont respawn if the player has the offzone item
                 if (Victim.IsInOffZone) {
                     declare ItemBuffs = Player::getBuffTimes(Victim);
                     if (ItemBuffs.existskey(Constants::C_ItemOffzone) && ItemBuffs[Constants::C_ItemOffzone] >= Now) {
+                        Events::Invalid(Event);
                         continue;
                     }
                 }
 
                 Obstacle::ObsRespawnPlayer(Victim);
-                // Discard the defaut behaviour (e.g Player is eliminated)
-                Events::Invalid(Event);
             }
 
             case CSmModeEvent::EType::OnHit: {
