@@ -171,7 +171,11 @@ Text GetLayer() {
                         if (RecordId < G_CPTotalTimes[cp_number-1].count) {
                             // CP1 is at the index 0
                             rank.SetText((RecordId+1)^".");
-                            declare Name = Scores[G_CPTotalTimes[cp_number-1][RecordId].ScoreId].User.Name;
+                            declare ScoreId = G_CPDeltaTimes[cp_number-1][RecordId].ScoreId;
+                            declare Name = "noname";
+                            if (ScoreId < Scores.count) {
+                                Name = Scores[ScoreId].User.Name;
+                            }
                             declare Time = G_CPTotalTimes[cp_number-1][RecordId].Time;
 
                             name.SetText(Name);
@@ -187,7 +191,11 @@ Text GetLayer() {
                         if (RecordId < G_CPDeltaTimes[cp_number-1].count) {
                             // CP1 is at the index 0
                             rank.SetText((RecordId+1)^".");
-                            declare Name = Scores[G_CPDeltaTimes[cp_number-1][RecordId].ScoreId].User.Name;
+                            declare ScoreId = G_CPDeltaTimes[cp_number-1][RecordId].ScoreId;
+                            declare Name = "noname";
+                            if (ScoreId < Scores.count) {
+                                Name = Scores[ScoreId].User.Name;
+                            }
                             declare Time = G_CPDeltaTimes[cp_number-1][RecordId].Time;
 
                             name.SetText(Name);
