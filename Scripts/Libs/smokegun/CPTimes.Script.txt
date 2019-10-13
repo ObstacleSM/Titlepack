@@ -15,12 +15,14 @@
 *************************/
 
 #Struct SCPTotalTime {
-    Integer ScoreId;
+    Text Login;
+    Text Nickname;
     Integer Time;
 }
 
 #Struct SCPDeltaTime {
-    Integer ScoreId;
+    Text Login;
+    Text Nickname;
     Integer Time;
 }
 
@@ -83,12 +85,14 @@ Text GetLayer() {
         #Include "TextLib" as TL
 
         #Struct SCPTotalTime {
-            Integer ScoreId;
+            Text Login;
+            Text Nickname;
             Integer Time;
         }
 
         #Struct SCPDeltaTime {
-            Integer ScoreId;
+            Text Login;
+            Text Nickname;
             Integer Time;
         }
 
@@ -171,11 +175,7 @@ Text GetLayer() {
                         if (RecordId < G_CPTotalTimes[cp_number-1].count) {
                             // CP1 is at the index 0
                             rank.SetText((RecordId+1)^".");
-                            declare ScoreId = G_CPDeltaTimes[cp_number-1][RecordId].ScoreId;
-                            declare Name = "noname";
-                            if (ScoreId < Scores.count) {
-                                Name = Scores[ScoreId].User.Name;
-                            }
+                            declare Name = G_CPTotalTimes[cp_number-1][RecordId].Nickname;
                             declare Time = G_CPTotalTimes[cp_number-1][RecordId].Time;
 
                             name.SetText(Name);
@@ -191,11 +191,7 @@ Text GetLayer() {
                         if (RecordId < G_CPDeltaTimes[cp_number-1].count) {
                             // CP1 is at the index 0
                             rank.SetText((RecordId+1)^".");
-                            declare ScoreId = G_CPDeltaTimes[cp_number-1][RecordId].ScoreId;
-                            declare Name = "noname";
-                            if (ScoreId < Scores.count) {
-                                Name = Scores[ScoreId].User.Name;
-                            }
+                            declare Name = G_CPDeltaTimes[cp_number-1][RecordId].Nickname;
                             declare Time = G_CPDeltaTimes[cp_number-1][RecordId].Time;
 
                             name.SetText(Name);
@@ -313,18 +309,8 @@ Void UpdateLayer(CSmPlayer _Player) {
     // But they should be automatically sorted in theory
     LastCPTimes = LastCPTimes.sort();
 
-    declare ScoreId = -1;
-    for (I, 0, Scores.count) {
-        if (Scores[I].User.Login == _Player.User.Login) {
-           ScoreId = I;
-           break;
-        }
-    }
-
-    if (ScoreId < 0) {
-        return;
-    }
-
+    declare Login = _Player.User.Login;
+    declare Nickname = _Player.User.Name;
 
     declare iLastCp = 0;
     foreach (LastCPTime in LastCPTimes) {
@@ -335,25 +321,23 @@ Void UpdateLayer(CSmPlayer _Player) {
         {
             declare ToRemove = -1;
             foreach (iCPTimes => CPTime in Net_CPTotalTimes[iLastCp]) {
-                declare User <=> Scores[CPTime.ScoreId].User;
-                if (User.Name == _Player.User.Name) {
+                if (CPTime.Login == _Player.User.Login) {
                     ToRemove = iCPTimes;
                     break;
                 }
             }
-            if (ToRemove > 0) {
+            if (ToRemove >= 0) {
                 declare Removed = Net_CPTotalTimes[iLastCp].removekey(ToRemove);
             }
 
             ToRemove = -1;
             foreach (iCPTimes => CPTime in Net_CPDeltaTimes[iLastCp]) {
-                declare User <=> Scores[CPTime.ScoreId].User;
-                if (User.Name == _Player.User.Name) {
+                if (CPTime.Login == _Player.User.Login) {
                     ToRemove = iCPTimes;
                     break;
                 }
             }
-            if (ToRemove > 0) {
+            if (ToRemove >= 0) {
                 declare Removed = Net_CPDeltaTimes[iLastCp].removekey(ToRemove);
             }
         }
@@ -368,7 +352,8 @@ Void UpdateLayer(CSmPlayer _Player) {
             if (rank > 5) return;
 
             declare SCPTotalTime TotalTime;
-            TotalTime.ScoreId = ScoreId;
+            TotalTime.Login = Login;
+            TotalTime.Nickname = Nickname;
             TotalTime.Time = Time;
 
             // Add the cp time at the end
@@ -398,7 +383,8 @@ Void UpdateLayer(CSmPlayer _Player) {
             if (rank > 5) return;
 
             declare SCPDeltaTime DeltaTime;
-            DeltaTime.ScoreId = ScoreId;
+            DeltaTime.Login = Login;
+            DeltaTime.Nickname = Nickname;
             DeltaTime.Time = Delta;
 
             // Add the cp time at the end

@@ -8,6 +8,7 @@
 #Include "TextLib" as TextLib
 #Include "MathLib" as MathLib
 #Include "Libs/Nadeo/ShootMania/Map.Script.txt" as Map
+#Include "Libs/smokegun/Player.Script.txt" as Player
 
 /***************************************
     CONSTANTS
@@ -141,7 +142,7 @@ Ident GetClosestSpawn(Ident _CheckPointId) {
 }
 
 Integer GetPlayerRank(CSmPlayer _Player) {
-    declare LastCheckpointId for _Player = NullId;
+    declare LastCheckpointId = Player::getLastCheckpoint(_Player);
     declare BestRun for _Player.Score = -1;
     declare Integer[Ident] CheckpointsTimeLast for _Player.Score = [];
     declare Integer[Ident] Ranking = [];
