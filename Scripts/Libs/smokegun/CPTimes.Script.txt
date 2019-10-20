@@ -406,8 +406,13 @@ Void UpdateLayer(CSmPlayer _Player) {
 
         TimeToSub = Time;
         iLastCp += 1;
+
     }
 
+    log("Total times");
+    log(Net_CPTotalTimes);
+    log("Delta times");
+    log(Net_CPDeltaTimes);
 
     declare netwrite Integer Net_CPTimesUpdated for Teams[0] = 0;
     Net_CPTimesUpdated = Now;
