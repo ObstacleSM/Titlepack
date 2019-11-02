@@ -543,9 +543,10 @@ Void Private_HandleFinish(CSmPlayer _Player, Ident _GoalId) {
         Player::setBestRun(_Player, Time);
         Player::setBestCPTimes(_Player, Player::getLastCPTimes(_Player));
 
-        CPTimes::UpdateLayer(_Player);
         Private_UpdatePlayerRsCounter(_Player);
     }
+
+    CPTimes::UpdateLayer(_Player);
 
     // Send score
     Private_SendFinishedRun(_Player, Time, _GoalId);

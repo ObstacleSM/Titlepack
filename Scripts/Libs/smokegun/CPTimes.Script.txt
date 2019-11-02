@@ -1,4 +1,5 @@
 #Include "TextLib" as TextLib
+#Include "Libs/Nadeo/Log.Script.txt" as Log
 #Include "Libs/Nadeo/Layers2.Script.txt" as Layers
 #Include "Libs/smokegun/Player.Script.txt" as Player
 #Include "Libs/smokegun/Tools.Script.txt" as Tools
@@ -409,10 +410,10 @@ Void UpdateLayer(CSmPlayer _Player) {
 
     }
 
-    log("Total times");
-    log(Net_CPTotalTimes);
-    log("Delta times");
-    log(Net_CPDeltaTimes);
+    Log::Log("Total times");
+    Log::Log(""^Net_CPTotalTimes);
+    Log::Log("Delta times");
+    Log::Log(""^Net_CPDeltaTimes);
 
     declare netwrite Integer Net_CPTimesUpdated for Teams[0] = 0;
     Net_CPTimesUpdated = Now;
