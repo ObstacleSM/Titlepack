@@ -61,7 +61,8 @@
 #Const C_SettingsUpdateInterval 1000
 
 
-declare Ident G_InvisibleSkinId;
+declare Ident   G_InvisibleSkinId;
+declare Boolean G_EnableRecords;
 
 ***Match_LogVersions***
 ***
@@ -152,10 +153,13 @@ ItemList_End();
 
 ***Match_StartServer***
 ***
+G_EnableRecords = ServerLogin != "" && ServerName != "" && ServerModeName != "";
+UpdateSettings();
+
 SM::SetupDefaultVisibility();
 CreateUI();
 
-if (S_EnableRecords) {
+if (Settings::GetEnableRecords()) {
     API::Init();
 }
 ***
@@ -169,7 +173,6 @@ declare LastUpdate = -1;
 
 ***Match_StartMap***
 ***
-
 // This needs to be called before PrepareMap to have the right settings
 UpdateSettings();
 
@@ -212,7 +215,7 @@ if (LastUpdate + C_SettingsUpdateInterval < Now) {
 
 Obstacle::UpdatePlayersSkin(G_InvisibleSkinId);
 
-if (S_EnableRecords) {
+if (Settings::GetEnableRecords()) {
     API::Loop(S_BestNewRecordMsg, S_WorseNewRecordMsg);
 }
 
@@ -421,7 +424,7 @@ Void CreateUI() {
     Layers::SetType("Markers", CUILayer::EUILayerType::Markers);
     Layers::Create("Items", Items::CreateLayerItems());
 
-    if (S_EnableRecords) {
+    if (Settings::GetEnableRecords()) {
         Layers::Create("Records", RecordsWidget::GetLayer());
     }
 
@@ -446,7 +449,7 @@ Void DestroyUI() {
     Layers::Detach("Markers");
     Layers::Detach("Items");
 
-    if (S_EnableRecords) {
+    if (Settings::GetEnableRecords()){
         Layers::Detach("Records");
     }
 
@@ -487,8 +490,9 @@ Void UpdateSettings() {
         Settings::SetAllowJump(S_AllowJump);
     }
 
-    if (S_EnableRecords != Settings::GetEnableRecords()) {
-        Settings::SetEnableRecords(S_EnableRecords);
+    declare Boolean EnableRecords = S_EnableRecords && G_EnableRecords;
+    if (EnableRecords != Settings::GetEnableRecords()) {
+        Settings::SetEnableRecords(EnableRecords);
     }
 
     if (S_NextMapVotingRatio != Settings::GetNextMapVotingRatio()) {
