@@ -153,7 +153,8 @@ ItemList_End();
 
 ***Match_StartServer***
 ***
-G_EnableRecords = ServerLogin != "" && ServerName != "" && ServerModeName != "";
+// ServerModeName is "" when the mode is started from the map editor "Test mode with"
+G_EnableRecords = ServerModeName != "";
 UpdateSettings();
 
 SM::SetupDefaultVisibility();

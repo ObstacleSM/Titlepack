@@ -6,6 +6,7 @@
 *********************************************/
 
 #Include "TextLib" as TL
+#Include "MathLib" as ML
 
 #Include "Libs/Nadeo/Log.Script.txt" as Log
 #Include "Libs/Nadeo/Json2.Script.txt" as Json
@@ -19,6 +20,11 @@
 #Const Version "2018-10-01"
 #Const ScriptName "ObstacleRecords.Script.txt"
 
+#Struct SRequestData {
+    Text Url;
+    Text Data;
+}
+
 /*********************************************
   GLOBALES
 *********************************************/
@@ -27,7 +33,8 @@ declare Text G_PostHeaders;
 declare Text G_GetHeaders;
 
 // Requests
-declare Text[Ident] G_CurrRequest;
+declare Text[Ident] G_WaitingToComplete;
+declare SRequestData[]  G_WaitingToSend;
 
 // State (what the lib is doing)
 declare Integer G_State;
@@ -51,7 +58,15 @@ Ident MakePost(Text _Url, Text _Data) {
 
 Void SendPost(Text _Url, Text _Data) {
     Log::Log("Send request to "^_Url);
-    G_CurrRequest[MakePost(_Url, _Data)] = _Data;
+    declare reqId = MakePost(_Url, _Data);
+    if (reqId == NullId) {
+        declare SRequestData RequestData;
+        RequestData.Url = _Url;
+        RequestData.Data = _Data;
+        G_WaitingToSend.add(RequestData);
+        return;
+    }
+    G_WaitingToComplete[reqId] = _Data;
 }
 
 /////////////////////////////////////////////////////////////////
@@ -61,7 +76,7 @@ Void SendPost(Text _Url, Text _Data) {
 // Init the API with a token
 Void Init() {
     G_PostHeaders = "Content-Type: application/json\nAccept: application/xml";
-    G_GetHeaders = "Accept: application/xml";
+    G_GetHeaders  = "Accept: application/xml";
 }
 
 /////////////////////////////////////////////////////////////////
@@ -118,7 +133,7 @@ Void Loop(Text _BestRecordMsg, Text _WorseRecordMsg)
     declare Ident[] ToDelete = [];
     declare UpdateRecords = False;
 
-    foreach (reqId => data in G_CurrRequest) {
+    foreach (reqId => data in G_WaitingToComplete) {
         declare request <=> Http.Requests[reqId];
         if (!request.IsCompleted) continue;
 
@@ -168,14 +183,29 @@ Void Loop(Text _BestRecordMsg, Text _WorseRecordMsg)
              UIManager.UIAll.SendChat(TL::Compose("OBSTACLE API ERROR(%1): Please contact the developer on Obstacle's discord.", ""^request.StatusCode));
         }
 
-
         ToDelete.add(reqId);
     }
 
     foreach (reqId in ToDelete) {
         declare request <=> Http.Requests[reqId];
-        declare Removed = G_CurrRequest.removekey(reqId);
+        declare Removed = G_WaitingToComplete.removekey(reqId);
         Http.Destroy(request);
+    }
+
+    if (G_WaitingToComplete.count < Http.SlotsAvailable) {
+        declare Integer[] ToRemove = [];
+        declare AvailableCount = Http.SlotsAvailable - Http.Requests.count;
+        declare ToSendCount = ML::Min(AvailableCount, G_WaitingToSend.count);
+
+        for (I, 0, ToSendCount-1) {
+            declare RequestData = G_WaitingToSend[I];
+            declare reqId = MakePost(RequestData.Url, RequestData.Data);
+            G_WaitingToComplete[reqId] = RequestData.Data;
+        }
+
+        for (I, 0, ToSendCount-1) {
+            G_WaitingToSend.removekey(0);
+        }
     }
 
     if (UpdateRecords) {
