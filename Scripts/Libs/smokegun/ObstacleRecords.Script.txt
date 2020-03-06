@@ -98,6 +98,8 @@ Void ReplaceOrCreateMap() {
 
 // Update player infos
 Void ReplaceOrCreatePlayer(CSmPlayer _Player) {
+    return;
+
     declare payload = """
     {
     "login": {{{Json::GetText(_Player.User.Login)}}},
