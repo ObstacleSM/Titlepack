@@ -134,6 +134,12 @@ Void Loop(Text _BestRecordMsg, Text _WorseRecordMsg)
     declare UpdateRecords = False;
 
     foreach (reqId => data in G_WaitingToComplete) {
+
+        if (!Http.Requests.existskey(reqId)) {
+            ToDelete.add(reqId);
+            continue;
+        }
+
         declare request <=> Http.Requests[reqId];
         if (!request.IsCompleted) continue;
 
@@ -187,6 +193,9 @@ Void Loop(Text _BestRecordMsg, Text _WorseRecordMsg)
     }
 
     foreach (reqId in ToDelete) {
+        if (!Http.Requests.existskey(reqId)) {
+            continue;
+        }
         declare request <=> Http.Requests[reqId];
         declare Removed = G_WaitingToComplete.removekey(reqId);
         Http.Destroy(request);

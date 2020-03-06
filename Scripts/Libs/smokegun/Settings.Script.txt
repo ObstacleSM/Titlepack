@@ -1,32 +1,33 @@
 // Generated from Settings.py and Settings.tmpl
 
 
-declare Integer G_TimeLimit;	
-declare Integer G_RoundLimit;	
-declare Integer G_MinPlayers;	
-declare Integer G_PointLimit;	
-declare Integer G_PointsMax;	
-declare Integer G_PointsMin;	
-declare Integer G_PointsDeduced;	
-declare Integer G_RoundCooldown;	
-declare Integer G_WarmupRounds;	
-declare Integer G_MinTimeLeft;	
-declare Integer G_MaxTimeLeft;	
+declare Integer G_TimeLimit;
+declare Integer G_ScoreMode;
+declare Integer G_RoundLimit;
+declare Integer G_MinPlayers;
+declare Integer G_PointLimit;
+declare Integer G_PointsMax;
+declare Integer G_PointsMin;
+declare Integer G_PointsDeduced;
+declare Integer G_RoundCooldown;
+declare Integer G_WarmupRounds;
+declare Integer G_MinTimeLeft;
+declare Integer G_MaxTimeLeft;
 
-declare Boolean G_PvPWeapons;	
-declare Boolean G_FastRespawn;	
-declare Boolean G_AllowJump;	
-declare Boolean G_EnableRecords;	
-declare Boolean G_LegacyRespawn;	
-declare Boolean G_FullAmmoSpawn;	
-declare Boolean G_PointDistribution;	
-declare Boolean G_ForceInvisibleSkin;	
-declare Boolean G_EnablePlayerHighlight;	
+declare Boolean G_PvPWeapons;
+declare Boolean G_FastRespawn;
+declare Boolean G_AllowJump;
+declare Boolean G_EnableRecords;
+declare Boolean G_LegacyRespawn;
+declare Boolean G_FullAmmoSpawn;
+declare Boolean G_PointDistribution;
+declare Boolean G_ForceInvisibleSkin;
+declare Boolean G_EnablePlayerHighlight;
 
-declare Real G_NextMapVotingRatio;	
+declare Real G_NextMapVotingRatio;
 
-declare Text G_BestNewRecordMsg;	
-declare Text G_WorseNewRecordMsg;	
+declare Text G_BestNewRecordMsg;
+declare Text G_WorseNewRecordMsg;
 
 
 Integer GetTimeLimit() {
@@ -35,6 +36,14 @@ Integer GetTimeLimit() {
 
 Void SetTimeLimit(Integer _Value) {
 	G_TimeLimit = _Value;
+}
+
+Integer GetScoreMode() {
+	return G_ScoreMode;
+}
+
+Void SetScoreMode(Integer _Value) {
+	G_ScoreMode = _Value;
 }
 
 Integer GetRoundLimit() {
@@ -215,5 +224,3 @@ Text GetWorseNewRecordMsg() {
 Void SetWorseNewRecordMsg(Text _Value) {
 	G_WorseNewRecordMsg = _Value;
 }
-
-

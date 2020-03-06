@@ -115,6 +115,11 @@ Integer getBestRun(CSmPlayer _Player) {
     return BestRun;
 }
 
+Integer getBestRun(CSmScore _Score) {
+    declare Integer BestRun for _Score;
+    return BestRun;
+}
+
 Void setBestRun(CSmPlayer _Player, Integer _Value) {
     declare Integer BestRun for _Player.Score;
     BestRun = _Value;
@@ -174,6 +179,11 @@ Integer getBestTime(CSmPlayer _Player, Ident _Ident) {
 
 Integer[Ident] getLastCPTimes(CSmPlayer _Player) {
     declare Integer[Ident] CheckpointsTimeLast for _Player.Score;
+    return CheckpointsTimeLast;
+}
+
+Integer[Ident] getLastCPTimes(CSmScore _Score) {
+    declare Integer[Ident] CheckpointsTimeLast for _Score;
     return CheckpointsTimeLast;
 }
 

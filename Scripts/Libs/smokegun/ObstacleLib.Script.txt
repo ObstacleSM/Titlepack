@@ -12,7 +12,6 @@
 #Include "Libs/Nadeo/ShootMania/Map.Script.txt" as Map
 #Include "Libs/Nadeo/Ladder.Script.txt" as Ladder
 #Include "Libs/Nadeo/ShootMania/SM3.Script.txt" as SM
-#Include "Libs/Nadeo/ShootMania/Scores.Script.txt" as Scores
 #Include "Libs/Nadeo/Message.Script.txt" as Message
 #Include "Libs/Nadeo/Log.Script.txt" as Log
 #Include "Libs/Nadeo/TabsServer.Script.txt" as Tabs
@@ -27,6 +26,7 @@
 
 #Include "Libs/smokegun/UI/TimeDiff.Script.txt" as TimeDiff
 #Include "Libs/smokegun/Settings.Script.txt" as Settings
+#Include "Libs/smokegun/Score.Script.txt" as ObsScores
 
 
 /*********************************************
@@ -50,7 +50,6 @@ declare Integer G_Mode;
 /*********************************************
   FUNCTIONS
  *********************************************/
-
 Void SetMode(Integer _Mode) {
     G_Mode = _Mode;
 }
@@ -95,6 +94,7 @@ Void UpdatePlayersSkin(Ident SkinId) {
     }
 }
 
+
 /**
  * Initialize the map (count cp, find spawn, send api request)
  *
@@ -129,6 +129,8 @@ Boolean PrepareMap() {
     Net_CheckpointsTotal = G_CheckpointsTotal;
 
     CPTimes::StartMap(G_CheckpointsTotal);
+    ObsScores::SetCheckpointTotal(G_CheckpointsTotal);
+    ObsScores::OnMapBegin();
 
     // Search start spawn
     foreach (SpawnLandmark in MapLandmarks_PlayerSpawn) {
@@ -198,46 +200,6 @@ Void Private_SendFinishedRun(CSmPlayer _Player, Integer _Run, Ident _GoalId) {
     Private_SendXmlRpcCallback("OnFinish", _Player, _Run, _GoalId);
     if (Settings::GetEnableRecords()) {
         API::PlayerFinished(_Player);
-    }
-}
-
-/////////////////////////////////////////////////////////////////
-///////////////////// RANKING FUNCTIONS /////////////////////////
-/////////////////////////////////////////////////////////////////
-
-/**
- * Update the scores of the players based on their best run or cp progress
- *
- */
-Void Private_UpdateRanking() {
-    if (G_Mode != Constants::C_Mode_Obstacle) {
-        return;
-    }
-
-    declare Integer[Ident] Finished = [];
-    declare CSmPlayer[] Unfinished = [];
-
-    // Split finished and unfinished players
-    foreach (Player in AllPlayers) {
-        declare BestRun = Player::getBestRun(Player);
-        if (BestRun > 0) Finished[Player.Id] = BestRun;
-        else Unfinished.add(Player);
-    }
-
-    // Unfinished players score are based on checkpoints reached
-    foreach (Player in Unfinished) {
-        declare Points = Player::getLastCPTimes(Player).count;
-        Scores::SetPlayerMapPoints(Player.Score, Points);
-    }
-
-    // Finished players scores are based on their ranking amongst themselves
-    Finished =  Finished.sort();
-    declare rank = 0;
-    foreach (Id => Time in Finished) {
-        if (Players.existskey(Id)) {
-            Scores::SetPlayerMapPoints(Players[Id].Score, G_CheckpointsTotal + Finished.count - rank);
-        }
-        rank += 1;
     }
 }
 
@@ -410,9 +372,13 @@ Void ObsRespawnPlayer(CSmPlayer _Player, Boolean _forceRestart) {
     /////////////////////////////////
     // Common behaviour after spawns
 
-    Private_UpdateRanking();
+    if (G_Mode == Constants::C_Mode_Obstacle) {
+       ObsScores::OnRespawnPlayer(_Player);
+    }
 
-    Private_UpdatePlayerBestTime(_Player);
+
+    Private_UpdatePlayerBestTime(_Player); // update rs count
+
     if (Player::getBestRun(_Player) < 0) {
         Private_UpdatePlayerRsCounter(_Player);
     }
@@ -654,8 +620,9 @@ Void Private_HandleCheckpoint(CSmPlayer _Player, Ident _CheckpointId) {
             CUIConfig::ENoticeLevel::PlayerInfo, _Player.User, CUIConfig::EAvatarVariant::Default,
             CUIConfig::EUISound::Checkpoint, Variant);
 
-    // BELOW IS OBSTACLE ONLY
-    Private_UpdateRanking();
+    if (G_Mode == Constants::C_Mode_Obstacle) {
+       ObsScores::OnCheckpoint(_Player);
+    }
 }
 
 /**
