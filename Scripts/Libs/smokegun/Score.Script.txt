@@ -1,0 +1,316 @@
+
+/*********************************************
+* Obstacle Library                           *
+* Author:  smokegun                          *
+*                                            *
+* Obstacle functions.                        *
+*********************************************/
+
+
+/*
+calcul de score
+joueurs en vie
+faire une commande pour lancer/finir
+restart la map quand on lance
+
+todo:
+voir pour le rendre compatible au sprint
+*/
+
+#Include "TextLib" as TL
+#Include "Libs/Nadeo/ShootMania/Scores.Script.txt" as Scores
+#Include "Libs/smokegun/Constants.Script.txt" as Constants
+#Include "Libs/smokegun/Player.Script.txt" as Player
+#Include "Libs/smokegun/Settings.Script.txt" as Settings
+
+#Const  Version     "2020-02-19"
+#Const  ScriptName  "Score.Script.txt"
+
+#Const C_DefaultMaxLives 100
+
+#Struct SSurvivalPlayer
+{
+    Text Login;
+    Text Nickname;
+    Integer Lives;
+    Integer WillLoose; // amount of lives the player will loose at the end of the map
+    Boolean IsAlive;
+}
+
+declare SSurvivalPlayer[] G_SurvivalPlayers;
+declare Integer G_CheckpointsTotal;
+declare Integer G_SurvivalMaps;
+
+declare Boolean G_TriggerSurvivalBegin;
+declare Integer G_MaxLives;
+
+Void SetCheckpointTotal(Integer _Value)
+{
+    G_CheckpointsTotal = _Value;
+}
+
+
+Void Private_UpdateRanking() {
+    declare Integer[Ident] Points = [];
+    declare Integer[Ident] Finished = [];
+    declare CSmScore[] Unfinished = [];
+
+    // TODO: utiliser les Scores a la place si ca gere la deco
+
+    // Split finished and unfinished players
+    foreach (Score in Scores) {
+        declare BestRun = Player::getBestRun(Score);
+        if (BestRun > 0) Finished[Score.Id] = BestRun;
+        else Unfinished.add(Score);
+    }
+
+    // Unfinished players score are based on checkpoints reached
+    foreach (Score in Unfinished) {
+        Points[Score.Id] = Player::getLastCPTimes(Score).count;
+    }
+
+    // Finished players scores are based on their ranking amongst themselves
+    Finished =  Finished.sort();
+    declare rank = -1;
+    declare last_time = -1;
+    foreach (Id => Time in Finished) {
+        if (Time != last_time) {
+            rank += 1;
+        }
+        Points[Id] = G_CheckpointsTotal + Finished.count - rank;
+        last_time = Time;
+    }
+
+    Points = Points.sortreverse();
+
+    if (Settings::GetScoreMode() == Constants::C_Score_Normal) {
+
+        foreach (Id => P in Points) {
+            if (!Scores.existskey(Id)) continue;
+            declare Score <=> Scores[Id];
+            Scores::SetPlayerMapPoints(Score, P);
+        }
+
+    }
+    else if (Settings::GetScoreMode() == Constants::C_Score_Survival){
+        declare Integer[Integer] PointsByIdx = [];
+
+        // We need the ranks of every players to know their score
+        // If a players is not connected, he is considered last
+        foreach (Idx => SurvivalPlayer in G_SurvivalPlayers) {
+            declare PlayerId = NullId;
+            foreach (Score in Scores) {
+                if (Score.User.Login == SurvivalPlayer.Login) {
+                    PlayerId = Score.Id;
+                    break;
+                }
+            }
+
+            if (PlayerId == NullId) {
+                PointsByIdx[Idx] = -999; // or 0 so that disconnected players are ranked the same as afk/cp0 players?
+            }
+            else {
+                PointsByIdx[Idx] = Points[PlayerId];
+            }
+        }
+
+        PointsByIdx = PointsByIdx.sortreverse();
+
+        declare Rank = -1;
+        declare LastPoints = -1;
+        foreach (I => Points in PointsByIdx) {
+            if (Points != LastPoints) {
+                Rank += 1;
+                LastPoints = Points;
+            }
+
+            // Find associated player
+            declare PlayerId = NullId;
+            foreach (Score in Scores) {
+                if (Score.User.Login == G_SurvivalPlayers[I].Login) {
+                    PlayerId = Score.Id;
+                    break;
+                }
+            }
+
+            // survival formula
+            if (Rank == 0) {
+                G_SurvivalPlayers[I].WillLoose = 0;
+            }
+            else {
+                G_SurvivalPlayers[I].WillLoose = (2*Rank + 3*G_SurvivalMaps);
+            }
+
+            if (PlayerId != NullId) {
+                declare Score <=> Scores[PlayerId];
+                Scores::SetPlayerMapPoints(Score, G_SurvivalPlayers[I].Lives - G_SurvivalPlayers[I].WillLoose);
+            }
+        }
+    }
+
+}
+
+Void OnCheckpoint(CSmPlayer _Player) {
+     Private_UpdateRanking();
+
+     if (Settings::GetScoreMode() == Constants::C_Score_Survival) {
+
+     }
+}
+
+Void OnRespawnPlayer(CSmPlayer _Player) {
+     Private_UpdateRanking();
+
+     if (Settings::GetScoreMode() == Constants::C_Score_Survival) {
+
+     }
+}
+
+// enable survival on next map
+Void Survival_Begin(Integer _MaxLives) {
+     G_TriggerSurvivalBegin = True;
+     if (_MaxLives <= 0) {
+         G_MaxLives = C_DefaultMaxLives;
+     }
+     else {
+         G_MaxLives = _MaxLives;
+     }
+}
+
+Void Survival_Init() {
+    UIManager.UIAll.SendChat("$zBeginning Survival Mode!");
+    Settings::SetScoreMode(Constants::C_Score_Survival);
+    UIManager.UIAll.SendChat("$zPlayers registered for the cup:");
+
+    foreach (Player in Players) {
+        declare SSurvivalPlayer P;
+        P.Login = Player.User.Login;
+        P.Nickname = Player.User.Name;
+        P.Lives = G_MaxLives;
+        P.WillLoose = 0;
+        P.IsAlive = True;
+        G_SurvivalPlayers.add(P);
+
+        UIManager.UIAll.SendChat("$z- "^Player.User.Name);
+    }
+}
+
+Void Survival_PrintRankings() {
+    declare Integer[Integer] LivesByIdx = []; // PlayerIdx => Lives
+
+    foreach (Idx => SurvivalPlayer in G_SurvivalPlayers) {
+        LivesByIdx[Idx] = SurvivalPlayer.Lives;
+    }
+
+    LivesByIdx = LivesByIdx.sortreverse();
+
+    UIManager.UIAll.SendChat("$zSurvival ranking:");
+
+    declare Rank = 0;
+    declare LastLives = -1;
+    foreach (PlayerIdx => Lives in LivesByIdx) {
+        declare SurvivalPlayer = G_SurvivalPlayers[PlayerIdx];
+        if (LastLives != SurvivalPlayer.Lives) {
+            Rank += 1;
+        }
+
+        declare msg = TL::Compose("$z%1. %2$z: %3 live(s)", ""^Rank, SurvivalPlayer.Nickname, ""^SurvivalPlayer.Lives);
+        UIManager.UIAll.SendChat(msg);
+
+        LastLives = Lives;
+    }
+
+}
+
+Void Survival_End() {
+    Settings::SetScoreMode(Constants::C_Score_Normal);
+
+    UIManager.UIAll.SendChat("$zSurvival Mode ends!");
+    UIManager.UIAll.SendChat("$zThere is only one player left!");
+    Survival_PrintRankings();
+    G_SurvivalPlayers.clear();
+}
+
+// Determine if the script should spawn the player (used for survival only)
+Boolean PlayerShouldSpawn(CSmPlayer _Player) {
+    if (Settings::GetScoreMode() == Constants::C_Score_Survival) {
+        foreach (SurvivalPlayer in G_SurvivalPlayers) {
+            if (SurvivalPlayer.Login == _Player.User.Login) {
+                return SurvivalPlayer.IsAlive;
+            }
+        }
+        return False;
+    }
+    return True;
+}
+
+Void OnMapBegin() {
+    if (G_TriggerSurvivalBegin)
+    {
+        Survival_Init();
+        G_TriggerSurvivalBegin = False;
+
+        G_SurvivalMaps = 0;
+    }
+
+    if (Settings::GetScoreMode() == Constants::C_Score_Survival)
+    {
+        G_SurvivalMaps += 1;
+
+        Private_UpdateRanking();
+        Survival_PrintRankings();
+    }
+}
+
+Void OnMapEnd()
+{
+    if (Settings::GetScoreMode() == Constants::C_Score_Survival)
+    {
+        declare NbAlive = 0;
+
+        // foreach doesnt work???
+        for (I, 0, G_SurvivalPlayers.count-1) {
+            G_SurvivalPlayers[I].Lives = G_SurvivalPlayers[I].Lives - G_SurvivalPlayers[I].WillLoose;
+            G_SurvivalPlayers[I].WillLoose = 0;
+
+            // Check if player is dead
+            if (G_SurvivalPlayers[I].Lives <= 0) {
+                G_SurvivalPlayers[I].IsAlive = False;
+            }
+            else {
+                NbAlive += 1;
+            }
+        }
+
+        // End condition
+        // Finish survival
+        // Announce winner (and ranking?)
+        if (NbAlive <= 1)
+        {
+            Survival_End();
+        }
+    }
+
+    declare BestPlayerScore <=> Scores::GetBestPlayerMapPoints(Scores::C_Order_Descending);
+    if (BestPlayerScore != Null) {
+        Scores::SetPlayerWinner(BestPlayerScore);
+    }
+    else {
+        Scores::ResetPlayerWinner();
+    }
+}
+
+Void Survival_ForceEnd() {
+    OnMapEnd();
+    if (Settings::GetScoreMode() == Constants::C_Score_Normal) {
+        // Survival_End got called
+    }
+    else {
+        Settings::SetScoreMode(Constants::C_Score_Normal);
+
+        UIManager.UIAll.SendChat("$zForce Survival Mode ends!");
+        Survival_PrintRankings();
+        G_SurvivalPlayers.clear();
+    }
+    Private_UpdateRanking();
+}
