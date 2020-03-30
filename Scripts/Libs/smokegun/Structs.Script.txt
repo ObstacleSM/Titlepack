@@ -1,0 +1,23 @@
+
+#Struct SSurvivalPlayer
+{
+    Text Login;
+    Text Nickname;
+    Integer Lives;
+    Integer WillLoose; // amount of lives the player will loose at the end of the map
+    Boolean IsAlive;
+}
+
+Text GetSSurvivalPlayerStruct()
+{
+return """
+#Struct SSurvivalPlayer
+{
+    Text Login;
+    Text Nickname;
+    Integer Lives;
+    Integer WillLoose; // amount of lives the player will loose at the end of the map
+    Boolean IsAlive;
+}
+""";
+}

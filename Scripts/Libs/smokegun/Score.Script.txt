@@ -22,22 +22,16 @@ voir pour le rendre compatible au sprint
 #Include "Libs/smokegun/Constants.Script.txt" as Constants
 #Include "Libs/smokegun/Player.Script.txt" as Player
 #Include "Libs/smokegun/Settings.Script.txt" as Settings
+#Include "Libs/smokegun/UI/SurvivalRanking.Script.txt" as SurvivalRanking
+#Include "Libs/smokegun/Structs.Script.txt" as Structs
 
 #Const  Version     "2020-02-19"
 #Const  ScriptName  "Score.Script.txt"
 
 #Const C_DefaultMaxLives 100
 
-#Struct SSurvivalPlayer
-{
-    Text Login;
-    Text Nickname;
-    Integer Lives;
-    Integer WillLoose; // amount of lives the player will loose at the end of the map
-    Boolean IsAlive;
-}
+#Struct Structs::SSurvivalPlayer as SSurvivalPlayer
 
-declare SSurvivalPlayer[] G_SurvivalPlayers;
 declare Integer G_CheckpointsTotal;
 declare Integer G_SurvivalMaps;
 
@@ -49,8 +43,8 @@ Void SetCheckpointTotal(Integer _Value)
     G_CheckpointsTotal = _Value;
 }
 
-
 Void Private_UpdateRanking() {
+    declare SSurvivalPlayer[] G_SurvivalPlayers for Teams[0] = [];
     declare Integer[Ident] Points = [];
     declare Integer[Ident] Finished = [];
     declare CSmScore[] Unfinished = [];
@@ -134,7 +128,7 @@ Void Private_UpdateRanking() {
             }
 
             // survival formula
-            if (Rank == 0) {
+            if (False && Rank == 0) {
                 G_SurvivalPlayers[I].WillLoose = 0;
             }
             else {
@@ -146,6 +140,7 @@ Void Private_UpdateRanking() {
                 Scores::SetPlayerMapPoints(Score, G_SurvivalPlayers[I].Lives - G_SurvivalPlayers[I].WillLoose);
             }
         }
+        SurvivalRanking::UpdateLayer();
     }
 
 }
@@ -178,6 +173,9 @@ Void Survival_Begin(Integer _MaxLives) {
 }
 
 Void Survival_Init() {
+    declare SSurvivalPlayer[] G_SurvivalPlayers for Teams[0] = [];
+    G_SurvivalPlayers.clear();
+
     UIManager.UIAll.SendChat("$zBeginning Survival Mode!");
     Settings::SetScoreMode(Constants::C_Score_Survival);
     UIManager.UIAll.SendChat("$zPlayers registered for the cup:");
@@ -193,9 +191,12 @@ Void Survival_Init() {
 
         UIManager.UIAll.SendChat("$z- "^Player.User.Name);
     }
+
+    SurvivalRanking::OnSurvivalStart();
 }
 
 Void Survival_PrintRankings() {
+    declare SSurvivalPlayer[] G_SurvivalPlayers for Teams[0] = [];
     declare Integer[Integer] LivesByIdx = []; // PlayerIdx => Lives
 
     foreach (Idx => SurvivalPlayer in G_SurvivalPlayers) {
@@ -223,16 +224,20 @@ Void Survival_PrintRankings() {
 }
 
 Void Survival_End() {
+    declare SSurvivalPlayer[] G_SurvivalPlayers for Teams[0] = [];
     Settings::SetScoreMode(Constants::C_Score_Normal);
 
     UIManager.UIAll.SendChat("$zSurvival Mode ends!");
     UIManager.UIAll.SendChat("$zThere is only one player left!");
     Survival_PrintRankings();
     G_SurvivalPlayers.clear();
+
+    SurvivalRanking::OnSurvivalEnd();
 }
 
 // Determine if the script should spawn the player (used for survival only)
 Boolean PlayerShouldSpawn(CSmPlayer _Player) {
+    declare SSurvivalPlayer[] G_SurvivalPlayers for Teams[0] = [];
     if (Settings::GetScoreMode() == Constants::C_Score_Survival) {
         foreach (SurvivalPlayer in G_SurvivalPlayers) {
             if (SurvivalPlayer.Login == _Player.User.Login) {
@@ -260,10 +265,15 @@ Void OnMapBegin() {
         Private_UpdateRanking();
         Survival_PrintRankings();
     }
+    else
+    {
+        SurvivalRanking::OnSurvivalEnd();
+    }
 }
 
 Void OnMapEnd()
 {
+    declare SSurvivalPlayer[] G_SurvivalPlayers for Teams[0] = [];
     if (Settings::GetScoreMode() == Constants::C_Score_Survival)
     {
         declare NbAlive = 0;
@@ -301,6 +311,8 @@ Void OnMapEnd()
 }
 
 Void Survival_ForceEnd() {
+    declare SSurvivalPlayer[] G_SurvivalPlayers for Teams[0] = [];
+
     OnMapEnd();
     if (Settings::GetScoreMode() == Constants::C_Score_Normal) {
         // Survival_End got called

@@ -25,6 +25,7 @@
 #Include "Libs/smokegun/UI/NextMapVote.Script.txt" as NextMapVote
 #Include "Libs/smokegun/UI/RespawnBehavior.Script.txt" as RespawnBehavior
 #Include "Libs/smokegun/UI/SpecKeys.Script.txt" as SpecKeys
+#Include "Libs/smokegun/UI/SurvivalRanking.Script.txt" as SurvivalRanking
 
 #Include "Libs/smokegun/CPTimes.Script.txt" as CPTimes
 
@@ -318,6 +319,7 @@ foreach (Event in PendingEvents) {
 }
 
 foreach (Player in Players) {
+
     switch (Player.SpawnStatus) {
 
         case CSmPlayer::ESpawnStatus::NotSpawned: {
@@ -439,6 +441,7 @@ Void CreateUI() {
     if (Settings::GetEnableRecords()) {
         Layers::Create("Records", RecordsWidget::GetLayer());
     }
+    Layers::Create("SurvivalRanking", SurvivalRanking::GetLayer());
 
     Layers::Attach("Chrono");
     Layers::Attach("TimeDiff");
@@ -451,6 +454,7 @@ Void CreateUI() {
     Layers::Attach("NextMapVote");
     Layers::Attach("RespawnBehavior");
     Layers::Attach("SpecKeys");
+    Layers::Attach("SurvivalRanking");
 }
 
 Void DestroyUI() {
@@ -469,6 +473,7 @@ Void DestroyUI() {
     Layers::Detach("NextMapVote");
     Layers::Detach("RespawnBehavior");
     Layers::Detach("SpecKeys");
+    Layers::Detach("SurvivalRanking");
 
     UIManager.UILayerDestroyAll();
 }
