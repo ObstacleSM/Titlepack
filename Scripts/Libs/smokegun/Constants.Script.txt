@@ -15,8 +15,9 @@
 #Const C_HostUrl "https://api.obstacle.ovh/api/"
 #Const C_WebsiteUrl "https://www.obstacle.ovh"
 //#Const C_HostUrl "http://localhost:3000/api/"
-#Const C_SIdle 0
-#Const C_SLoggingIn 1
+#Const C_Request_ReplaceOrCreateMap 0
+#Const C_Request_ReplaceOrCreatePlayer 1
+#Const C_Request_PlayerFinished 2
 
 // Weapons
 #Const C_Weapon_Laser 0

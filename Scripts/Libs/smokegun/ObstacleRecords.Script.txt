@@ -23,6 +23,7 @@
 #Struct SRequestData {
     Text Url;
     Text Data;
+    Integer Type;
 }
 
 /*********************************************
@@ -33,12 +34,8 @@ declare Text G_PostHeaders;
 declare Text G_GetHeaders;
 
 // Requests
-declare Text[Ident] G_WaitingToComplete;
+declare SRequestData[Ident] G_WaitingToComplete;
 declare SRequestData[]  G_WaitingToSend;
-
-// State (what the lib is doing)
-declare Integer G_State;
-declare Integer G_PreviousState;
 
 /////////////////////////////////////////////////////////////////
 /////////////////////       TOOLS       /////////////////////////
@@ -49,24 +46,26 @@ Boolean Contains(Text _Text, Text _Input) {
 
 // Used to create a POST request
 Ident MakePost(Text _Url, Text _Data) {
-    if (Http.Requests.count >= Http.SlotsAvailable) {
-        return NullId;
+    if (Http.SlotsAvailable > 0) {
+        declare request <=> Http.CreatePost(Constants::C_HostUrl^_Url, _Data, G_PostHeaders);
+        return request.Id;
     }
-    declare request <=> Http.CreatePost(Constants::C_HostUrl^_Url, _Data, G_PostHeaders);
-    return request.Id;
+    return NullId;
 }
 
-Void SendPost(Text _Url, Text _Data) {
+Void SendPost(Text _Url, Text _Data, Integer _Type) {
     Log::Log("Send request to "^_Url);
+    declare SRequestData RequestData;
+    RequestData.Url = _Url;
+    RequestData.Data = _Data;
+    RequestData.Type = _Type;
+
     declare reqId = MakePost(_Url, _Data);
-    if (reqId == NullId) {
-        declare SRequestData RequestData;
-        RequestData.Url = _Url;
-        RequestData.Data = _Data;
+    if (reqId == NullId && G_WaitingToSend.count < 64) {
         G_WaitingToSend.add(RequestData);
         return;
     }
-    G_WaitingToComplete[reqId] = _Data;
+    G_WaitingToComplete[reqId] = RequestData;
 }
 
 /////////////////////////////////////////////////////////////////
@@ -93,20 +92,18 @@ Void ReplaceOrCreateMap() {
     }
     """;
 
-    SendPost("Maps/replaceOrCreate", payload);
+    SendPost("Maps/replaceOrCreate", payload, Constants::C_Request_ReplaceOrCreateMap);
 }
 
 // Update player infos
 Void ReplaceOrCreatePlayer(CSmPlayer _Player) {
-    return;
-
     declare payload = """
     {
     "login": {{{Json::GetText(_Player.User.Login)}}},
     "nickname": {{{Json::GetText(_Player.User.Name)}}}
     }""";
 
-    SendPost("Players/replaceOrCreate", payload);
+    SendPost("Players/replaceOrCreate", payload, Constants::C_Request_ReplaceOrCreatePlayer);
 }
 
 // Send records
@@ -121,7 +118,7 @@ Void PlayerFinished(CSmPlayer _Player) {
     "mapId": {{{Json::GetText(""^Map.Id)}}}
     }""";
 
-    SendPost("Records/player-finished", payload);
+    SendPost("Records/player-finished", payload, Constants::C_Request_PlayerFinished);
 }
 
 
@@ -135,7 +132,11 @@ Void Loop(Text _BestRecordMsg, Text _WorseRecordMsg)
     declare Ident[] ToDelete = [];
     declare UpdateRecords = False;
 
-    foreach (reqId => data in G_WaitingToComplete) {
+    // log("G_WaitingToComplete.count: "^G_WaitingToComplete.count);
+    // log("G_WaitingToSend.count: "^G_WaitingToSend.count);
+    // log("Http.SlotsAvailable: "^Http.SlotsAvailable);
+
+    foreach (reqId => ReqData in G_WaitingToComplete) {
 
         if (!Http.Requests.existskey(reqId)) {
             ToDelete.add(reqId);
@@ -149,10 +150,10 @@ Void Loop(Text _BestRecordMsg, Text _WorseRecordMsg)
 
         if (request.StatusCode == 200) {
 
-            if (TL::Find("player-finished", request.Url, True, True)) {
-               declare response = Xml.Create(request.Result);
+            if (ReqData.Type == Constants::C_Request_PlayerFinished) {
+                declare response = Xml.Create(request.Result);
 
-               if ( response != Null
+                if ( response != Null
                     && response.Root != Null
                     && response.Root.GetFirstChild("newBest") != Null
                     && response.Root.GetFirstChild("login") != Null
@@ -203,15 +204,14 @@ Void Loop(Text _BestRecordMsg, Text _WorseRecordMsg)
         Http.Destroy(request);
     }
 
-    if (G_WaitingToComplete.count < Http.SlotsAvailable) {
+    if (G_WaitingToSend.count > 0) {
         declare Integer[] ToRemove = [];
-        declare AvailableCount = Http.SlotsAvailable - Http.Requests.count;
-        declare ToSendCount = ML::Min(AvailableCount, G_WaitingToSend.count);
+        declare ToSendCount = ML::Min(Http.SlotsAvailable, G_WaitingToSend.count);
 
         for (I, 0, ToSendCount-1) {
             declare RequestData = G_WaitingToSend[I];
             declare reqId = MakePost(RequestData.Url, RequestData.Data);
-            G_WaitingToComplete[reqId] = RequestData.Data;
+            G_WaitingToComplete[reqId] = RequestData;
         }
 
         for (I, 0, ToSendCount-1) {
