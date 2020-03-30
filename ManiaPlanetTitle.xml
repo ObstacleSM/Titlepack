@@ -92,7 +92,7 @@
 		<folder name="Media" public="false" internal="false"/>
 		<folder name="Modules" public="false" internal="false"/>
 		<folder name="Scripts" public="false" internal="false"/>
-		<folder name="Skins" public="true" internal="false"/>
+		<folder name="Skins" public="false" internal="false"/>
 	</folders>
 	<hud_default_module name=""/>
 </maniaplanet_title>
