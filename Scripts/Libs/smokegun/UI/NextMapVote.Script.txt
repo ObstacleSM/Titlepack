@@ -25,12 +25,11 @@ Void Yield(Real _NextMapVotingRatio) {
     Net_PlayersVotingNext = VotingsNb;
     Net_PlayersVotingRemaining = Remaining;
 
-
     // End map?
     if (VotingsNb > 0
         && Remaining <= 0
         && StartTime + 15000 < Now
-        && EndTime - 15000 > Now
+        && (EndTime == -1 || EndTime - 15000 > Now)
     ) {
         Message::SendStatusMessage(_("Voting has forced an End of the current Map."), 5000, 1);
         EndTime = Now + 15000;
