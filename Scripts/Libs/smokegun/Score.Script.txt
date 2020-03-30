@@ -128,7 +128,7 @@ Void Private_UpdateRanking() {
             }
 
             // survival formula
-            if (False && Rank == 0) {
+            if (Rank == 0) {
                 G_SurvivalPlayers[I].WillLoose = 0;
             }
             else {
