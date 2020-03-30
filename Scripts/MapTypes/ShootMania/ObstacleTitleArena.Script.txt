@@ -994,6 +994,7 @@ Void UpdateValidability()
 {
     declare StartSpawns = 0;
     declare Goals = 0;
+    declare Integer[Integer] CPCounts = [];
 
     foreach (Anchor in AnchorData)
     {
@@ -1015,6 +1016,13 @@ Void UpdateValidability()
                     }
                 }
             }
+            case "Checkpoint":
+            {
+                if (!CPCounts.existskey(Anchor.Order)) {
+                    CPCounts[Anchor.Order] = 0;
+                }
+                CPCounts[Anchor.Order] += 1;
+            }
             default :
             {
                 if (IsGoal(Anchor))
@@ -1023,6 +1031,11 @@ Void UpdateValidability()
                 }
             }
         }
+    }
+
+    declare MaxOrder = 0;
+    foreach (Order => Count in CPCounts) {
+        MaxOrder = ML::Max(MaxOrder, Order);
     }
 
 
@@ -1036,9 +1049,31 @@ Void UpdateValidability()
         ValidationStatus = CSmMapType::ValidationStatus::NotValidable;
         ValidabilityRequirementsMessage = _("You must place at least one Goal.");
     }
+    else if (CPCounts.existskey(0))
+    {
+        ValidationStatus = CSmMapType::ValidationStatus::NotValidable;
+        ValidabilityRequirementsMessage = _("Every checkpoint needs to have an order.");
+    }
     else
     {
-        ValidationStatus = CSmMapType::ValidationStatus::Validated;
+        declare IsOk = True;
+        declare Missing = -1;
+
+        for (Order, 1, MaxOrder) {
+            if (!CPCounts.existskey(Order)) {
+                Missing = Order;
+                IsOk = False;
+                break;
+            }
+        }
+
+        if (IsOk) {
+            ValidationStatus = CSmMapType::ValidationStatus::Validated;
+        }
+        else {
+            ValidationStatus = CSmMapType::ValidationStatus::NotValidable;
+            ValidabilityRequirementsMessage = "Missing checkpoint #"^Missing;
+        }
     }
 }
 
