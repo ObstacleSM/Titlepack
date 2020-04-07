@@ -483,7 +483,7 @@ Void UpdateSettings() {
         Settings::SetTimeLimit(S_TimeLimit);
 
         if (Hud != Null && Hud.ScoresTable != Null) {
-            Hud.ScoresTable.SetFooterText(TL::Compose("%1 "^TL::TimeToText(S_TimeLimit * 60 * 1000), _("Time limit : ")));
+            Hud.ScoresTable.SetFooterText(TL::Compose("%1 "^Tools::TimeLimitToText(S_TimeLimit), _("Time limit : ")));
         }
 
         if (S_TimeLimit > 0) {

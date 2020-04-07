@@ -185,3 +185,18 @@ Integer GetPlayerRank(CSmPlayer _Player) {
 
     return Rank;
 }
+
+Text TimeLimitToText(Integer _TimeLimit)
+{
+    declare H = _TimeLimit / 60;
+    declare M = _TimeLimit % 60;
+    declare HH = ""^H;
+    if (H < 10) {
+        HH = "0" ^ HH;
+    }
+    declare MM = ""^M;
+    if (M < 10) {
+        MM = "0" ^ MM;
+    }
+    return HH^":"^MM;
+}
