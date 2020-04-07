@@ -25,6 +25,7 @@
 #Include "Libs/smokegun/UI/CpProgress.Script.txt" as CpProgress
 #Include "Libs/smokegun/UI/SpectatorCount.Script.txt" as SpectatorCount
 #Include "Libs/smokegun/UI/SpecKeys.Script.txt" as SpecKeys
+#Include "Libs/smokegun/UI/Duo.Script.txt" as Duo
 
 #Include "Libs/smokegun/Items.Script.txt" as Items
 #Include "Libs/smokegun/ObstacleRecords.Script.txt" as API
@@ -40,7 +41,7 @@
 #Setting S_TimeLimit 10 as _("Time limit (minutes)")
 #Setting S_RoundLimit 5 as _("Round limit")
 #Setting S_MinPlayers 2  as _("Number of players needed to start a map")
-#Setting S_PointDistribution False as _("Beta: Enable dynamic point distribution")
+#Setting S_PointDistribution False as _("Enable dynamic point distribution")
 #Setting S_PointLimit 10 as _("Point limit")
 #Setting S_PointsMax 3 as _("Points for the 1st player")
 #Setting S_PointsMin 1 as _("Points for the lasts players")
@@ -51,6 +52,8 @@
 #Setting S_MinTimeLeft 20 as _("Minimum time left (seconds)")
 #Setting S_MaxTimeLeft 120 as _("Maximum time left (seconds)")
 #Setting S_EnablePlayerHighlight False as "Highlight players"
+#Setting S_DuoSprint False as "Beta: DuoSprint"
+#Setting S_MinWaitTime 10 as "Beta: Minimum waiting time"
 
 #Setting S_ScriptEnvironment "development"
 
@@ -141,7 +144,7 @@ if (Hud != Null && Hud.ScoresTable != Null) {
     TabsLayer.Type = CUILayer::EUILayerType::AltMenu;
     UIManager.UIAll.UILayers.add(TabsLayer);
 
-    Hud.ScoresTable.SetFooterText("Time limit: "^TL::TimeToText(S_TimeLimit*60*1000)^" | Round limit: "^S_RoundLimit^" | Point limit: "^S_PointLimit^" | Warmup round: "^S_WarmupRounds);
+    Hud.ScoresTable.SetFooterText("Time limit: "^Tools::TimeLimitToText(S_TimeLimit)^" | Round limit: "^S_RoundLimit^" | Point limit: "^S_PointLimit^" | Warmup round: "^S_WarmupRounds);
 }
 ***
 
@@ -157,13 +160,11 @@ ItemList_Begin();
 G_InvisibleSkinId = ItemList_Add("InvisibleBot.Item.Gbx");
 Items::LoadItems();
 ItemList_End();
-
 ***
 
 ***Match_StartServer***
 ***
 Obstacle::SetMode(Constants::C_Mode_Sprint);
-CreateUI();
 ***
 
 ***Match_InitMap***
@@ -174,7 +175,8 @@ declare LastUpdate = -1;
 
 ***Match_StartMap***
 ***
-DoNothing();
+CreateUI();
+
 // map is invalid
 if (!Obstacle::PrepareMap()) {
     MB_StopMap();
@@ -196,6 +198,12 @@ G_State = C_State_Waiting;
 
 Message::SendBigMessage("Waiting for "^S_MinPlayers^" players...", 2000, 0, CUIConfig::EUISound::Default, 1);
 
+if (S_DuoSprint) {
+    declare DuoMsg = "DuoSprint mode: Players need to make teams to start the match";
+    Message::SendBigMessage(DuoMsg, 2000, 0, CUIConfig::EUISound::Default, 1);
+    UIManager.UIAll.SendChat(DuoMsg);
+}
+
 CurrentRound = 0;
 ***
 
@@ -207,10 +215,42 @@ declare Integer NumberOfPlayerRound;
 
 ***Match_StartRound***
 ***
+
+if (S_DuoSprint) {
+    Duo::ShowLayer();
+}
+
+
 if (G_State == C_State_Waiting) {
+
+if (CurrentRound == 0) {
+    Duo::Reset();
+
+    StartTime = Now;
+    if (S_TimeLimit > 0) {
+        EndTime = (StartTime + S_TimeLimit * 1000 * 60);
+    }
+    else {
+        EndTime = -1;
+    }
+}
 
 }
 else {
+
+    // Players can choose teams only during waiting phase
+    if (S_DuoSprint) {
+        Duo::DisableLayer();
+    }
+
+    StartTime = Now;
+    if (S_TimeLimit > 0) {
+        EndTime = (StartTime + S_TimeLimit * 1000 * 60);
+    }
+    else {
+        EndTime = -1;
+    }
+
     CurrentRound += 1;
 
     G_FirstPlayer = NullId;
@@ -223,16 +263,9 @@ else {
        G_FinishedScores[Player.Score.Id] = False;
     }
 
-    StartTime = Now;
-    if (S_TimeLimit > 0) {
-        EndTime = (StartTime + S_TimeLimit * 1000 * 60);
-    }
-    else {
-        EndTime = -1;
-    }
-
     declare netwrite Net_IsWarmup for Teams[0] = False;
     Net_IsWarmup = CurrentRound <= S_WarmupRounds;
+
 
     if (Net_IsWarmup) {
         Message::SendBigMessage("Warmup round "^ CurrentRound ^"!", 2000, 0, CUIConfig::EUISound::StartRound, 1);
@@ -258,11 +291,32 @@ if (LastUpdate + C_SettingsUpdateInterval < Now) {
 Obstacle::UpdatePlayersSkin(G_InvisibleSkinId);
 
 if (G_State == C_State_Waiting) {
-    if (EndTime > 0 && Now > EndTime || CurrentRound == 0 && AllPlayers.count >= S_MinPlayers) {
-        MB_StopRound();
+
+    declare CanPlay = CurrentRound == 0 && Players.count >= S_MinPlayers;
+
+    if (CurrentRound == 0 && S_DuoSprint) {
+        declare IsEveryoneInTeam = Duo::UpdateLayer();
+        log(IsEveryoneInTeam);
+        CanPlay = CanPlay && IsEveryoneInTeam;
+    }
+
+
+    if (Now > StartTime + (S_MinWaitTime * 1000)) {
+        if (EndTime > 0 && Now > EndTime) {
+            if (CurrentRound == 0) {
+                MB_StopMap();
+            }
+            else {
+                 MB_StopRound();
+            }
+        }
+        else if (CanPlay) {
+             MB_StopRound();
+        }
     }
 }
 else {
+
     foreach (Event in PendingEvents) {
         switch (Event.Type) {
 
@@ -414,6 +468,7 @@ if (G_State == C_State_Playing) {
     }
 
     if (CurrentRound > S_WarmupRounds) {
+
         declare Integer[Ident] FinishedScores = [];
         foreach (ScoreId => HasFinished in G_FinishedScores) {
             if (HasFinished) FinishedScores[ScoreId] = Player::getLastRunS(Scores[ScoreId]);
@@ -422,7 +477,74 @@ if (G_State == C_State_Playing) {
         FinishedScores = FinishedScores.sort();
 
         if (FinishedScores.count > 0) {
-            if (!S_PointDistribution) {
+            if (S_DuoSprint)
+            {
+                declare Text[][Text] DuoAssociatesByLogin for Teams[0] = [];
+
+                log("associates");
+                log(DuoAssociatesByLogin);
+
+                declare Top1Id = NullId;
+                // cant do FinishedScores[0]...
+                foreach (ScoreId => Run in FinishedScores) {
+                    Top1Id = ScoreId;
+                    break;
+                }
+                declare Top1Score <=> Scores[Top1Id];
+
+                declare MateId = NullId;
+                if (DuoAssociatesByLogin.existskey(Top1Score.User.Login)) {
+                    declare Mates = DuoAssociatesByLogin[Top1Score.User.Login];
+                    if (Mates.count >= 1) {
+                        declare Mate = Mates[0];
+                        foreach (Score in Scores) {
+                            if (Score.User.Login == Mate) {
+                                MateId = Score.Id;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (MateId != NullId) {
+                    declare Top2Id = NullId;
+                    declare Top3Id = NullId;
+
+                    if (FinishedScores.count >= 3)  {
+                        declare I = 0;
+                        foreach (ScoreId => Run in FinishedScores) {
+                            if (I == 1) {
+                                Top2Id = ScoreId;
+                            }
+                            else if (I == 2) {
+                                Top3Id = ScoreId;
+                                break;
+                            }
+                            I += 1;
+                        }
+                    }
+                    else if (FinishedScores.count >= 2)  {
+                        declare I = 0;
+                        foreach (ScoreId => Run in FinishedScores) {
+                            if (I == 1) {
+                                Top2Id = ScoreId;
+                                break;
+                            }
+                            I += 1;
+                        }
+                    }
+
+                    if ((Top2Id != NullId && Scores[MateId].User.Login == Scores[Top2Id].User.Login) || (Top3Id != NullId && Scores[MateId].User.Login == Scores[Top3Id].User.Login)) {
+                        Scores::SetPlayerRoundPoints(Top1Score, 3);
+                        Scores::SetPlayerRoundPoints(Scores[MateId], 3);
+                    }
+                    else {
+                        Scores::SetPlayerRoundPoints(Top1Score, 1);
+                        Scores::SetPlayerRoundPoints(Scores[MateId], 1);
+                    }
+                }
+            }
+            else if (!S_PointDistribution) {
                 declare PointsToAdd = S_PointsMax;
                 declare PreviousRun = -1;
 
@@ -441,7 +563,7 @@ if (G_State == C_State_Playing) {
                     PreviousRun = LastRun;
                 }
             }
-            else if (FinishedScores.count > 0) {
+            else {
                 declare PointsToAdd = NumberOfPlayerRound;
                 declare PreviousRun = -1;
                 foreach (ScoreId => LastRun in FinishedScores) {
@@ -462,18 +584,31 @@ if (G_State == C_State_Playing) {
 
     Scores::AffectPlayersRoundToMapPoints();
 
-
     declare BestPlayerScore <=> Scores::GetBestPlayerMapPoints(Scores::C_Order_Descending);
-
     declare MostPointsScore <=> Scores[0];
     foreach (Score in Scores) {
         if (Score.Points > MostPointsScore.Points) {
-            MostPointsScore <=> Score;
+            MostPointsScore = Score;
+        }
+    }
+    declare NbWinners = 0;
+    foreach (Score in Scores) {
+        if (Score.Points == MostPointsScore.Points) {
+            NbWinners += 1;
         }
     }
 
     if (BestPlayerScore == Null && (MostPointsScore.Points >= S_PointLimit || CurrentRound - S_WarmupRounds >= S_RoundLimit)) {
-         Message::SendBigMessage("Draw! A new round will start while there is a draw.", 5000, 0, CUIConfig::EUISound::Warning, 1);
+        declare MaxWinner = 1;
+        if (S_DuoSprint) {
+            MaxWinner = 2;
+        }
+        if (NbWinners > MaxWinner) {
+            Message::SendBigMessage("Draw! A new round will start while there is a draw.", 5000, 0, CUIConfig::EUISound::Warning, 1);
+        }
+        else {
+            MB_StopMap();
+        }
     }
 
     if (BestPlayerScore != Null && (BestPlayerScore.Points >= S_PointLimit || CurrentRound - S_WarmupRounds >= S_RoundLimit)) {
@@ -508,6 +643,8 @@ if (BestPlayerScore != Null) {
 } else {
     Scores::ResetPlayerWinner();
 }
+
+DestroyUI();
 ***
 
 ***Match_BeforeCloseLadder***
@@ -524,7 +661,6 @@ DoNothing();
 ***
 SpawnScreen::DestroyRules();
 SpawnScreen::DestroyMapInfo();
-DestroyUI();
 ***
 
 // ---------------------------------- //
@@ -540,6 +676,7 @@ Void CreateUI() {
     Layers::Create("CPTimes", CPTimes::GetLayer());
     Layers::Create("SpectatorCount", SpectatorCount::GetLayer());
     Layers::Create("SpecKeys", SpecKeys::GetLayer());
+    Layers::Create("Duo", Duo::GetLayer());
 
     Layers::Create("Markers");
     Layers::SetType("Markers", CUILayer::EUILayerType::Markers);
@@ -553,6 +690,7 @@ Void CreateUI() {
     Layers::Attach("Items");
     Layers::Attach("SpectatorCount");
     Layers::Attach("SpecKeys");
+    Layers::Attach("Duo");
 }
 
 Void DestroyUI() {
@@ -564,6 +702,7 @@ Void DestroyUI() {
     Layers::Detach("Items");
     Layers::Detach("SpectatorCount");
     Layers::Detach("SpecKeys");
+    Layers::Detach("Duo");
 
     UIManager.UILayerDestroyAll();
 }
@@ -593,7 +732,7 @@ Void UpdateSettings() {
         Settings::SetTimeLimit(S_TimeLimit);
 
         if (Hud != Null && Hud.ScoresTable != Null) {
-            Hud.ScoresTable.SetFooterText("Time limit: "^TL::TimeToText(S_TimeLimit*60*1000)^" | Round limit: "^S_RoundLimit^" | Point limit: "^S_PointLimit^" | Warmup round: "^S_WarmupRounds);
+            Hud.ScoresTable.SetFooterText("Time limit: "^Tools::TimeLimitToText(S_TimeLimit)^" | Round limit: "^S_RoundLimit^" | Point limit: "^S_PointLimit^" | Warmup round: "^S_WarmupRounds);
         }
 
         if (S_TimeLimit > 0) {
@@ -607,7 +746,7 @@ Void UpdateSettings() {
         Settings::SetRoundLimit(S_RoundLimit);
 
         if (Hud != Null && Hud.ScoresTable != Null) {
-            Hud.ScoresTable.SetFooterText("Time limit: "^TL::TimeToText(S_TimeLimit*60*1000)^" | Round limit: "^S_RoundLimit^" | Point limit: "^S_PointLimit^" | Warmup round: "^S_WarmupRounds);
+            Hud.ScoresTable.SetFooterText("Time limit: "^Tools::TimeLimitToText(S_TimeLimit)^" | Round limit: "^S_RoundLimit^" | Point limit: "^S_PointLimit^" | Warmup round: "^S_WarmupRounds);
         }
     }
 
@@ -623,7 +762,7 @@ Void UpdateSettings() {
         Settings::SetPointLimit(S_PointLimit);
 
         if (Hud != Null && Hud.ScoresTable != Null) {
-            Hud.ScoresTable.SetFooterText("Time limit: "^TL::TimeToText(S_TimeLimit*60*1000)^" | Round limit: "^S_RoundLimit^" | Point limit: "^S_PointLimit^" | Warmup round: "^S_WarmupRounds);
+            Hud.ScoresTable.SetFooterText("Time limit: "^Tools::TimeLimitToText(S_TimeLimit)^" | Round limit: "^S_RoundLimit^" | Point limit: "^S_PointLimit^" | Warmup round: "^S_WarmupRounds);
         }
     }
 
@@ -653,7 +792,7 @@ Void UpdateSettings() {
         Settings::SetWarmupRounds(S_WarmupRounds);
 
         if (Hud != Null && Hud.ScoresTable != Null) {
-            Hud.ScoresTable.SetFooterText("Time limit: "^TL::TimeToText(S_TimeLimit*60*1000)^" | Round limit: "^S_RoundLimit^" | Point limit: "^S_PointLimit^" | Warmup round: "^S_WarmupRounds);
+            Hud.ScoresTable.SetFooterText("Time limit: "^Tools::TimeLimitToText(S_TimeLimit)^" | Round limit: "^S_RoundLimit^" | Point limit: "^S_PointLimit^" | Warmup round: "^S_WarmupRounds);
         }
     }
 
