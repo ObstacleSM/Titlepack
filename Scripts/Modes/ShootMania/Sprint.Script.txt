@@ -53,7 +53,7 @@
 #Setting S_MaxTimeLeft 120 as _("Maximum time left (seconds)")
 #Setting S_EnablePlayerHighlight False as "Highlight players"
 #Setting S_DuoSprint False as "Beta: DuoSprint"
-#Setting S_MinWaitTime 10 as "Beta: Minimum waiting time"
+#Setting S_MinWaitTime 10 as "Beta: Minimum waiting time (seconds)"
 
 #Setting S_ScriptEnvironment "development"
 
@@ -227,11 +227,12 @@ if (G_State == C_State_Waiting) {
         Duo::Reset();
 
         StartTime = Now;
-        if (S_TimeLimit > 0) {
-            EndTime = (StartTime + S_TimeLimit * 1000 * 60);
+
+        if (S_MinWaitTime > 0) {
+            EndTime = (StartTime + S_MinWaitTime * 1000);
         }
         else {
-            EndTime = -1;
+            EndTime = (StartTime + 10 * 1000);
         }
     }
 
@@ -244,6 +245,7 @@ else {
     }
 
     StartTime = Now;
+
     if (S_TimeLimit > 0) {
         EndTime = (StartTime + S_TimeLimit * 1000 * 60);
     }
@@ -290,33 +292,42 @@ if (LastUpdate + C_SettingsUpdateInterval < Now) {
 
 Obstacle::UpdatePlayersSkin(G_InvisibleSkinId);
 
-if (G_State == C_State_Waiting) {
+if (G_State == C_State_Waiting)
+{
 
-    declare CanPlay = CurrentRound == 0 && Players.count >= S_MinPlayers;
+    declare CanPlay = Players.count >= S_MinPlayers;
 
-    if (CurrentRound == 0 && S_DuoSprint) {
-        declare IsEveryoneInTeam = Duo::UpdateLayer();
-        CanPlay = CanPlay && IsEveryoneInTeam;
-    }
+    if (CanPlay)
+    {
+        if (CurrentRound == 0)
+        {
+            // First round has a different waiting time, S_MinWaitTime.
+            // It can be used to wait for every player to connect when switching maps.
+            // It is also used to wait for players to create and change teams in DuoSprint.
 
-
-    if (Now > StartTime + (S_MinWaitTime * 1000)) {
-        if (EndTime > 0 && Now > EndTime) {
-            if (CurrentRound == 0) {
-                MB_StopMap();
+            if (S_DuoSprint) {
+                declare IsEveryoneInTeam = Duo::UpdateLayer();
+                CanPlay = CanPlay && IsEveryoneInTeam;
             }
-            else {
+
+
+            // EndTime should be Now + S_MinWaitTime, it's the waiting time for the first round
+            if (EndTime > 0 && Now > EndTime) {
                  MB_StopRound();
             }
         }
-        else if (CanPlay) {
-             MB_StopRound();
+        else {
+            // EndTime should be Now + S_RoundCooldown, it's the waiting time between rounds
+            if (EndTime > 0 && Now > EndTime) {
+                 MB_StopRound();
+            }
         }
     }
 }
 else {
 
     foreach (Event in PendingEvents) {
+        log("Event: "^Event.Type);
         switch (Event.Type) {
 
             case CSmModeEvent::EType::OnArmorEmpty: {
@@ -622,6 +633,7 @@ if (G_State == C_State_Playing) {
         G_State = C_State_Waiting;
 
         if (S_RoundCooldown > 0) {
+        log(S_RoundCooldown);
             EndTime = Now + S_RoundCooldown * 1000;
         }
     }
