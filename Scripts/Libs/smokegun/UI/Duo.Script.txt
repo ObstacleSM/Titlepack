@@ -5,6 +5,7 @@
 declare Boolean G_IsEnabled;
 
 Text GetLayer() {
+    log("GetLayer");
     return """
 <manialink version="3" name="Obstacle:Duo">
 <frame id="Frame_Duo" pos="-139 50" z-index="3" hidden="1">
@@ -88,11 +89,12 @@ Void UpdateView()
     declare Matched = False;
 
     if (LocalPlayer != Null) {
-        declare netread Text Net_DuoClickedPlayer for UI = "";
+        declare netwrite Text Net_DuoClickedPlayer for UI = "";
         declare netread Boolean Net_DuoClickedMatched for UI = False;
         ClickedPlayer = Net_DuoClickedPlayer;
         Matched = Net_DuoClickedMatched;
     }
+
 
     declare netread Net_LayerDuoCanClick for Teams[0] = False;
 
@@ -222,6 +224,7 @@ main()
 
 Void Reset()
 {
+    log("Reset");
     declare Text[][Text] DuoAssociatesByLogin for Teams[0] = [];
     DuoAssociatesByLogin.clear();
 
@@ -234,12 +237,6 @@ Void Reset()
 
         Net_DuoClickedPlayer = "";
         Net_DuoClickedMatched = False;
-
-log(UI.Id);
-log(Now);
-log(Player.User.Login^":");
-log("Clicked: "^Net_DuoClickedPlayer);
-log("Matched: "^Net_DuoClickedMatched);
     }
 }
 
@@ -295,12 +292,6 @@ Boolean UpdateLayer()
                 IsEveryoneInTeam = False;
             }
 
-log(UI.Id);
-log(Now);
-log(Player.User.Login^":");
-log("Clicked: "^Net_DuoClickedPlayer);
-log("Matched: "^Net_DuoClickedMatched);
-
         }
     }
     return IsEveryoneInTeam;
@@ -308,31 +299,22 @@ log("Matched: "^Net_DuoClickedMatched);
 
 Void ShowLayer()
 {
-    if (!G_IsEnabled)
-    {
-        G_IsEnabled = True;
-        declare netwrite Net_LayerDuoEnabled for Teams[0] = False;
-        declare netwrite Net_LayerDuoCanClick for Teams[0] = True;
-        Net_LayerDuoEnabled = G_IsEnabled;
-        Net_LayerDuoCanClick = True;
-    }
+    G_IsEnabled = True;
+    declare netwrite Net_LayerDuoEnabled for Teams[0] = False;
+    declare netwrite Net_LayerDuoCanClick for Teams[0] = True;
+    Net_LayerDuoEnabled = G_IsEnabled;
+    Net_LayerDuoCanClick = True;
 }
 
 Void DisableLayer()
 {
-    if (G_IsEnabled)
-    {
-        declare netwrite Net_LayerDuoCanClick for Teams[0] = True;
-        Net_LayerDuoCanClick = False;
-    }
+    declare netwrite Net_LayerDuoCanClick for Teams[0] = True;
+    Net_LayerDuoCanClick = False;
 }
 
 Void HideLayer()
 {
-    if (G_IsEnabled)
-    {
-        G_IsEnabled = False;
-        declare netwrite Net_LayerDuoEnabled for Teams[0] = False;
-        Net_LayerDuoEnabled = G_IsEnabled;
-    }
+    G_IsEnabled = False;
+    declare netwrite Net_LayerDuoEnabled for Teams[0] = False;
+    Net_LayerDuoEnabled = G_IsEnabled;
 }

@@ -202,6 +202,7 @@ if (S_DuoSprint) {
     declare DuoMsg = "DuoSprint mode: Players need to make teams to start the match";
     Message::SendBigMessage(DuoMsg, 2000, 0, CUIConfig::EUISound::Default, 1);
     UIManager.UIAll.SendChat(DuoMsg);
+    Duo::ShowLayer();
 }
 
 CurrentRound = 0;
@@ -220,20 +221,19 @@ if (S_DuoSprint) {
     Duo::ShowLayer();
 }
 
-
 if (G_State == C_State_Waiting) {
 
-if (CurrentRound == 0) {
-    Duo::Reset();
+    if (CurrentRound == 0) {
+        Duo::Reset();
 
-    StartTime = Now;
-    if (S_TimeLimit > 0) {
-        EndTime = (StartTime + S_TimeLimit * 1000 * 60);
+        StartTime = Now;
+        if (S_TimeLimit > 0) {
+            EndTime = (StartTime + S_TimeLimit * 1000 * 60);
+        }
+        else {
+            EndTime = -1;
+        }
     }
-    else {
-        EndTime = -1;
-    }
-}
 
 }
 else {
@@ -296,7 +296,6 @@ if (G_State == C_State_Waiting) {
 
     if (CurrentRound == 0 && S_DuoSprint) {
         declare IsEveryoneInTeam = Duo::UpdateLayer();
-        log(IsEveryoneInTeam);
         CanPlay = CanPlay && IsEveryoneInTeam;
     }
 
