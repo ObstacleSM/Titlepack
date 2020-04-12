@@ -352,11 +352,16 @@ else {
             }
 
             case CSmModeEvent::EType::OnPlayerRequestRespawn: {
-                // Only spawn players that were present during the round's start and haven't finished yet
                 declare ScoreId = Event.Player.Score.Id;
 
-                if (G_FinishedScores.existskey(ScoreId) && !G_FinishedScores[ScoreId])
+                if (!G_FinishedScores.existskey(ScoreId)) {
+                    G_FinishedScores[ScoreId] = False;
+                    Player_NewRound(Event.Player);
                     Obstacle::ObsRespawnPlayer(Event.Player);
+                }
+                else if (!G_FinishedScores[ScoreId]) {
+                    Obstacle::ObsRespawnPlayer(Event.Player);
+                }
 
                 Events::Invalid(Event);
             }
