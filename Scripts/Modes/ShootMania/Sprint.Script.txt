@@ -1,7 +1,7 @@
 #Extends "Modes/ShootMania/Base/ModeShootMania.Script.txt"
 
 #Const CompatibleMapTypes "ObstacleArena,ObstacleTitleArena,ObstacleTitleArenaOld,TimeAttackArena,ObstacleBetaArena"
-#Const  Version           "0.7.0"
+#Const  Version           "0.8.0"
 #Const  ScriptName        "Modes/ShootMania/Sprint.Script.txt"
 
 // ---------------------------------- //
@@ -64,6 +64,7 @@
 #Const C_State_Playing 0
 #Const C_State_Waiting 1
 #Const C_SettingsUpdateInterval 1000
+#Const C_Colors [<0.0, 0.0, 1.0>, <0.0, 1.0, 0.0>, <0.0, 1.0, 1.0>, <1.0, 0.0, 0.0>, <1.0, 0.0, 1.0>, <1.0, 1.0, 0.0>, <1.0, 1.0, 1.0>]
 
 declare Ident           G_FirstPlayer;
 declare Integer         G_State;
@@ -212,6 +213,7 @@ CurrentRound = 0;
 ***
 declare Boolean LastFinished;
 declare Integer NumberOfPlayerRound;
+declare Integer LastPlayersCount;
 ***
 
 ***Match_StartRound***
@@ -222,6 +224,9 @@ if (S_DuoSprint) {
 }
 
 if (G_State == C_State_Waiting) {
+    if (S_DuoSprint) {
+        Duo::ShowLayer();
+    }
 
     if (CurrentRound == 0) {
         Duo::Reset();
@@ -260,14 +265,37 @@ else {
     NumberOfPlayerRound = Players.count;
     G_FinishedScores.clear();
 
+    declare Boolean[Ident] ColoredPlayer = [];
+    declare CurrentColor = 1;
     foreach (Player in Players) {
+
+        declare IsColored = ColoredPlayer.existskey(Player.Id) && ColoredPlayer[Player.Id];
+
+        if (!IsColored) {
+            declare UI <=> UIManager.GetUI(Player);
+
+            if (UI != Null)
+            {
+                declare netread Text Net_DuoClickedPlayer for UI = "";
+                foreach (Mate in Players) {
+                    if (Mate.User.Login == Net_DuoClickedPlayer) {
+                        Player.ForceColor = C_Colors[CurrentColor % C_Colors.count];
+                        Mate.ForceColor = C_Colors[CurrentColor % C_Colors.count];
+                        ColoredPlayer[Player.Id] = True;
+                        ColoredPlayer[Mate.Id] = True;
+                        CurrentColor += 1;
+                        break;
+                    }
+                }
+            }
+        }
+
        Player_NewRound(Player);
        G_FinishedScores[Player.Score.Id] = False;
     }
 
     declare netwrite Net_IsWarmup for Teams[0] = False;
     Net_IsWarmup = CurrentRound <= S_WarmupRounds;
-
 
     if (Net_IsWarmup) {
         Message::SendBigMessage("Warmup round "^ CurrentRound ^"!", 2000, 0, CUIConfig::EUISound::StartRound, 1);
@@ -276,6 +304,7 @@ else {
         Message::SendBigMessage("Starting round "^ CurrentRound - S_WarmupRounds ^"!", 2000, 0, CUIConfig::EUISound::StartRound, 1);
     }
 }
+LastPlayersCount = Players.count;
 ***
 
 ***Match_Yield***
@@ -297,37 +326,29 @@ if (G_State == C_State_Waiting)
 
     declare CanPlay = Players.count >= S_MinPlayers;
 
+    // First round has a different waiting time, S_MinWaitTime.
+    // It can be used to wait for every player to connect when switching maps.
+    // It is also used to wait for players to create and change teams in DuoSprint.
+
+    if (S_DuoSprint) {
+        declare IsEveryoneInTeam = Duo::UpdateLayer();
+
+        // First round we wait for all players to be in team then during match only 2 teams is enough to start (to handle players leaving)
+        CanPlay = CanPlay && (IsEveryoneInTeam || CurrentRound != 0 && Duo::GetTeamCount() >= 1);
+    }
+
     if (CanPlay)
     {
-        if (CurrentRound == 0)
-        {
-            // First round has a different waiting time, S_MinWaitTime.
-            // It can be used to wait for every player to connect when switching maps.
-            // It is also used to wait for players to create and change teams in DuoSprint.
-
-            if (S_DuoSprint) {
-                declare IsEveryoneInTeam = Duo::UpdateLayer();
-                CanPlay = CanPlay && IsEveryoneInTeam;
-            }
-
-
-            // EndTime should be Now + S_MinWaitTime, it's the waiting time for the first round
-            if (EndTime > 0 && Now > EndTime) {
-                 MB_StopRound();
-            }
-        }
-        else {
-            // EndTime should be Now + S_RoundCooldown, it's the waiting time between rounds
-            if (EndTime > 0 && Now > EndTime) {
-                 MB_StopRound();
-            }
+        // CurrentRound == 0 ? EndTime should be Now + S_MinWaitTime, it's the waiting time for the first round
+        // CurrentRound != 0 ? EndTime should be Now + S_RoundCooldown, it's the waiting time between rounds
+        if (EndTime > 0 && Now > EndTime) {
+             MB_StopRound();
         }
     }
 }
 else {
 
     foreach (Event in PendingEvents) {
-        log("Event: "^Event.Type);
         switch (Event.Type) {
 
             case CSmModeEvent::EType::OnArmorEmpty: {
@@ -353,6 +374,7 @@ else {
                     }
                 }
 
+                // put back
                 Obstacle::ObsRespawnPlayer(Victim);
             }
 
@@ -364,14 +386,28 @@ else {
             case CSmModeEvent::EType::OnPlayerRequestRespawn: {
                 declare ScoreId = Event.Player.Score.Id;
 
-                if (!G_FinishedScores.existskey(ScoreId)) {
-                    G_FinishedScores[ScoreId] = False;
-                    Player_NewRound(Event.Player);
+                declare CanSpawn = G_FinishedScores.existskey(ScoreId) && !G_FinishedScores[ScoreId];
+
+                // Don't respawn if the player is alone in DuoSprint
+                if (S_DuoSprint) {
+                    declare UI <=> UIManager.GetUI(Event.Player);
+                    declare HasMatched = False;
+                    if (UI != Null) {
+                        declare netwrite Boolean Net_DuoClickedMatched for UI = False;
+                        if (Net_DuoClickedMatched) {
+                            HasMatched = True;
+                        }
+                    }
+                    CanSpawn = CanSpawn && HasMatched;
+                }
+
+                // Respawn only when the player hasn't finished
+                if (CanSpawn) {
+                    // put back
                     Obstacle::ObsRespawnPlayer(Event.Player);
                 }
-                else if (!G_FinishedScores[ScoreId]) {
-                    Obstacle::ObsRespawnPlayer(Event.Player);
-                }
+
+                // check if matched?
 
                 Events::Invalid(Event);
             }
@@ -426,7 +462,39 @@ else {
 
     foreach (Player in Players) {
         switch (Player.SpawnStatus) {
+
             case CSmPlayer::ESpawnStatus::NotSpawned: {
+
+                declare CanSpawn = !Player.RequestsSpectate;
+
+                // Don't respawn if the player is alone in DuoSprint
+                if (S_DuoSprint) {
+                    declare UI <=> UIManager.GetUI(Player);
+                    declare HasMatched = False;
+                    if (UI != Null) {
+                        declare netwrite Boolean Net_DuoClickedMatched for UI = False;
+                        if (Net_DuoClickedMatched) {
+                            HasMatched = True;
+                        }
+                    }
+
+                    CanSpawn = CanSpawn && HasMatched;
+                }
+
+                // A player can spawn if it's a new player or he hasnt finished yet
+                CanSpawn = CanSpawn && (!G_FinishedScores.existskey(Player.Score.Id) || !G_FinishedScores[Player.Score.Id]);
+
+                if (CanSpawn) {
+
+                    // Spawn new players
+                    if (!G_FinishedScores.existskey(Player.Score.Id)) {
+                        Player_NewRound(Player);
+                        G_FinishedScores[Player.Score.Id] = False;
+                    }
+
+                    Obstacle::ObsRespawnPlayer(Player);
+                }
+
             }
 
             case CSmPlayer::ESpawnStatus::Spawned: {
@@ -460,6 +528,35 @@ else {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    if (LastPlayersCount != Players.count) {
+        LastPlayersCount = Players.count;
+
+
+        if (S_DuoSprint) {
+            declare IsEveryoneInTeam = Duo::UpdateLayer();
+
+            // A player either left or crashed, so we need to update the match list and put its mate to spec
+            if (!IsEveryoneInTeam) {
+
+                foreach (Player in Players) {
+                    declare UI <=> UIManager.GetUI(Player);
+                    if (UI == Null) {
+                        continue;
+                    }
+
+                    declare netwrite Boolean Net_DuoClickedMatched for UI = False;
+                    if (Net_DuoClickedMatched) {
+                        // Obstacle::ObsRespawnPlayer(Player);
+                    }
+                    else {
+                        UnspawnPlayer(Player);
+                    }
+                }
+
             }
         }
     }
@@ -507,23 +604,25 @@ if (G_State == C_State_Playing) {
                 }
                 declare Top1Score <=> Scores[Top1Id];
 
-                declare MateId = NullId;
+                declare Top1MateId = NullId;
                 if (DuoAssociatesByLogin.existskey(Top1Score.User.Login)) {
                     declare Mates = DuoAssociatesByLogin[Top1Score.User.Login];
                     if (Mates.count >= 1) {
                         declare Mate = Mates[0];
                         foreach (Score in Scores) {
                             if (Score.User.Login == Mate) {
-                                MateId = Score.Id;
+                                Top1MateId = Score.Id;
                                 break;
                             }
                         }
                     }
                 }
 
-                if (MateId != NullId) {
+                if (Top1MateId != NullId) {
                     declare Top2Id = NullId;
+                    declare Top2MateId = NullId;
                     declare Top3Id = NullId;
+                    declare Top3MateId = NullId;
 
                     if (FinishedScores.count >= 3)  {
                         declare I = 0;
@@ -537,6 +636,32 @@ if (G_State == C_State_Playing) {
                             }
                             I += 1;
                         }
+
+                        if (Scores.existskey(Top2Id) && DuoAssociatesByLogin.existskey(Scores[Top2Id].User.Login)) {
+                            declare Mates = DuoAssociatesByLogin[Scores[Top2Id].User.Login];
+                            if (Mates.count >= 1) {
+                                declare Mate = Mates[0];
+                                foreach (Score in Scores) {
+                                    if (Score.User.Login == Mate) {
+                                        Top2MateId = Score.Id;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (Scores.existskey(Top3Id) && DuoAssociatesByLogin.existskey(Scores[Top3Id].User.Login)) {
+                            declare Mates = DuoAssociatesByLogin[Scores[Top3Id].User.Login];
+                            if (Mates.count >= 1) {
+                                declare Mate = Mates[0];
+                                foreach (Score in Scores) {
+                                    if (Score.User.Login == Mate) {
+                                        Top3MateId = Score.Id;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
                     }
                     else if (FinishedScores.count >= 2)  {
                         declare I = 0;
@@ -547,15 +672,81 @@ if (G_State == C_State_Playing) {
                             }
                             I += 1;
                         }
+
+                        if (Scores.existskey(Top2Id) && DuoAssociatesByLogin.existskey(Scores[Top2Id].User.Login)) {
+                            declare Mates = DuoAssociatesByLogin[Scores[Top2Id].User.Login];
+                            if (Mates.count >= 1) {
+                                declare Mate = Mates[0];
+                                foreach (Score in Scores) {
+                                    if (Score.User.Login == Mate) {
+                                        Top2MateId = Score.Id;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
                     }
 
-                    if ((Top2Id != NullId && Scores[MateId].User.Login == Scores[Top2Id].User.Login) || (Top3Id != NullId && Scores[MateId].User.Login == Scores[Top3Id].User.Login)) {
-                        Scores::SetPlayerRoundPoints(Top1Score, 3);
-                        Scores::SetPlayerRoundPoints(Scores[MateId], 3);
+                    declare Top1Done = False;
+                    declare Top2Done = False;
+                    declare Top3Done = False;
+
+                    declare Top1Points = 3;
+                    declare Top2Points = 2;
+                    declare Top3Points = 3;
+                    declare BonusPoints = 2;
+
+                    if (Top2Id != NullId && Scores[Top1MateId].User.Login == Scores[Top2Id].User.Login)
+                    {
+                        // top1's mate is top 2
+                        Scores::SetPlayerRoundPoints(Top1Score, Top1Points + BonusPoints);
+                        Scores::SetPlayerRoundPoints(Scores[Top1MateId], Top1Points + BonusPoints);
+
+                        Top1Done = True;
+                        Top2Done = True;
                     }
-                    else {
-                        Scores::SetPlayerRoundPoints(Top1Score, 1);
-                        Scores::SetPlayerRoundPoints(Scores[MateId], 1);
+                    else if (Top3Id != NullId && Scores[Top1MateId].User.Login == Scores[Top3Id].User.Login)
+                    {
+                        // top1's mate is top 3
+                        Scores::SetPlayerRoundPoints(Top1Score, Top1Points + BonusPoints);
+                        Scores::SetPlayerRoundPoints(Scores[Top1MateId], Top1Points + BonusPoints);
+
+                        Top1Done = True;
+                        Top3Done = True;
+                    }
+                    else
+                    {
+                        // top1 is alone
+                        Scores::SetPlayerRoundPoints(Top1Score, Top1Points);
+
+                        Top1Done = True;
+                    }
+
+                    if (!Top2Done && Top2Id != NullId)
+                    {
+                        if (Top3Id != NullId && Scores[Top2MateId].User.Login == Scores[Top3Id].User.Login)
+                        {
+                             // top2's mate is top3
+                            Scores::SetPlayerRoundPoints(Scores[Top2Id], Top2Points + BonusPoints);
+                            Scores::SetPlayerRoundPoints(Scores[Top2MateId], Top2Points + BonusPoints);
+
+                            Top2Done = True;
+                            Top3Done = True;
+                        }
+                        else
+                        {
+                             // top2 is alone
+                            Scores::SetPlayerRoundPoints(Scores[Top2Id], Top2Points);
+
+                            Top2Done = True;
+                        }
+                    }
+
+                    if (!Top3Done && Top3Id != NullId)
+                    {
+                        // top3 is alone
+                        Scores::SetPlayerRoundPoints(Scores[Top3Id], Top3Points);
+                        Top3Done = True;
                     }
                 }
             }
@@ -633,7 +824,6 @@ if (G_State == C_State_Playing) {
         G_State = C_State_Waiting;
 
         if (S_RoundCooldown > 0) {
-        log(S_RoundCooldown);
             EndTime = Now + S_RoundCooldown * 1000;
         }
     }
@@ -734,7 +924,7 @@ Void Player_NewRound(CSmPlayer _Player)
     Player::setRespawnCount(_Player, 0);
     Player::clearLastCPTimes(_Player);
 
-    Obstacle::ObsRespawnPlayer(_Player);
+    //Obstacle::ObsRespawnPlayer(_Player);
 
     Player::setCpProgress(_Player, 0);
     Player::setBestRun(_Player, -1);

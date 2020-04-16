@@ -3,6 +3,7 @@
 #Struct Structs::SSurvivalPlayer as SSurvivalPlayer
 
 declare Boolean G_IsEnabled;
+declare Integer G_TeamCount;
 
 Text GetLayer() {
     log("GetLayer");
@@ -248,6 +249,7 @@ Boolean UpdateLayer()
         declare Text[][Text] DuoAssociatesByLogin for Teams[0] = [];
 
         IsEveryoneInTeam = Players.count > 0;
+        G_TeamCount = 0;
 
         foreach (Player in Players) {
             declare UI <=> UIManager.GetUI(Player);
@@ -285,6 +287,7 @@ Boolean UpdateLayer()
 
                     Net_DuoClickedMatched = True;
                     DuoAssociatesByLogin[Player.User.Login] = [Mate.User.Login];
+                    G_TeamCount += 1;
                 }
             }
 
@@ -294,6 +297,8 @@ Boolean UpdateLayer()
 
         }
     }
+
+    G_TeamCount = G_TeamCount / 2/* nb of player per team*/;
     return IsEveryoneInTeam;
 }
 
@@ -317,4 +322,9 @@ Void HideLayer()
     G_IsEnabled = False;
     declare netwrite Net_LayerDuoEnabled for Teams[0] = False;
     Net_LayerDuoEnabled = G_IsEnabled;
+}
+
+Integer GetTeamCount()
+{
+return G_TeamCount;
 }
