@@ -107,6 +107,8 @@ Void setBuffTime(CSmPlayer _Player, Text _Key, Integer _Value) {
 
 Void clearBuffTimes(CSmPlayer _Player) {
     declare netwrite Integer[Text] ItemBuffTimes for _Player = [];
+    declare LastTaken for _Player = 0;
+    LastTaken = 0;
     ItemBuffTimes.clear();
 }
 

@@ -392,17 +392,20 @@ Void EditCheckpoint(CAnchorData _Checkpoint)
     declare Integer CPType for ManialinkPage;
     declare Boolean IsPortal for ManialinkPage;
     declare Boolean RefillWeapon for ManialinkPage;
+    declare Boolean EmptyWeapon for ManialinkPage;
     declare Boolean RefillStamina for ManialinkPage;
 
     declare metadata Meta_CPType for _Checkpoint = 0;
     declare metadata Meta_IsPortal for _Checkpoint = False;
     declare metadata Meta_RefillWeapon for _Checkpoint = False;
+    declare metadata Meta_EmptyWeapon for _Checkpoint = False;
     declare metadata Meta_RefillStamina for _Checkpoint = False;
 
     Order = _Checkpoint.Order;
     CPType = Meta_CPType;
     IsPortal = Meta_IsPortal;
     RefillWeapon = Meta_RefillWeapon;
+    EmptyWeapon = Meta_EmptyWeapon;
     RefillStamina = Meta_RefillStamina;
 
     InitWeaponPageVariables(_Checkpoint);
@@ -419,7 +422,8 @@ Void EditCheckpoint(CAnchorData _Checkpoint)
             {{{Property("-12 5.5", "Gain (10%-1000%)", Entry("0 -5.5", "Entry_Weapon_Gain"))}}}
             {{{Property("12 5.5", "Amount (0-10)", Entry("0 -5.5", "Entry_Weapon_Amount"))}}}
 
-            {{{Property("-5 -7.5", "Refill", Checkbox("10 0", "Checkbox_Fill_Weapon"))}}}
+            {{{Property("-15 -7.5", "Refill", Checkbox("10 0", "Checkbox_Fill_Weapon"))}}}
+            {{{Property("7.5 -7.5", "Empty", Checkbox("10 0", "Checkbox_Empty_Weapon"))}}}
         </frame>
 
         <frame id="Stamina" pos="0 -67.5">
@@ -427,7 +431,7 @@ Void EditCheckpoint(CAnchorData _Checkpoint)
             {{{Property("-12 5.5", "Gain (10%-100%)", Entry("0 -5.5", "Entry_Stamina_Gain"))}}}
             {{{Property("12 5.5", "Amount (10%-300%)", Entry("0 -5.5", "Entry_Stamina_Amount"))}}}
 
-            {{{Property("-5 -7.5", "Refill", Checkbox("10 0", "Checkbox_Fill_Stamina"))}}}
+            {{{Property("-15 -7.5", "Refill", Checkbox("10 0", "Checkbox_Fill_Stamina"))}}}
         </frame>
     """;
 
@@ -443,6 +447,7 @@ Void EditCheckpoint(CAnchorData _Checkpoint)
         declare Boolean Enabled for Page;
         declare Boolean IsPortal for Page;
         declare Boolean RefillWeapon for Page;
+        declare Boolean EmptyWeapon for Page;
         declare Boolean RefillStamina for Page;
         declare Integer CPType for Page;
         declare Integer Order for Page;
@@ -452,6 +457,7 @@ Void EditCheckpoint(CAnchorData _Checkpoint)
         declare Quad_Type_Selector <=> (Frame_Properties.GetFirstChild("Type_Selector") as CMlQuad);
         declare Entry_Order <=> (Frame_Properties.GetFirstChild("Entry_Order") as CMlEntry);
         declare Label_RefillWeapon <=> (Page.GetFirstChild("Checkbox_Fill_Weapon") as CMlLabel);
+        declare Label_EmptyWeapon <=> (Page.GetFirstChild("Checkbox_Empty_Weapon") as CMlLabel);
         declare Label_RefillStamina <=> (Page.GetFirstChild("Checkbox_Fill_Stamina") as CMlLabel);
 
         if (Enabled) {
@@ -476,6 +482,13 @@ Void EditCheckpoint(CAnchorData _Checkpoint)
             Label_RefillWeapon.SetText("✖");
         }
 
+        if (!EmptyWeapon && Label_EmptyWeapon.Value != "") {
+            Label_EmptyWeapon.SetText("");
+        }
+        if (EmptyWeapon && Label_EmptyWeapon.Value != "✖") {
+            Label_EmptyWeapon.SetText("✖");
+        }
+
         if (!RefillStamina && Label_RefillStamina.Value != "") {
             Label_RefillStamina.SetText("");
         }
@@ -491,6 +504,7 @@ Void EditCheckpoint(CAnchorData _Checkpoint)
         declare Integer Order for Page;
         declare Boolean IsPortal for Page;
         declare Boolean RefillWeapon for Page;
+        declare Boolean EmptyWeapon for Page;
         declare Boolean RefillStamina for Page;
         declare Integer CPType for Page;
         declare Integer Weapon for Page;
@@ -531,6 +545,7 @@ Void EditCheckpoint(CAnchorData _Checkpoint)
                             case "Custom" : Stamina = 1;
                             case "Unlimited" : Stamina = 2;
                             case "Checkbox_Fill_Weapon": RefillWeapon = !RefillWeapon;
+                            case "Checkbox_Empty_Weapon": EmptyWeapon = !EmptyWeapon;
                             case "Checkbox_Fill_Stamina": RefillStamina = !RefillStamina;
                         }
                         IsPortal = CPType == 1;
@@ -569,17 +584,20 @@ Void SaveCheckpointSettings()
 
     declare Integer Order for ManialinkPage;
     declare Boolean RefillWeapon for ManialinkPage;
+    declare Boolean EmptyWeapon for ManialinkPage;
     declare Boolean RefillStamina for ManialinkPage;
     Anchor.Order = Order;
 
     declare Integer CPType for ManialinkPage;
     declare metadata Meta_IsPortal for Anchor = False;
     declare metadata Meta_RefillWeapon for Anchor = False;
+    declare metadata Meta_EmptyWeapon for Anchor = False;
     declare metadata Meta_RefillStamina for Anchor = False;
     declare metadata Meta_CPType for Anchor = 0;
     Meta_CPType = CPType;
     Meta_IsPortal = CPType == 1;
     Meta_RefillWeapon = RefillWeapon;
+    Meta_EmptyWeapon = EmptyWeapon;
     Meta_RefillStamina = RefillStamina;
 
 
@@ -793,12 +811,17 @@ Void EditAmmoItem(CAnchorData _Item)
     declare metadata Meta_GrantAmmoDuration for _Item = 0.;
     Duration = Meta_GrantAmmoDuration;
 
+    declare Integer Cooldown for ManialinkPage;
+    declare metadata Meta_GrantAmmoCooldown for _Item = 500;
+    Cooldown = Meta_GrantAmmoCooldown;
+
     /// --- Manialink
     declare Properties = """
         <frame id="Basic" pos="0 25">
             {{{Property("0 -2.5", "Type", Select2("0 2.5", "Instantly", "Duration", "Duration_Selector"))}}}
             {{{Property("0 -15.5", "Duration", Entry("0 -6", "Entry_Duration"))}}}
-            {{{Property("0 -28.5", "Amount", Entry("0 -6", "Entry_Amount"))}}}
+            {{{Property("0 -28.5", "Cooldown (ms)", Entry("0 -6", "Entry_Cooldown"))}}}
+            {{{Property("0 -41.5", "Amount", Entry("0 -6", "Entry_Amount"))}}}
         </frame>
     """;
 
@@ -812,6 +835,7 @@ Void EditAmmoItem(CAnchorData _Item)
 
     Void UpdateView() {
         declare Real Duration for Page;
+        declare Integer Cooldown for Page;
         declare Boolean Saved for Page;
         declare Real Amount for Page;
 
@@ -828,6 +852,11 @@ Void EditAmmoItem(CAnchorData _Item)
             Entry_Duration.Value = ""^Duration;
         }
 
+        declare Entry_Cooldown <=> (Page.GetFirstChild("Entry_Cooldown") as CMlEntry);
+        if (TL::ToInteger(Entry_Cooldown.Value) != Cooldown) {
+            Entry_Cooldown.Value = ""^Cooldown;
+        }
+
         declare Entry_Amount <=> (Page.GetFirstChild("Entry_Amount") as CMlEntry);
         if (TL::ToReal(Entry_Amount.Value) != Amount) {
             Entry_Amount.Value = ""^Amount;
@@ -838,6 +867,7 @@ Void EditAmmoItem(CAnchorData _Item)
 
     main() {
         declare Real Duration for Page;
+        declare Integer Cooldown for Page;
         declare Real Amount for Page;
         declare NeedUpdate = False;
         UpdateView();
@@ -872,6 +902,10 @@ Void EditAmmoItem(CAnchorData _Item)
                                 Duration = TL::ToReal(Entry.Value);
                                 NeedUpdate = True;
                             }
+                            case "Entry_Cooldown": {
+                                Cooldown = TL::ToInteger(Entry.Value);
+                                NeedUpdate = True;
+                            }
                             case "Entry_Amount": {
                                 Amount = TL::ToReal(Entry.Value);
                             }
@@ -904,6 +938,10 @@ Void SaveAmmoItemSettings()
     declare Real Duration for ManialinkPage;
     declare metadata Meta_GrantAmmoDuration for Anchor = 0.;
     Meta_GrantAmmoDuration = Duration;
+
+    declare Integer Cooldown for ManialinkPage;
+    declare metadata Meta_GrantAmmoCooldown for Anchor = 500;
+    Meta_GrantAmmoCooldown = Cooldown;
 }
 
 
@@ -921,7 +959,7 @@ Void EditOffzoneShieldItem(CAnchorData _Item)
         </frame>
     """;
 
-    SetWindow(MakeWindowWithoutEnabled("Edit Ammo Item", Properties));
+    SetWindow(MakeWindowWithoutEnabled("Edit OffzoneShield Item", Properties));
 
     ManialinkText = """
     <manialink version="3" name="Obstacle:EditOffzoneShieldItem">
@@ -1156,6 +1194,10 @@ Void Loop()
 main()
 {
 log(Map.Id);
+Mode.UseSameWallJump = True;
+log(Mode.UseSameWallJump);
+RequestEnterPlayground ();
+
     Load();
     Init();
     while (True)

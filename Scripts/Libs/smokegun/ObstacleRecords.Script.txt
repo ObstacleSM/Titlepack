@@ -44,9 +44,14 @@ Boolean Contains(Text _Text, Text _Input) {
     return TL::Find(_Text, _Input, False, False);
 }
 
+Text LogPrefix() {
+    return "API (W "^G_WaitingToComplete.count^" | Q "^G_WaitingToSend.count^"):";
+}
+
 // Used to create a POST request
 Ident MakePost(Text _Url, Text _Data) {
     if (Http.SlotsAvailable > 0) {
+        Log::Log(LogPrefix()^" Sending request to "^_Url);
         declare request <=> Http.CreatePost(Constants::C_HostUrl^_Url, _Data, G_PostHeaders);
         return request.Id;
     }
@@ -54,7 +59,6 @@ Ident MakePost(Text _Url, Text _Data) {
 }
 
 Void SendPost(Text _Url, Text _Data, Integer _Type) {
-    Log::Log("Send request to "^_Url);
     declare SRequestData RequestData;
     RequestData.Url = _Url;
     RequestData.Data = _Data;
@@ -62,8 +66,13 @@ Void SendPost(Text _Url, Text _Data, Integer _Type) {
 
     declare reqId = MakePost(_Url, _Data);
     if (reqId == NullId && G_WaitingToSend.count < 64) {
+        Log::Log(LogPrefix()^" Queue up "^_Url^" (count: "^G_WaitingToSend.count^")");
         G_WaitingToSend.add(RequestData);
         return;
+    }
+    if (reqId == NullId) {
+       Log::Log(LogPrefix()^" WARNING requests queue has more than 64 waiting!");
+       return;
     }
     G_WaitingToComplete[reqId] = RequestData;
 }
@@ -132,10 +141,6 @@ Void Loop(Text _BestRecordMsg, Text _WorseRecordMsg)
     declare Ident[] ToDelete = [];
     declare UpdateRecords = False;
 
-    // log("G_WaitingToComplete.count: "^G_WaitingToComplete.count);
-    // log("G_WaitingToSend.count: "^G_WaitingToSend.count);
-    // log("Http.SlotsAvailable: "^Http.SlotsAvailable);
-
     foreach (reqId => ReqData in G_WaitingToComplete) {
 
         if (!Http.Requests.existskey(reqId)) {
@@ -146,7 +151,7 @@ Void Loop(Text _BestRecordMsg, Text _WorseRecordMsg)
         declare request <=> Http.Requests[reqId];
         if (!request.IsCompleted) continue;
 
-        Log::Log("Request done: ("^request.StatusCode^") "^request.Url);
+        Log::Log(LogPrefix()^" Request done: ("^request.StatusCode^") "^request.Url);
 
         if (request.StatusCode == 200) {
 

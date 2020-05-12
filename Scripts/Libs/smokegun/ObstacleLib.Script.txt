@@ -289,6 +289,11 @@ Void Private_CpRestart(CSmPlayer _Player, Integer _Delay, Ident _LastCheckpoint,
     else
         SM::SpawnNoLadder(_Player, 0, Spawn.PlayerSpawn, Now + _Delay);
 
+    declare metadata Meta_EmptyWeapon for Checkpoint = False;
+    if (Meta_EmptyWeapon) {
+        Weapons::EmptyPlayerAmmo(_Player);
+    }
+
     XmlRpc.SendCallback("OnRespawn", _Player.User.Login);
 }
 

@@ -53,6 +53,16 @@ Void SetWeapon(CSmPlayer _Player, Integer _WeaponType, Real _Gain, Integer _Coun
 }
 
 Void FillUpPlayerAmmo(CSmPlayer _Player) {
+
+    declare LastCheckpointId = Player::getLastCheckpoint(_Player);
+    if (MapLandmarks.existskey(LastCheckpointId)) {
+        declare CheckpointLandmark <=> MapLandmarks[LastCheckpointId];
+        declare metadata Meta_EmptyWeapon for CheckpointLandmark = False;
+        if (Meta_EmptyWeapon) {
+ return;
+        }
+    }
+
     if (_Player == Null || _Player.SpawnStatus != CSmPlayer::ESpawnStatus::Spawned) {
         declare PlayerHasRespawned for _Player = False;
         PlayerHasRespawned = True;
@@ -64,11 +74,24 @@ Void FillUpPlayerAmmo(CSmPlayer _Player) {
     }
 }
 
+Void EmptyPlayerAmmo(CSmPlayer _Player) {
+    if (_Player == Null || _Player.SpawnStatus != CSmPlayer::ESpawnStatus::Spawned) {
+        declare PlayerHasRespawned for _Player = False;
+        PlayerHasRespawned = True;
+    } else {
+        SetPlayerAmmo(_Player, CSmMode::EWeapon::Rocket, 0);
+        SetPlayerAmmo(_Player, CSmMode::EWeapon::Laser, 0);
+        SetPlayerAmmo(_Player, CSmMode::EWeapon::Nucleus, 0);
+        SetPlayerAmmo(_Player, CSmMode::EWeapon::Arrow, 0);
+    }
+}
+
 Void ApplyEffects(CSmPlayer _Player, CSmMapLandmark _Anchor) {
     declare metadata Meta_Weapon for _Anchor = 1;
     declare metadata Meta_Weapon_Gain for _Anchor = 1.0;
     declare metadata Meta_Weapon_Amount for _Anchor = 4;
     declare metadata Meta_RefillWeapon for _Anchor = False;
+    declare metadata Meta_EmptyWeapon for _Anchor = False;
 
     declare metadata Meta_Stamina for _Anchor = 0;
     declare metadata Meta_Stamina_Gain for _Anchor = 1.0;
@@ -90,9 +113,14 @@ Void ApplyEffects(CSmPlayer _Player, CSmMapLandmark _Anchor) {
         FillUpPlayerAmmo(_Player);
     }
 
+    if (Meta_EmptyWeapon) {
+        EmptyPlayerAmmo(_Player);
+    }
+
     if (Meta_RefillStamina) {
         _Player.Stamina = _Player.StaminaMaxValue;
     }
+
 }
 
 /*
