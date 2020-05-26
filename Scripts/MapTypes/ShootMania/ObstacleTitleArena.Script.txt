@@ -1054,18 +1054,18 @@ Void UpdateValidability()
                     }
                 }
             }
-            case "Checkpoint":
-            {
-                if (!CPCounts.existskey(Anchor.Order)) {
-                    CPCounts[Anchor.Order] = 0;
-                }
-                CPCounts[Anchor.Order] += 1;
-            }
             default :
             {
                 if (IsGoal(Anchor))
                 {
                     Goals += 1;
+                }
+                else if (IsCheckpoint(Anchor))
+                {
+                    if (!CPCounts.existskey(Anchor.Order)) {
+                        CPCounts[Anchor.Order] = 0;
+                    }
+                    CPCounts[Anchor.Order] += 1;
                 }
             }
         }
@@ -1194,9 +1194,6 @@ Void Loop()
 main()
 {
 log(Map.Id);
-Mode.UseSameWallJump = True;
-log(Mode.UseSameWallJump);
-RequestEnterPlayground ();
 
     Load();
     Init();
