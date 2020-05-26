@@ -112,13 +112,14 @@ Boolean PickupItems(CSmModeEvent _Event) {
                 Cooldown = 500;
             }
 
-            declare CanTakeItem for _Event.Player = 0;
+            // contains the now + cooldown from when the item was taken
+            declare Integer[Ident] ItemsActiveCooldowns for _Event.Player = [];
 
-            if (Now < CanTakeItem) {
+            if (ItemsActiveCooldowns.existskey(_Event.Object.Id) && Now <= ItemsActiveCooldowns[_Event.Object.Id]) {
                 return False;
             }
 
-            CanTakeItem = Now + Cooldown;
+            ItemsActiveCooldowns[_Event.Object.Id] = Now + Cooldown;
 
             declare Duration for _Event.Object = 0.;
             declare Amount for _Event.Object = 1.;
