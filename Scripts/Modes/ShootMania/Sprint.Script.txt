@@ -1,7 +1,7 @@
 #Extends "Modes/ShootMania/Base/ModeShootMania.Script.txt"
 
 #Const CompatibleMapTypes "ObstacleArena,ObstacleTitleArena,ObstacleTitleArenaOld,TimeAttackArena,ObstacleBetaArena"
-#Const  Version           "0.8.1"
+#Const  Version           "0.8.2"
 #Const  ScriptName        "Modes/ShootMania/Sprint.Script.txt"
 
 // ---------------------------------- //
@@ -513,6 +513,7 @@ else {
                     PlayerHasRespawned = False;
                 }
 
+
                 // Manage item effects
                 declare ItemBuff = Player::getBuffTimes(Player);
                 foreach (Name => Time in ItemBuff) {
@@ -523,8 +524,16 @@ else {
                             declare AmmoItemBuffDuration for Player = 0.;
                             if (AmmoItemBuffDuration <= 0.) continue;
                             declare AmmoItemBuffAmount for Player = 1.;
-                            declare TickAmount = AmmoItemBuffAmount / (AmmoItemBuffDuration * 1000. / Period);
-                            AddPlayerAmmo(Player, SM::GetWeapon(Player.CurWeapon), TickAmount);
+
+                            declare AmmoItemStart = Time - AmmoItemBuffDuration * 1000;
+                            declare TickDuration = 1000. * AmmoItemBuffDuration / AmmoItemBuffAmount;
+                            declare AmmoItemBuffTicks for Player = 0;
+
+                            if (Now > AmmoItemStart + AmmoItemBuffTicks * TickDuration)
+                            {
+                                AddPlayerAmmo(Player, SM::GetWeapon(Player.CurWeapon), 1.);
+                                AmmoItemBuffTicks += 1;
+                            }
                         }
                     }
                 }
