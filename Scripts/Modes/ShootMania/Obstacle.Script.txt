@@ -361,8 +361,16 @@ foreach (Player in Players) {
                         declare AmmoItemBuffDuration for Player = 0.;
                         if (AmmoItemBuffDuration <= 0.) continue;
                         declare AmmoItemBuffAmount for Player = 1.;
-                        declare TickAmount = AmmoItemBuffAmount / (AmmoItemBuffDuration * 1000. / Period);
-                        AddPlayerAmmo(Player, SM::GetWeapon(Player.CurWeapon), TickAmount);
+
+                        declare AmmoItemStart = Time - AmmoItemBuffDuration * 1000;
+                        declare TickDuration = 1000. * AmmoItemBuffDuration / AmmoItemBuffAmount;
+                        declare AmmoItemBuffTicks for Player = 0;
+
+                        if (Now > AmmoItemStart + AmmoItemBuffTicks * TickDuration)
+                        {
+                            AddPlayerAmmo(Player, SM::GetWeapon(Player.CurWeapon), 1.);
+                            AmmoItemBuffTicks += 1;
+                        }
                     }
                 }
             }

@@ -129,8 +129,10 @@ Boolean PickupItems(CSmModeEvent _Event) {
 
             declare Real AmmoItemBuffDuration for _Event.Player;
             declare Real AmmoItemBuffAmount for _Event.Player;
+            declare Integer AmmoItemBuffTicks for _Event.Player = 0;
             AmmoItemBuffDuration = Duration;
             AmmoItemBuffAmount = Amount;
+            AmmoItemBuffTicks = 0;
 
             // Instant grant
             if (Duration <= 0.) {
