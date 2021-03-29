@@ -57,7 +57,7 @@ Text GetLayer() {
 
     main() {
         wait(InputPlayer != Null && Page != Null);
-        
+
         declare Label_RespawnBehavior <=> (Page.GetFirstChild("Label_RespawnBehavior") as CMlLabel);
 
         Quad_Toggler <=> (Page.GetFirstChild("Quad_Toggler") as CMlQuad);
@@ -109,7 +109,7 @@ Text GetLayer() {
             }
         }
      }
-    
+
 --></script>
 </manialink>""";
 }

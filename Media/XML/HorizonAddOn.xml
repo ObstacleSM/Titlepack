@@ -8,7 +8,7 @@
 		<Style MainTitlePolice="TextTitle3" SectionsPolice="TextRaceMessageBig" />
 	</global>
 
-	<Multiplayer logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_Online.dds" activated="True" color="fff" allowallmodes="True" displaytitleserversonly="True">
+	<Multiplayer logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_Online.dds" activated="True" color="fff" allowallmodes="False" displaytitleserversonly="True">
 			<asset id="Online_UGCAsset-0" isdefault="no" titlename="Modes\ShootMania\Obstacle.Script.txt"/>
 	<asset id="Online_UGCAsset-1" isdefault="no" titlename="Modes\ShootMania\Sprint.Script.txt"/>
 

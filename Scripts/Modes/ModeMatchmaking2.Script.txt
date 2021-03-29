@@ -180,10 +180,10 @@ if (MMCommon::IsMatchmakingServer()) {
 	// Lobby
 	if (MMCommon::IsLobbyServer()) {
 		Message::Loop();
-		
+
 		declare MM_Private_NeedAlliesUpdate = MMLobby::MM_PlayLoop();
 		declare MM_Private_NeedLoadAllies = False;
-		
+
 		foreach (Event in PendingEvents) {
 			if (
 				Event.Type == CSmModeEvent::EType::OnPlayerRemoved ||
@@ -202,7 +202,7 @@ if (MMCommon::IsMatchmakingServer()) {
 				MMLobby::UpdatePlayersList();
 			}
 		}
-		
+
 		if (MM_Private_NeedLoadAllies) {
 			MMLobby::LoadAllies();
 		}
@@ -224,29 +224,29 @@ if (MMCommon::IsMatchmakingServer()) {
 		}
 		MMMatch::Ping(False);
 		MMMatch::ManagePlayers();
-		
+
 		// Check the number of players on the match server
 		// If there's not any players left on the server, restart the matchmaking
 		declare MM_Private_Restart = MMMatch::MM_CheckPlayersNumbers();
 		if (MM_Private_Restart) MB_Private_StopMatch();
 	}
-	
+
 	// ---------------------------------- //
 	// Manage the HTTP response from the API
 	declare Ident[] MM_Private_ToRemove;
 	foreach (Request in Http.Requests) {
 		if (!MMCommon::IsInPendingRequests(Request.Id)) continue;
-		
+
 		if (Request.IsCompleted) {
 			MM_Private_ToRemove.add(Request.Id);
 		}
 	}
-	
+
 	// Destroy the completed requests
 	foreach (RequestId in MM_Private_ToRemove) {
 		if (!Http.Requests.existskey(RequestId)) continue;
 		declare Request <=> Http.Requests[RequestId];
-		
+
 		// Success
 		if (Request.StatusCode >= 200 && Request.StatusCode < 300) {
 			declare RequestType = MMCommon::GetPendingRequestType(Request.Id);
@@ -281,7 +281,7 @@ if (MMCommon::IsMatchmakingServer()) {
 			}
 			if (MMCommon::GetErrorMessage() != "") UIManager.UIAll.SendChat(MM_TL::Compose("%1 %2", MMCommon::GetMessagePrefix(), MMCommon::GetErrorMessage()));
 		}
-			
+
 		MMCommon::RemovePendingRequest(RequestId);
 		Http.Destroy(Http.Requests[RequestId]);
 	}
@@ -414,17 +414,17 @@ switch (MMLobby::GetLobbyPhase()) {
 			Message::CleanAllMessages();
 			Lobby_Private_InitPlayers();
 			MM_Private_MatchmakingRunNb += 1;
-			
+
 			if (MM_Private_MatchmakingRunNb >= S_LobbyMatchmakerPerRound) {
 				// ---------------------------------- //
 				// Find the winner
 				Lobby_Private_FindWinner();
-				
+
 				// ---------------------------------- //
 				// Announce the winner
 				Lobby_Private_AnnounceWinner();
 			}
-			
+
 			// ---------------------------------- //
 			// Start matchmaking
 			if (!S_LobbyDisableUI) {
@@ -443,10 +443,10 @@ switch (MMLobby::GetLobbyPhase()) {
 					}
 				}
 			}
-			
+
 			MMLobby::SetTimersAutoDown(S_LobbyMatchmakerTime * 1000);
 			MMLobby::SetLobbyEndTime(Now + (S_LobbyMatchmakerTime * 1000));
-			
+
 			MMLobby::ComputeAllies();
 			MMLobby::MatchmakerStart(S_ProgressiveActivation_WaitingTime, S_ProgressiveActivation_PlayersNbRatio);
 		}
@@ -455,11 +455,11 @@ switch (MMLobby::GetLobbyPhase()) {
 	// Start playing
 	case MMLobby::LobbyPhase_Matchmaking(): {
 		MMLobby::MatchmakerRun();
-			
+
 		if (MMLobby::GetLobbyEndTime() > 0 && Now > MMLobby::GetLobbyEndTime()) {
 			MMLobby::MatchmakerStop();
 			Message::CleanAllMessages();
-			
+
 			if (MM_Private_MatchmakingRunNb >= S_LobbyMatchmakerPerRound) {
 				if (MB_Private_SectionCount_Round >= S_LobbyRoundPerMap) {
 					MB_StopMap();
@@ -533,15 +533,15 @@ if (MB_Private_UseMatchmaking && MMCommon::IsMatchServer()) {
 	Layers::Create("MM_Private_StartingMatch", MMMatch::GetMLStartingMatch());
 	Layers::SetType("MM_Private_StartingMatch", CUILayer::EUILayerType::CutScene);
 	Layers::Create("MM_Private_RematchVote", MMMatch::GetMLRematchVote());
-	
+
 	MMMatch::ForceAllowSubstitutes(True);
-	
+
 	// @Debug -> initialize bots
 	foreach (Player in AllPlayers) {
 		declare Matchmaking_PlayerStatus for Player = MMMatch::PlayerStatus_Waiting();
 		Matchmaking_PlayerStatus = MMMatch::PlayerStatus_Waiting();
 	}
-	
+
 	MM_Private_CreateNewSession = True;
 }
 ***
@@ -551,7 +551,7 @@ if (MB_Private_UseMatchmaking && MMCommon::IsMatchServer()) {
 if (MB_Private_UseMatchmaking && MMCommon::IsMatchServer()) {
 	MM_Private_MasterLogin = "";
 	MM_Private_SessionClosed = False;
-	
+
 	if (MB_Settings_UseDefaultMatchmaking) {
 		MM_Private_OpenSession(MM_Private_CreateNewSession);
 	}
@@ -628,9 +628,9 @@ Void Lobby_Private_AnnounceWinner() {
 		);
 	}
 	UIManager.UIAll.SendNotice(
-		"", 
-		CUIConfig::ENoticeLevel::PlayerInfo, Null, 
-		CUIConfig::EAvatarVariant::Default, 
+		"",
+		CUIConfig::ENoticeLevel::PlayerInfo, Null,
+		CUIConfig::EAvatarVariant::Default,
 		CUIConfig::EUISound::EndRound,
 		0
 	);
@@ -704,7 +704,7 @@ Void MM_Private_SetMaxPlayers(Integer _MaxPlayers) {
 Void MM_Private_SetFormat(Integer[] _NewFormat) {
 	MMCommon::SetMatchFormat(_NewFormat);
 	MMCommon::SetCurrentMatchFormat(_NewFormat);
-	
+
 	declare Max = 0;
 	declare MatchFormat = MMCommon::GetMatchFormat();
 	if (MMCommon::IsUniversalServer()) {
@@ -716,11 +716,11 @@ Void MM_Private_SetFormat(Integer[] _NewFormat) {
 			if (PlayersNb > Max) Max = PlayersNb;
 		}
 	}
-	
+
 	MM_Private_SetMaxPlayers(Max);
 	MMLobby::UpdateMatchFormat(MatchFormat);
 	Layers::Update("MM_Private_StartingMatch", MMMatch::GetMLStartingMatch());
-	
+
 	if (MMCommon::IsMatchServer()) UseForcedClans = True;
 }
 
@@ -820,7 +820,7 @@ Void MM_Private_SetScores(Integer[] _Scores) {
 Void MM_Private_SetLadderMatchId() {
 	declare MatchId = MMMatch::GetMatchIdInteger();
 	if (MatchId < 0) return;
-	
+
 	Ladder_SetMatchMakingMatchId(MatchId);
 }
 
@@ -939,31 +939,31 @@ Integer MM_Private_GetAssignedClan(Text _Login) {
  */
 Void MM_Private_VoteForNextMap(Boolean _ForceLoadMap) {
 	if (!S_MatchmakingVoteForMap) return;
-	
+
 	declare PrevHidden = UIManager.UIAll.OverlayHideCountdown;
 	UIManager.UIAll.OverlayHideCountdown = False;
-	
+
 	VoteMap::Begin();
 	if (This is CTmMode) {
 		MM_Private_SetEndTime(VoteMap::GetVoteDuration(), True);
 	}
-	
+
 	while (!VoteMap::CanStop()) {
 		MB_Private_Yield();
 		VoteMap::Loop();
-		
+
 		if (This is CTmMode) {
 			if (MM_Private_GetEndTime(True) != VoteMap::GetVoteDuration()) {
 				MM_Private_SetEndTime(VoteMap::GetVoteDuration(), True);
 			}
 		}
 	}
-	
+
 	if (This is CTmMode) {
 		MM_Private_SetEndTime(-1, True);
 	}
 	VoteMap::End();
-	
+
 	if (_ForceLoadMap) {
 		declare NextMapInfo <=> VoteMap::GetNextMapInfo();
 		if (NextMapInfo != Null && NextMapInfo.Id != Map.MapInfo.Id) {
@@ -971,7 +971,7 @@ Void MM_Private_VoteForNextMap(Boolean _ForceLoadMap) {
 			MB_Private_LoadMap();
 		}
 	}
-	
+
 	UIManager.UIAll.OverlayHideCountdown = PrevHidden;
 }
 
@@ -983,26 +983,26 @@ Void MM_Private_VoteForNextMap(Boolean _ForceLoadMap) {
 Void MM_Private_WaitPlayers(Integer _MaxDuration) {
 	declare PrevHidden = UIManager.UIAll.OverlayHideCountdown;
 	UIManager.UIAll.OverlayHideCountdown = False;
-	
+
 	MM_Private_SetStartTime(Now);
 	MM_Private_SetEndTime(-1, True);
 	MMMatch::WaitPlayers_Begin(MM_Private_GetStartTime(), _MaxDuration);
 	Layers::Attach("MM_Private_StartingMatch");
-	
+
 	while (MMMatch::WaitPlayers_IsRunning()) {
 		MB_Private_Yield();
-		
+
 		declare WaitPlayersEndTime = MMMatch::WaitPlayers_Loop();
 		if (WaitPlayersEndTime >= 0) {
 			MM_Private_SetEndTime(WaitPlayersEndTime, True);
 		}
 	}
-	
+
 	MMMatch::WaitPlayers_End();
 	Layers::Detach("MM_Private_StartingMatch");
 	MM_Private_SetStartTime(-1);
 	MM_Private_SetEndTime(-1, True);
-	
+
 	UIManager.UIAll.OverlayHideCountdown = PrevHidden;
 }
 
@@ -1011,22 +1011,22 @@ Void MM_Private_WaitPlayers(Integer _MaxDuration) {
 Void MM_Private_PrepareMatch() {
 	declare PrevHidden = UIManager.UIAll.OverlayHideCountdown;
 	UIManager.UIAll.OverlayHideCountdown = False;
-	
+
 	MM_Private_SetStartTime(Now);
 	MM_Private_SetEndTime(MMMatch::PrepareMatch_Begin(MM_Private_GetStartTime(), S_MatchmakingWaitingTime), True);
 	Layers::Attach("MM_Private_StartingMatch");
-	
+
 	while (MMMatch::PrepareMatch_IsRunning()) {
 		MB_Private_Yield();
-		
+
 		MMMatch::PrepareMatch_Loop();
 	}
-	
+
 	MMMatch::PrepareMatch_End();
 	Layers::Detach("MM_Private_StartingMatch");
 	MM_Private_SetStartTime(-1);
 	MM_Private_SetEndTime(-1, True);
-	
+
 	UIManager.UIAll.OverlayHideCountdown = PrevHidden;
 }
 
@@ -1034,12 +1034,12 @@ Void MM_Private_PrepareMatch() {
 /// Wait for a new match
 Void MM_Private_MatchWait() {
 	MMMatch::MM_MatchWait();
-	
+
 	// Waiting to get a match
 	while (!MMMatch::CanStartMatch()) {
 		MB_Private_Yield();
 	}
-	
+
 	// Got a match, now prepare it
 	MM_Private_PrepareMatch();
 }
@@ -1076,39 +1076,39 @@ Void MM_Private_SetMasterLogin(Text _Login) {
  */
 Boolean MM_Private_VoteForRematch() {
 	if (S_MatchmakingRematchRatio < 0.) return False;
-	
+
 	Layers::Attach("MM_Private_RematchVote");
 	Layers::Create("RematchVoteResults");
 	Layers::Attach("RematchVoteResults");
-	
+
 	MMMatch::VoteForRematch_Begin(S_MatchmakingRematchRatio);
-	
+
 	MMMatch::AnimRematchVote("SlideIn");
 	MB_Private_Sleep(300);
-	
+
 	while (MMMatch::VoteForRematch_IsRunning()) {
 		MB_Private_Yield();
-		
+
 		declare LoginsList = MMMatch::VoteForRematch_Loop();
 		if (LoginsList != "") Layers::Update("RematchVoteResults", LoginsList);
 	}
-	
+
 	MMMatch::AnimRematchVote("SlideOut");
 	MB_Private_Sleep(300);
-	
+
 	Layers::Detach("RematchVoteResults");
 	Layers::Destroy("RematchVoteResults");
 	Layers::Detach("MM_Private_RematchVote");
-	
+
 	declare Result = MMMatch::VoteForRematch_End();
-	
+
 	declare End = Now + 3000;
 	while (Now < End) {
 		MB_Private_Yield();
 	}
-	
+
 	Message::CleanAllMessages();
-	
+
 	return Result;
 }
 
@@ -1126,20 +1126,20 @@ Void MM_Private_MatchEnd(Text _MasterLogin) {
 Void MM_Private_MatchToLobby() {
 	declare PrevHidden = UIManager.UIAll.OverlayHideCountdown;
 	UIManager.UIAll.OverlayHideCountdown = False;
-	
+
 	MM_Private_SetStartTime(Now);
 	MM_Private_SetEndTime(MMMatch::MatchToLobby_Begin(MM_Private_GetStartTime()), True);
-	
+
 	while (MMMatch::MatchToLobby_IsRunning()) {
 		MB_Private_Yield();
 		MMMatch::MatchToLobby_Loop();
 	}
-	
+
 	MM_Private_SetStartTime(-1);
 	MM_Private_SetEndTime(-1, True);
-	
+
 	MMMatch::MatchToLobby_End();
-	
+
 	UIManager.UIAll.OverlayHideCountdown = PrevHidden;
 }
 
@@ -1155,14 +1155,14 @@ Void MM_Private_MatchToLobby() {
 Boolean MM_Private_CloseSession(Text _MasterLogin) {
 	declare CreateNewSession = True;
 	MM_Private_SessionClosed = True;
-	
+
 	// Force match end if the channel resquested a transfer of the players
 	declare ForceMatchEnd = False;
 	if (MMCommon::IsChannelServer() && MMCommon::GetChannelTransferUrl() != "") {
 		MB_Private_StopMatch();
 		ForceMatchEnd = True;
 	}
-	
+
 	if ((UseClans && ClansNbPlayers[1] > 0 && ClansNbPlayers[2] > 0) || (!UseClans && Players.count > 0)) {
 		if (MB_Private_MatchIsRunning()) {
 			CreateNewSession = False;
@@ -1172,7 +1172,7 @@ Boolean MM_Private_CloseSession(Text _MasterLogin) {
 				CreateNewSession = !MM_Private_VoteForRematch();
 				MM_Private_RematchNb += 1;
 			}
-        
+
 			if (CreateNewSession) {
 				MM_Private_RematchNb = 0;
 				MM_Private_MatchEnd(_MasterLogin);
@@ -1186,6 +1186,6 @@ Boolean MM_Private_CloseSession(Text _MasterLogin) {
 		MM_Private_MatchEnd(_MasterLogin);
 		MM_Private_MatchToLobby();
 	}
-	
+
 	return CreateNewSession;
 }

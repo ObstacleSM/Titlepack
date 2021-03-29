@@ -13,8 +13,8 @@ representing the progression of the game mode.
 
 Server -> Match -> Map -> Round -> Turn -> PlayLoop
 
-The server can launch a match. 
-This match can be played on several maps. 
+The server can launch a match.
+This match can be played on several maps.
 Each maps can be divided into several rounds.
 Each rounds can be further divided into several turns.
 
@@ -89,8 +89,8 @@ switch (MB_Private_ExtendMode) {
 ***
 
 // ---------------------------------- //
-/**	Here you can declare and set settings specific 
- *	to the mode. Unlike the #Settings they won't 
+/**	Here you can declare and set settings specific
+ *	to the mode. Unlike the #Settings they won't
  *	be accessible from the outside.
  *	This includes some default settings like the
  *	automatic handling of the ladder, hud,
@@ -100,7 +100,7 @@ switch (MB_Private_ExtendMode) {
 ***
 // Open and close the ladder at the begining and end of the map
 MB_Settings_UseDefaultLadder = True;
-// Play the mediatracker intro sequence when starting the map						
+// Play the mediatracker intro sequence when starting the map
 MB_Settings_UseDefaultIntroSequence = True;
 // Play the podium sequence at the end of the map
 MB_Settings_UseDefaultPodiumSequence = True;
@@ -221,7 +221,7 @@ switch (MB_Private_ExtendMode) {
 ***
 
 // ---------------------------------- //
-/**	Here you can define the rules of 
+/**	Here you can define the rules of
  *	the mode played during a matchmaking match.
  *	It will be displayed in the lobby.
  */
@@ -276,7 +276,7 @@ switch (MB_Private_ExtendMode) {
 /**	Here you can initialize the SpawnScreen
  *	library.
  *	If the default spawn screen is enabled
- *	(MB_Settings_UseDefaultSpawnScreen) 
+ *	(MB_Settings_UseDefaultSpawnScreen)
  *	then this plug is not executed
  */
 ***MB_Private_SpawnScreen***
@@ -304,7 +304,7 @@ switch (MB_Private_ExtendMode) {
 /** Use this plug to declare variables
  *	that will be accessible in the following
  *	child section : Match, Map, Round, Turn, PlayLoop.
- *	This plug is executed at the start 
+ *	This plug is executed at the start
  *	of each match.
  */
 ***MB_Private_InitMatch***
@@ -315,7 +315,7 @@ switch (MB_Private_ExtendMode) {
 
 // ---------------------------------- //
 /** Use this plug to initialize the match.
- *	This plug is executed at the start 
+ *	This plug is executed at the start
  *	of each match.
  */
 ***MB_Private_StartMatch***
@@ -354,7 +354,7 @@ switch (MB_Private_ExtendMode) {
 /** Use this plug to declare variables
  *	that will be accessible in the following
  *	child section : Map, Round, Turn, PlayLoop.
- *	This plug is executed at the start 
+ *	This plug is executed at the start
  *	of each map.
  */
 ***MB_Private_InitMap***
@@ -379,7 +379,7 @@ switch (MB_Private_ExtendMode) {
 /**	Here you can manage the introduction
  *	sequence as you wish.
  *	If the default introduction sequence
- *	is enabled (MB_Settings_UseDefaultIntroSequence) 
+ *	is enabled (MB_Settings_UseDefaultIntroSequence)
  *	then this plug is not executed
  */
 ***MB_Private_IntroSequence***
@@ -418,7 +418,7 @@ switch (MB_Private_ExtendMode) {
 /**	Here you can manage the opening
  *	of the match on the ladder.
  *	If the default ladder is enabled
- *	(MB_Settings_UseDefaultLadder) 
+ *	(MB_Settings_UseDefaultLadder)
  *	then this plug is not executed
  */
 ***MB_Private_OpenLadder***
@@ -443,7 +443,7 @@ switch (MB_Private_ExtendMode) {
 
 // ---------------------------------- //
 /** Use this plug to initialize the map.
- *	This plug is executed at the start 
+ *	This plug is executed at the start
  *	of each map.
  */
 ***MB_Private_StartMap***
@@ -458,7 +458,7 @@ switch (MB_Private_ExtendMode) {
 /** Use this plug to declare variables
  *	that will be accessible in the following
  *	child section : Round, Turn, PlayLoop.
- *	This plug is executed at the start 
+ *	This plug is executed at the start
  *	of each round.
  */
 ***MB_Private_InitRound***
@@ -469,7 +469,7 @@ switch (MB_Private_ExtendMode) {
 
 // ---------------------------------- //
 /** Use this plug to initialize the round.
- *	This plug is executed at the start 
+ *	This plug is executed at the start
  *	of each round.
  */
 ***MB_Private_StartRound***
@@ -484,7 +484,7 @@ switch (MB_Private_ExtendMode) {
 /** Use this plug to declare variables
  *	that will be accessible in the following
  *	child section : Turn, PlayLoop.
- *	This plug is executed at the start 
+ *	This plug is executed at the start
  *	of each turn.
  */
 ***MB_Private_InitTurn***
@@ -495,7 +495,7 @@ switch (MB_Private_ExtendMode) {
 
 // ---------------------------------- //
 /** Use this plug to initialize the turn.
- *	This plug is executed at the start 
+ *	This plug is executed at the start
  *	of each turn.
  */
 ***MB_Private_StartTurn***
@@ -510,7 +510,7 @@ switch (MB_Private_ExtendMode) {
 /** Use this plug to declare variables
  *	that will be accessible in the
  *	PlayLoop section.
- *	This plug is executed once at the start 
+ *	This plug is executed once at the start
  *	of the play loop.
  */
 ***MB_Private_InitPlayLoop***
@@ -521,7 +521,7 @@ switch (MB_Private_ExtendMode) {
 
 // ---------------------------------- //
 /** Use this plug to initialize the play loop.
- *	This plug is executed once at the start 
+ *	This plug is executed once at the start
  *	of the play loop.
  */
 ***MB_Private_StartPlayLoop***
@@ -548,7 +548,7 @@ switch (MB_Private_ExtendMode) {
 ***
 
 // ---------------------------------- //
-/** This plug is executed once when 
+/** This plug is executed once when
  *	exiting the play loop.
  */
 ***MB_Private_EndPlayLoop***
@@ -560,7 +560,7 @@ switch (MB_Private_ExtendMode) {
 ***
 
 // ---------------------------------- //
-/**	This plug is executed at the end 
+/**	This plug is executed at the end
  *	of each turn.
  */
 ***MB_Private_EndTurn***
@@ -572,7 +572,7 @@ switch (MB_Private_ExtendMode) {
 ***
 
 // ---------------------------------- //
-/**	This plug is executed at the end 
+/**	This plug is executed at the end
  *	of each round.
  */
 ***MB_Private_EndRound***
@@ -584,7 +584,7 @@ switch (MB_Private_ExtendMode) {
 ***
 
 // ---------------------------------- //
-/**	This plug is executed at the end 
+/**	This plug is executed at the end
  *	of each map.
  */
 ***MB_Private_EndMap***
@@ -611,7 +611,7 @@ switch (MB_Private_ExtendMode) {
 /**	Here you can manage the closing
  *	of the match on the ladder.
  *	If the default ladder is enabled
- *	(MB_Settings_UseDefaultLadder) 
+ *	(MB_Settings_UseDefaultLadder)
  *	then this plug is not executed
  */
 ***MB_Private_CloseLadder***
@@ -650,7 +650,7 @@ switch (MB_Private_ExtendMode) {
 /**	Here you can manage the podium
  *	sequence as you wish.
  *	If the default podium sequence
- *	is enabled (MB_Settings_UseDefaultPodiumSequence) 
+ *	is enabled (MB_Settings_UseDefaultPodiumSequence)
  *	then this plug is not executed.
  */
 ***MB_Private_PodiumSequence***
@@ -689,7 +689,7 @@ switch (MB_Private_ExtendMode) {
 /**	Here you can manage the channel progression
  *	sequence as you wish.
  *	If the default channel progression sequence
- *	is enabled (MB_Settings_UseDefaultChannelProgression) 
+ *	is enabled (MB_Settings_UseDefaultChannelProgression)
  *	then this plug is not executed.
  */
 ***MB_Private_ChannelProgression***
@@ -737,7 +737,7 @@ switch (MB_Private_ExtendMode) {
 ***
 
 // ---------------------------------- //
-/**	This plug is executed at the end 
+/**	This plug is executed at the end
  *	of each match.
  */
 ***MB_Private_EndMatch***
@@ -750,7 +750,7 @@ switch (MB_Private_ExtendMode) {
 
 // ---------------------------------- //
 /**	This plug is executed once just
- *	before the server shut down when 
+ *	before the server shut down when
  *	it is requested to stop.
  */
 ***MB_Private_EndServer***
@@ -825,7 +825,7 @@ Boolean MB_TurnIsRunning() {
 /** Get the number of times a section
  *	has been played
  *
- *	@return														The number of times the section 
+ *	@return														The number of times the section
  *																		has been played
  */
 Integer MB_GetMatchCount() {
@@ -842,10 +842,10 @@ Integer MB_GetTurnCount() {
 }
 
 // ---------------------------------- //
-/**	The yield; instruction update the state 
- *	of the script. In particular the old 
- *	events will be flushed and replaced 
- *	by the ones that happened since 
+/**	The yield; instruction update the state
+ *	of the script. In particular the old
+ *	events will be flushed and replaced
+ *	by the ones that happened since
  *	the last yield.
  *	To ensure that no event is lost,
  *	yield must be executed at one
@@ -928,7 +928,7 @@ Void MB_CloseLadder(Boolean _ValidMatch) {
  *	(MB_Settings_UseDefaultLadder) call
  *	this function before ***Match_CloseLadder***
  *	to cancel the ongoing match on the
- *	ladder and prevent players from 
+ *	ladder and prevent players from
  *	receiving any ladder points.
  */
 Void MB_CancelMatchOnLadder() {
@@ -1033,7 +1033,7 @@ Void MB_ChannelProgression() {
 
 // ---------------------------------- //
 /** Call this function during a map
- *	to skip the channel progression sequence 
+ *	to skip the channel progression sequence
  *	at the end of the map
  */
 Void MB_SkipChannelProgression() {
@@ -1057,7 +1057,7 @@ Boolean MM_IsMatchmakingServer() {
 /** Check if the matchmaking is active
  *	AND the universal setting is enabled
  *
- *	@return														True if the matchmaking is active and 
+ *	@return														True if the matchmaking is active and
  *																		the universal setting is enabled,
  *																		False otherwise
  */
@@ -1102,7 +1102,7 @@ Void MM_SetFormat(Integer[] _Format) {
 }
 
 // ---------------------------------- //
-/** Set the progressive matchmaking formats 
+/** Set the progressive matchmaking formats
  *	available on this game mode.
  *	Progressive matchmaking allow matches
  *	to be played with different amounts of
@@ -1116,7 +1116,7 @@ Void MM_SetFormat(Integer[] _Format) {
  *
  *	This function shoud be called once inside
  *	***MM_SetupMatchmaking***
- *	
+ *
  *	@param	_Formats									The available formats
  */
 Void MM_SetProgressiveFormats(Integer[][] _Formats) {
@@ -1152,7 +1152,7 @@ Void MM_SetProgressiveFormats(Integer[] _Format, Integer _MinPlayersNb, Integer 
  *	the players and start a map vote when
  *	everyone is ready.
  *	Continuing the current session will
- *	conserve the current match info, 
+ *	conserve the current match info,
  *	wait for the players and start
  *	the new map when they are ready.
  *
@@ -1173,17 +1173,17 @@ Void MM_OpenSession(Boolean _NewSession) {
 // ---------------------------------- //
 /** Close the matchmaking match session.
  *	If the match is finished the players
- *	can vote for a rematch. 
+ *	can vote for a rematch.
  *	If the rematch is validated the players
  *	can vote for the next map and the session
  *	can be reopened at the begining of the
  *	new map.
- *	If the vote result is negative or if 
+ *	If the vote result is negative or if
  *	a rematch is not possible anymore
  *	the players are sent back to the lobby
  *	and a new session must be created at the
  *	begining of the new map.
- *	You can pass a player login to 
+ *	You can pass a player login to
  *	the function to select the match
  *	Master.
  *	The Master is the player that played
@@ -1252,7 +1252,7 @@ Void MM_SetMasterLogin(Text _Login) {
  *	assigned by the matchmaking to
  *	the player.
  *	If the matchmaking is disabled
- *	this function will return the 
+ *	this function will return the
  *	default _Player.RequestedClan
  *
  *	If your mode support the matchmaking

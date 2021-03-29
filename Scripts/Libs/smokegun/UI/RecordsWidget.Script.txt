@@ -112,7 +112,7 @@ Text GetLayer() {
                 Xml.Destroy(XRecords);
 
 
-              
+
                 if (!Frame_Widget.Visible)
                     Frame_Widget.Show();
 
