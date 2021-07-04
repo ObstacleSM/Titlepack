@@ -220,7 +220,7 @@ Void Loop(Text _BestRecordMsg, Text _WorseRecordMsg)
         }
 
         for (I, 0, ToSendCount-1) {
-            G_WaitingToSend.removekey(0);
+            declare Removed = G_WaitingToSend.removekey(0);
         }
     }
 

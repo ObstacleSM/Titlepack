@@ -63,7 +63,7 @@ Text GetLayer() {
         <frameinstance modelid="duo_player" pos="0 -192" id="ranking48" hidden="0" z-index="1"/>
         <frameinstance modelid="duo_player" pos="0 -196" id="ranking49" hidden="0" z-index="1"/>
     </frame>
-    <frame id="Frame_Background"halign="center" valign="center2">
+    <frame id="Frame_Background" halign="center" valign="center2">
         <label pos="0 -1" size="40 5" text="Players" style="TextTitle3" textsize="4" halign="center" textfont="OswaldMono" maxline="1" valign="top" textemboss="1"/>
         <quad z-index="-1" size="44 60" style="BgRaceScore2" substyle="BgCardPlayer" halign="center" valign="top"/>
     </frame>

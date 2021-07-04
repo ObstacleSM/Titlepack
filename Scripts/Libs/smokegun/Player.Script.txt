@@ -11,12 +11,13 @@
 #Include "Libs/Nadeo/Json2.Script.txt" as Json
 
 #Include "Libs/smokegun/Constants.Script.txt" as Constants
+#Include "Libs/miltant/Randomizer.Script.txt" as RNG
 
 /*********************************************
   CONSTANTS
  *********************************************/
 
-#Const  Version     "2017-11-25"
+#Const  Version     "2021-03-31"
 #Const  ScriptName  "Player.Script.txt"
 
 /*********************************************
@@ -83,15 +84,26 @@ Ident getLastCheckpoint(CSmPlayer _Player) {
 Void setLastCheckpoint(CSmPlayer _Player, Ident _Value) {
     declare Ident[] LastCheckpointsIds for _Player;
     declare netwrite Text[] LastCheckpointsIdsStr for _Player;
+    declare netwrite Integer[] PreviousCheckpointsOrder for _Player;
 
     if (_Value != NullId) {
         LastCheckpointsIds.add(_Value);
         LastCheckpointsIdsStr.add(_Value^"");
+
+        if (MapLandmarks[_Value].Order < 0) {
+            PreviousCheckpointsOrder.add(MapLandmarks[_Value].Order);
+        }
     }
     else {
-         LastCheckpointsIds.clear();
-         LastCheckpointsIdsStr.clear();
+        LastCheckpointsIds.clear();
+        LastCheckpointsIdsStr.clear();
+        PreviousCheckpointsOrder.clear();
     }
+}
+
+Integer[] getPreviousCheckpointsOrder(CSmPlayer _Player) {
+    declare netwrite Integer[] PreviousCheckpointsOrder for _Player;
+    return PreviousCheckpointsOrder;
 }
 
 Integer[Text] getBuffTimes(CSmPlayer _Player) {
@@ -242,7 +254,7 @@ Text Private_CPTimesToJSON(Integer[Ident] _Times) {
     declare res = "{";
     declare i = 0;
     foreach (CPId => CPTime in _Times) {
-        res ^= """ "{{{Json::GetInteger(MapLandmarks[CPId].Order)}}}" : {{{Json::GetInteger(CPTime)}}}""";
+        res ^= """ "{{{Json::GetInteger(RNG::GetOrder(MapLandmarks[CPId]))}}}" : {{{Json::GetInteger(CPTime)}}}""";
 
         if (i < _Times.count-1)
             res ^= ",";

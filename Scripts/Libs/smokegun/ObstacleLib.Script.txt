@@ -19,6 +19,7 @@
 #Include "Libs/smokegun/Constants.Script.txt" as Constants
 #Include "Libs/smokegun/Player.Script.txt" as Player
 #Include "Libs/smokegun/Tools.Script.txt" as Tools
+#Include "Libs/miltant/Randomizer.Script.txt" as RNG
 #Include "Libs/smokegun/Weapons.Script.txt" as Weapons
 #Include "Libs/smokegun/ObstacleRecords.Script.txt" as API
 
@@ -33,7 +34,7 @@
   CONSTANTS
  *********************************************/
 
-#Const  Version     "2017-07-10"
+#Const  Version     "2021-06-26"
 #Const  ScriptName  "ObstacleLib.Script.txt"
 
 
@@ -41,15 +42,27 @@
   GLOBALES
  *********************************************/
 
+declare Ident[] ActionsId;
+
 // Map
-declare Ident G_StartSpawnId;
-declare Integer G_CheckpointsTotal;
 declare Integer G_Mode;
+
+declare Integer G_CheckpointsTotal;
+declare Ident[] G_SpawnLandmarks;
+declare Ident[] G_GoalLandmarks;
+declare Ident G_LatestV2PortalCache;
+
+declare Ident G_Editor_WayPointSpawn;
+
+declare Boolean G_IsRandomizerMap;
+declare Integer[] G_RandomizerMap_TargetNumbers;
+declare Ident[][Integer] G_RandomizerMap_Landmarks;
 
 
 /*********************************************
   FUNCTIONS
  *********************************************/
+
 Void SetMode(Integer _Mode) {
     G_Mode = _Mode;
 }
@@ -58,6 +71,37 @@ Integer GetMode() {
     return G_Mode;
 }
 
+Integer GetCheckpointsTotal() {
+    return G_CheckpointsTotal;
+}
+Ident[] GetSpawnLandmarks() {
+    return G_SpawnLandmarks;
+}
+Ident[] GetGoalLandmarks() {
+    return G_GoalLandmarks;
+}
+
+Boolean IsRandomizerMap() {
+    return G_IsRandomizerMap;
+}
+Integer[] GetRNGTargetNumbers() {
+    return G_RandomizerMap_TargetNumbers;
+}
+Ident[][Integer] GetRNGLandmarks() {
+    return G_RandomizerMap_Landmarks;
+}
+
+Void LoadActions() {
+    ActionList_Begin();
+
+    //ActionsId.add(ActionList_Add("Quake_RL.Action.Gbx"));
+    //ActionsId.add(ActionList_Add("Waterbomb.Action.Gbx"));
+    //ActionsId.add(ActionList_Add("Hoverrocket.Action.Gbx"));
+
+    ActionList_End();
+}
+
+
 /**
  * Initialize a player
  *
@@ -65,6 +109,48 @@ Integer GetMode() {
 Void NewPlayer(CSmPlayer _Player)
 {
     Player::InitPlayer(_Player);
+
+    if (ActionsId.count > 0) {
+        ActionLoad(_Player, CSmMode::EActionSlot::Slot_A, ActionsId[0]);
+        ActionBind(_Player, CSmMode::EActionSlot::Slot_A, CSmMode::EActionInput::Consumable1);
+        log(ActionsId[0]);
+    }
+    if (ActionsId.count > 1) {
+        ActionLoad(_Player, CSmMode::EActionSlot::Slot_B, ActionsId[1]);
+        ActionBind(_Player, CSmMode::EActionSlot::Slot_B, CSmMode::EActionInput::Consumable2);
+        log(ActionsId[1]);
+    }
+    if (ActionsId.count > 2) {
+        ActionLoad(_Player, CSmMode::EActionSlot::Slot_C, ActionsId[2]);
+        ActionBind(_Player, CSmMode::EActionSlot::Slot_C, CSmMode::EActionInput::Activable1);
+        log(ActionsId[2]);
+    }
+    if (ActionsId.count > 3) {
+        ActionLoad(_Player, CSmMode::EActionSlot::Slot_D, ActionsId[3]);
+        ActionBind(_Player, CSmMode::EActionSlot::Slot_D, CSmMode::EActionInput::Activable2);
+        log(ActionsId[3]);
+    }
+    if (ActionsId.count > 4) {
+        ActionLoad(_Player, CSmMode::EActionSlot::Slot_E, ActionsId[4]);
+        ActionBind(_Player, CSmMode::EActionSlot::Slot_E, CSmMode::EActionInput::Activable3);
+        log(ActionsId[4]);
+    }
+    if (ActionsId.count > 5) {
+        ActionLoad(_Player, CSmMode::EActionSlot::Slot_F, ActionsId[5]);
+        ActionBind(_Player, CSmMode::EActionSlot::Slot_F, CSmMode::EActionInput::Activable4);
+        log(ActionsId[5]);
+    }
+    if (ActionsId.count > 6) {
+        ActionLoad(_Player, CSmMode::EActionSlot::Slot_G, ActionsId[6]);
+        ActionBind(_Player, CSmMode::EActionSlot::Slot_G, CSmMode::EActionInput::Weapon);
+        log(ActionsId[6]);
+    }
+    if (ActionsId.count > 7) {
+        ActionLoad(_Player, CSmMode::EActionSlot::Slot_H, ActionsId[7]);
+        ActionBind(_Player, CSmMode::EActionSlot::Slot_H, CSmMode::EActionInput::Movement);
+        log(ActionsId[7]);
+    }
+
     if (Settings::GetEnableRecords()) {
         API::ReplaceOrCreatePlayer(_Player);
     }
@@ -78,10 +164,10 @@ Void NewPlayer(CSmPlayer _Player)
     Hud.ScoresTable.SetColumnValue (_Player.Score, "RS", 0);
 }
 
-Void UpdatePlayersSkin(Ident SkinId) {
+Void UpdatePlayersSkin(Ident _SkinId) {
     foreach (Player in Players) {
-        if (Settings::GetForceInvisibleSkin() && Player.ForceModelId == NullId) {
-            Player.ForceModelId = SkinId;
+        if (Settings::GetForceInvisibleSkin() && Player.ForceModelId != _SkinId) {
+            Player.ForceModelId = _SkinId;
         }
 
         if (!Settings::GetForceInvisibleSkin() && Player.ForceModelId != NullId) {
@@ -100,28 +186,54 @@ Void UpdatePlayersSkin(Ident SkinId) {
  *
  * Returns: boolean is the map valid
  */
-Boolean PrepareMap() {
+Boolean PrepareMap(Text ModeName) {
     if (Settings::GetEnableRecords()) {
         API::ReplaceOrCreateMap();
     }
 
-    G_StartSpawnId = NullId;
     G_CheckpointsTotal = 0;
 
-    // Count checkpoints and init markers for portals
-    // We save checkpoints to CheckpointOrders to count multiple checkpoints with the same order once
-    declare Integer[] CheckpointOrders = [];
+    G_IsRandomizerMap = False;
 
+    G_RandomizerMap_Landmarks.clear();
+
+    foreach (Landmark in MapLandmarks) {
+        if (Tools::IsCheckpoint(Landmark) && Landmark.Order < 0) {
+            if (!G_RandomizerMap_Landmarks.existskey(Landmark.Order))
+                G_RandomizerMap_Landmarks[Landmark.Order] = [];
+            
+            G_RandomizerMap_Landmarks[Landmark.Order].add(Landmark.Id);
+            G_IsRandomizerMap = True;
+        }
+
+        if (!G_IsRandomizerMap && (Tools::IsACandidateGoal(Landmark) || Tools::IsACandidateSpawn(Landmark))) {
+            declare metadata Meta_Randomize for Landmark = False;
+            if (Meta_Randomize) G_IsRandomizerMap = True;
+        }
+    }
+
+    // We save checkpoints to CheckpointOrders to count multiple checkpoints with the same order once
+    declare Integer[Integer] CheckpointOrders = [];
+   
     foreach (Landmark in MapLandmarks) {
         if (Landmark.Gauge != Null)
             Landmark.Gauge.ValueReal = 1.0;
 
         if (Tools::IsCheckpoint(Landmark)) {
-            if (Landmark.Order == 0 || !CheckpointOrders.exists(Landmark.Order)) {
+            if (!CheckpointOrders.existskey(Landmark.Order)) {
                 G_CheckpointsTotal += 1;
-                CheckpointOrders.add(Landmark.Order);
+                CheckpointOrders[Landmark.Order] = 0;
             }
+            else if (Landmark.Order == 0) {
+                G_CheckpointsTotal += 1;
+            }
+
+            CheckpointOrders[Landmark.Order] += 1;
         }
+    }
+
+    if (G_IsRandomizerMap) {
+        G_RandomizerMap_TargetNumbers = Tools::FindMissingNumbers(CheckpointOrders);
     }
 
     // Publish the numbers of checkpoint for the UI
@@ -132,19 +244,28 @@ Boolean PrepareMap() {
     ObsScores::SetCheckpointTotal(G_CheckpointsTotal);
     ObsScores::OnMapBegin();
 
-    // Search start spawn
+    // Search start spawns
+    G_SpawnLandmarks.clear();
     foreach (SpawnLandmark in MapLandmarks_PlayerSpawn) {
-        if (Tools::IsSpawn(SpawnLandmark)) {
-            G_StartSpawnId = SpawnLandmark.Id;
-            break;
+        if (Tools::IsACandidateSpawn(SpawnLandmark)) {
+            RNG::SetDefaultSpawn(SpawnLandmark.Id);
+            G_SpawnLandmarks.add(SpawnLandmark.Id);
         }
     }
 
     //TODO: Show warning when playing old map, to prevent crash with fast rs and poles as cp
-    if (!MapLandmarks_PlayerSpawn.existskey(G_StartSpawnId)) {
+    if (G_SpawnLandmarks.count == 0) {
         Log::Log("ERROR: No Start Spawn on this Map!");
         UIManager.UIAll.SendChat("$f00ERROR: No Start Spawn on this Map!");
         return False;
+    }
+
+    // Search end goals
+    G_GoalLandmarks.clear();
+    foreach (Landmark in MapLandmarks) {
+        if (Tools::IsACandidateGoal(Landmark)) {
+            G_GoalLandmarks.add(Landmark.Id);
+        }
     }
 
     declare MapVersion = Map::GetMapTypeVersion();
@@ -153,10 +274,6 @@ Boolean PrepareMap() {
     }
 
     return True;
-}
-
-Integer GetCheckpointsTotal() {
-	return G_CheckpointsTotal;
 }
 
 /////////////////////////////////////////////////////////////////
@@ -171,6 +288,7 @@ Void Private_SendXmlRpcCallback(Text _CallbackName, CSmPlayer _Player, Integer _
     if (_Player == Null || _Player.IsFakePlayer || _Player.Score == Null || _CallbackName == "" || _RunTime <= 0) return;
 
     declare LastCPTimes = Player::getLastCPTimes(_Player);
+
     declare JSON =
         """{
             "Player":
@@ -273,7 +391,6 @@ Void Private_CpRestart(CSmPlayer _Player, Integer _Delay, Ident _LastCheckpoint,
         Player::incrementRespawnCount(_Player);
 
     declare Checkpoint <=> MapLandmarks[_LastCheckpoint];
-    declare Spawn <=> MapLandmarks_PlayerSpawn[_CPSpawn];
     declare CanFastRespawn = Settings::GetFastRespawn();
 
     // Check if fast respawn is possible
@@ -286,8 +403,10 @@ Void Private_CpRestart(CSmPlayer _Player, Integer _Delay, Ident _LastCheckpoint,
     // Respawn player
     if (_Player.SpawnStatus == CSmPlayer::ESpawnStatus::Spawned && CanFastRespawn)
         RespawnPlayer(_Player, Checkpoint.Waypoint);
+    else if (_CPSpawn != NullId)
+        SM::SpawnNoLadder(_Player, 0, MapLandmarks_PlayerSpawn[_CPSpawn].PlayerSpawn, Now + _Delay);
     else
-        SM::SpawnNoLadder(_Player, 0, Spawn.PlayerSpawn, Now + _Delay);
+        return;
 
     declare metadata Meta_EmptyWeapon for Checkpoint = False;
     if (Meta_EmptyWeapon) {
@@ -316,7 +435,7 @@ Void Private_CpRestart( CSmPlayer _Player, Integer _Delay, Ident _LastCheckpoint
  *            Integer   _Delay  Activation delay for SM::Spawn
  */
 Void Private_FullRestart(CSmPlayer _Player, Integer _Delay) {
-    declare Spawn <=> MapLandmarks_PlayerSpawn[G_StartSpawnId];
+    declare Spawn <=> MapLandmarks_PlayerSpawn[RNG::GetEnabledSpawn()];
 
     declare IsFirstRespawn = Player::getStartTime(_Player) <= 0;
 
@@ -355,12 +474,21 @@ Void ObsRespawnPlayer(CSmPlayer _Player, Boolean _forceRestart) {
     if (_Player.RequestsSpectate)
         return;
 
+    declare shouldRestart = Player::wantsRestart(_Player, _forceRestart);
+
+    if (shouldRestart) {
+        declare Editor_WayPointSpawn_Tag for This = "";
+        Editor_WayPointSpawn_Tag = "";
+    }
+
     if (!Player::isInitialized(_Player)) {
         NewPlayer(_Player);
     }
 
-    declare shouldRestart = Player::wantsRestart(_Player, _forceRestart);
-    declare LastCP = Player::getLastCheckpoint(_Player);
+    declare LastCP = G_LatestV2PortalCache;
+    if (LastCP == NullId)
+        LastCP = Player::getLastCheckpoint(_Player);
+
     declare Delay = -1;
     declare CPSpawnId = NullId;
     if (LastCP != NullId)
@@ -369,7 +497,7 @@ Void ObsRespawnPlayer(CSmPlayer _Player, Boolean _forceRestart) {
         Delay = StartTime - Now;
 
     // Check if there is a cp spawn, if not we full restart
-    if (CPSpawnId != NullId && !shouldRestart)
+    if ((CPSpawnId != NullId || G_Editor_WayPointSpawn != NullId) && !shouldRestart)
         Private_CpRestart(_Player, Delay, LastCP, CPSpawnId);
     else
         Private_FullRestart(_Player, Delay);
@@ -427,12 +555,54 @@ Void Private_UsePortal(CSmPlayer _Player, Ident _Portal) {
     Message::SendBigMessage(_Player, _("Portal!"), 2500, 0);
 }
 
+
+Boolean JumpToCheckpointIdent_ByPassSpawn(CSmPlayer _Player, Ident _Target) {
+    G_Editor_WayPointSpawn = _Target;
+
+    Player::setUsedJump(_Player, True);
+    Player::setLastCheckpoint(_Player, _Target);
+
+    Private_CpRestart(_Player, 3500, _Target, NullId, False);
+
+    // TODO: Below is copy pasted in common behaviour after respawn
+    Player::clearBuffTimes(_Player);
+
+    if (Settings::GetFullAmmoSpawn()) {
+        Weapons::FillUpPlayerAmmo(_Player);
+    }
+    return True;
+}
+
+
+Boolean JumpToCheckpointIdent(CSmPlayer _Player, Ident _Target) {
+    declare Spawn = Tools::GetClosestSpawn(_Target);
+    if (Spawn == NullId)
+        return False;
+
+    Player::setUsedJump(_Player, True);
+    Private_CpRestart(_Player, 3500, _Target, Spawn, False);
+
+    if (RNG::GetOrder(MapLandmarks_Sector[_Target]) != 0)
+        Player::setCpProgress(_Player, RNG::GetOrder(MapLandmarks_Sector[_Target]));
+    else
+        Player::setCpProgress(_Player, Player::getLastCPTimes(_Player).count + 1);
+
+    // TODO: Below is copy pasted in common behaviour after respawn
+    Player::clearBuffTimes(_Player);
+
+    if (Settings::GetFullAmmoSpawn()) {
+        Weapons::FillUpPlayerAmmo(_Player);
+    }
+    return True;
+}
+
 /**
  * Jump a player to the desired checkpoint
  *
  * Arguments: CSmPlayer _Player Player to teleport
  *            Integer   _Target Order of the checkpoint to teleport to
  */
+
 Void JumpToCheckpoint(CSmPlayer _Player, Integer _Target) {
     declare UI <=> UIManager.GetUI(_Player);
     if (_Player.SpawnStatus != CSmPlayer::ESpawnStatus::Spawned || UI == Null)
@@ -446,7 +616,7 @@ Void JumpToCheckpoint(CSmPlayer _Player, Integer _Target) {
     // Search for the checkpoint to jump to
     declare CSmMapLandmark Target <=> Null;
     foreach (Landmark in MapLandmarks) {
-        if (Tools::IsCheckpoint(Landmark) && Landmark.Order == _Target) {
+        if (Tools::IsCheckpoint(Landmark) && RNG::GetOrder(Landmark) == _Target) {
             Target <=> Landmark;
             break;
         }
@@ -470,24 +640,10 @@ Void JumpToCheckpoint(CSmPlayer _Player, Integer _Target) {
         return;
     }
 
-    declare Spawn = Tools::GetClosestSpawn(Target.Id);
-    if (Spawn == NullId) {
+    if (JumpToCheckpointIdent(_Player, Target.Id)) {
+        UI.SendChat("$1f1Jumping to Checkpoint "^_Target^"!");
+    } else {
         UI.SendChat("$f11Cannot find Spawn for Checkpoint "^_Target^"!$z");
-        return;
-    }
-
-    UI.SendChat("$1f1Jumping to Checkpoint "^_Target^"!");
-
-    Player::setUsedJump(_Player, True);
-    Player::setLastCheckpoint(_Player, Target.Id);
-
-    Private_CpRestart(_Player, 3500, Target.Id, Spawn, False);
-
-    // TODO: Below is copy pasted in common behaviour after respawn
-    Player::clearBuffTimes(_Player);
-
-    if (Settings::GetFullAmmoSpawn()) {
-        Weapons::FillUpPlayerAmmo(_Player);
     }
 }
 
@@ -598,10 +754,11 @@ Void Private_HandleCheckpoint(CSmPlayer _Player, Ident _CheckpointId) {
     declare time = Player::getTime(_Player);
 
     Player::setLastCPTimes(_Player, _CheckpointId, time);
+    G_LatestV2PortalCache = NullId;
 
     // lazy fix might not fix cp progress completely
-    if (Player::usedJump(_Player) && Checkpoint.Order != 0)
-        Player::setCpProgress(_Player, Checkpoint.Order);
+    if (Player::usedJump(_Player) && RNG::GetOrder(Checkpoint) != 0)
+        Player::setCpProgress(_Player, RNG::GetOrder(Checkpoint));
     else
         Player::setCpProgress(_Player, LastCPTimes.count + 1);
 
@@ -646,7 +803,7 @@ Boolean HandleCapture(CSmPlayer _Player) {
     declare HasJumped = Player::usedJump(_Player);
     declare MessageToShow = "";
 
-    if (!Tools::IsEnabled(Landmark)) {
+    if (!RNG::IsEnabled(Landmark)) {
         return HasCapturedGoal;
     }
 
@@ -671,31 +828,61 @@ Boolean HandleCapture(CSmPlayer _Player) {
             }
         }
     }
-    else if (Tools::IsCheckpoint(Landmark)) {
+    else if (Tools::IsCheckpoint(Landmark) || Tools::IsPortal(Landmark)) {
         // Take any checkpoints if player jumped
         if (HasJumped) {
-            if (Landmark.Order != CpProgress) {
+            declare LastCPId = Player::getLastCheckpoint(_Player);
+
+            if (LastCPId != NullId) {
+                declare LastCP <=> MapLandmarks_Sector[LastCPId];
+                declare Distance = ML::Distance(LastCP.Position, _Player.Position);
+
+                log(Distance);
+                if (ML::Abs(Distance) > 3)
+                    Private_HandleCheckpoint(_Player, Landmark.Id);
+            } else {
                 Private_HandleCheckpoint(_Player, Landmark.Id);
             }
-        }
-        else {
+
+        } else {
             declare LastCpTimes = Player::getLastCPTimes(_Player);
-            declare LastCheckpoint = Player::getLastCheckpoint(_Player);
+            declare PreviousCheckpointsOrder = Player::getPreviousCheckpointsOrder(_Player);
 
             // Check if the checkpoint is the next one
             declare isNextCp = True;
-            if (Landmark.Order == 0) {
-                isNextCp = !LastCpTimes.existskey(Landmark.Id);
+            declare Order = RNG::GetOrder(Landmark);
+            if (Order == 0) {
+                if (Landmark.Order == 0) {
+                    isNextCp = !LastCpTimes.existskey(Landmark.Id);
+                } else {
+                    isNextCp = !PreviousCheckpointsOrder.exists(Landmark.Order);
+                }
             } else {
-                isNextCp = Landmark.Order == CpProgress + 1;
+                isNextCp = Order == CpProgress + 1;
             }
 
             if (isNextCp) {
-                Private_HandleCheckpoint(_Player, Landmark.Id);
+                if (Tools::IsPortal(Landmark)) {
+                    declare HasANormalCP = False;
+
+                    foreach (Landmark in MapLandmarks) {
+                        if (Tools::IsCheckpoint(Landmark) && !Tools::IsPortal(Landmark) && RNG::GetOrder(Landmark) == Order) {
+                            HasANormalCP = True;
+                            break;
+                        }
+                    }
+
+                    if (HasANormalCP) {
+                        Private_UsePortal(_Player, Landmark.Id);
+                        G_LatestV2PortalCache = Landmark.Id;
+                    } else {
+                        Private_HandleCheckpoint(_Player, Landmark.Id);
+                    }
+                } else {
+                    Private_HandleCheckpoint(_Player, Landmark.Id);
+                }
             }
         }
-    } else if (Tools::IsPortal(Landmark)) {
-        Private_UsePortal(_Player, Landmark.Id);
     }
 
     // TODO: Change this to a separate function (in Tools or Player?)

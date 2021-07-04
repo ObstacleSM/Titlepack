@@ -8,7 +8,6 @@
 #Include "TextLib" as TL
 #Include "MathLib" as ML
 #Include "Libs/Nadeo/ShootMania/SM3.Script.txt" as SM
-#Include "Libs/smokegun/Tools.Script.txt" as Tools
 #Include "Libs/smokegun/Player.Script.txt" as Player
 #Include "Libs/smokegun/Constants.Script.txt" as Constants
 
@@ -16,7 +15,7 @@
     CONSTANTS
 ***************************************/
 
-#Const Version  "2017-11-25"
+#Const Version  "2021-05-07"
 #Const ScriptName "Items.Script.txt"
 
 
@@ -78,7 +77,6 @@ Void Place() {
 
 Boolean PickupItems(CSmModeEvent _Event) {
     declare ItemName for _Event.Object = "";
-
 
     declare Distance = ML::Distance(_Event.Object.AnchorLandmark.Position, _Event.Player.Position);
 

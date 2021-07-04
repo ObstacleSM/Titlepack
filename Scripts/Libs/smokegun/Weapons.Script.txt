@@ -15,7 +15,7 @@
     CONSTANTS
 ***************************************/
 
-#Const  Version     "2017-07-10"
+#Const  Version     "2021-07-4"
 #Const  ScriptName  "Weapons.Script.txt"
 
 
@@ -59,7 +59,7 @@ Void FillUpPlayerAmmo(CSmPlayer _Player) {
         declare CheckpointLandmark <=> MapLandmarks[LastCheckpointId];
         declare metadata Meta_EmptyWeapon for CheckpointLandmark = False;
         if (Meta_EmptyWeapon) {
- return;
+            return;
         }
     }
 
@@ -67,10 +67,10 @@ Void FillUpPlayerAmmo(CSmPlayer _Player) {
         declare PlayerHasRespawned for _Player = False;
         PlayerHasRespawned = True;
     } else {
-        SetPlayerAmmo(_Player, CSmMode::EWeapon::Rocket, 10);
-        SetPlayerAmmo(_Player, CSmMode::EWeapon::Laser, 10);
-        SetPlayerAmmo(_Player, CSmMode::EWeapon::Nucleus, 10);
-        SetPlayerAmmo(_Player, CSmMode::EWeapon::Arrow, 10);
+        SetPlayerAmmo(_Player, CSmMode::EWeapon::Rocket, 18);
+        SetPlayerAmmo(_Player, CSmMode::EWeapon::Laser, 21);
+        SetPlayerAmmo(_Player, CSmMode::EWeapon::Nucleus, 16);
+        SetPlayerAmmo(_Player, CSmMode::EWeapon::Arrow, 21);
     }
 }
 
@@ -97,6 +97,7 @@ Void ApplyEffects(CSmPlayer _Player, CSmMapLandmark _Anchor) {
     declare metadata Meta_Stamina_Gain for _Anchor = 1.0;
     declare metadata Meta_Stamina_Amount for _Anchor = 1.0;
     declare metadata Meta_RefillStamina for _Anchor = False;
+    declare metadata Meta_EmptyStamina for _Anchor = False;
 
     SetWeapon(_Player, Meta_Weapon, Meta_Weapon_Gain, Meta_Weapon_Amount);
     _Player.StaminaMax = Meta_Stamina_Amount;
@@ -119,6 +120,10 @@ Void ApplyEffects(CSmPlayer _Player, CSmMapLandmark _Anchor) {
 
     if (Meta_RefillStamina) {
         _Player.Stamina = _Player.StaminaMaxValue;
+    }
+
+    if (Meta_EmptyStamina) {
+        _Player.Stamina = 0;
     }
 
 }

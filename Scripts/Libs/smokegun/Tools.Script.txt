@@ -9,13 +9,15 @@
 #Include "MathLib" as MathLib
 #Include "Libs/Nadeo/ShootMania/Map.Script.txt" as Map
 #Include "Libs/smokegun/Player.Script.txt" as Player
+#Include "Libs/miltant/Randomizer.Script.txt" as RNG
 
 /***************************************
     CONSTANTS
 ***************************************/
 
-#Const  Version     "2017-07-10"
+#Const  Version     "2021-03-30"
 #Const  ScriptName  "Tools.Script.txt"
+
 
 /***************************************
     FUNCTIONS
@@ -29,38 +31,70 @@ Text GetPos(Vec2 _Pos) {
     return _Pos.X^" "^_Pos.Y;
 }
 
-Boolean IsEnabled(CSmMapLandmark _Landmark) {
+Boolean Private_IsEnabled(CSmMapLandmark _Landmark) {
     if (Map::GetMapTypeVersion() <= 2)
         return _Landmark.Tag != "No-Function";
+
     declare metadata Meta_Enabled for _Landmark = True;
     return Meta_Enabled;
 }
 
 Boolean IsGoal(CSmMapLandmark _Landmark) {
-    if (!IsEnabled(_Landmark))
+    if (!RNG::IsEnabled(_Landmark))
         return False;
 
     if (Map::GetMapTypeVersion() <= 2)
-   	    return _Landmark.Tag == "Goal";
+        return _Landmark.Tag == "Goal";
 
     declare metadata Meta_CPType for _Landmark = 0;
-   	return _Landmark.Tag == "Goal" || Meta_CPType == 2;
+    return _Landmark.Tag == "Goal" || Meta_CPType == 2;
+}
+
+Boolean IsACandidateGoal(CSmMapLandmark _Landmark) {
+    if (!Private_IsEnabled(_Landmark))
+        return False;
+
+    if (Map::GetMapTypeVersion() <= 2)
+        return _Landmark.Tag == "Goal";
+
+    declare metadata Meta_CPType for _Landmark = 0;
+    return _Landmark.Tag == "Goal" || Meta_CPType == 2;
+}
+
+Boolean IsSpawn(CSmMapLandmark _Landmark) {
+    if (!RNG::IsEnabled(_Landmark))
+        return False;
+
+    if (Map::GetMapTypeVersion() <= 2)
+        return TextLib::SubString(_Landmark.Tag, 0, 5) == "Spawn";
+    declare metadata Meta_IsCpSpawn for _Landmark = False;
+    return !Meta_IsCpSpawn && TextLib::SubString(_Landmark.Tag, 0, 7) != "CPSpawn";
+}
+
+Boolean IsACandidateSpawn(CSmMapLandmark _Landmark) {
+    if (!Private_IsEnabled(_Landmark))
+        return False;
+
+    if (Map::GetMapTypeVersion() <= 2)
+        return TextLib::SubString(_Landmark.Tag, 0, 5) == "Spawn";
+    declare metadata Meta_IsCpSpawn for _Landmark = False;
+    return !Meta_IsCpSpawn && TextLib::SubString(_Landmark.Tag, 0, 7) != "CPSpawn";
 }
 
 Boolean IsCheckpoint(CSmMapLandmark _Landmark) {
-    if (!IsEnabled(_Landmark))
+    if (!RNG::IsEnabled(_Landmark))
         return False;
 
     if (Map::GetMapTypeVersion() <= 2)
         return "Checkpoint" == TextLib::SubText(_Landmark.Tag, 0, 10);
 
     declare metadata Meta_CPType for _Landmark = 0;
-   	return _Landmark.Tag == "Checkpoint"
+    return _Landmark.Tag == "Checkpoint"
            && (Meta_CPType == 0 || Meta_CPType == 1);
 }
 
 Boolean IsPortal(CSmMapLandmark _Landmark) {
-    if (!IsEnabled(_Landmark))
+    if (!RNG::IsEnabled(_Landmark))
         return False;
 
     if (Map::GetMapTypeVersion() <= 2)
@@ -70,23 +104,25 @@ Boolean IsPortal(CSmMapLandmark _Landmark) {
 }
 
 Boolean IsCpSpawn(CSmMapLandmark _Landmark) {
-    if (!IsEnabled(_Landmark))
+    if (!RNG::IsEnabled(_Landmark))
         return False;
 
     if (Map::GetMapTypeVersion() <= 2)
         return _Landmark.Tag == "CPSpawn";
     declare metadata Meta_IsCpSpawn for _Landmark = False;
-    return Meta_IsCpSpawn;
+    return Meta_IsCpSpawn || TextLib::SubString(_Landmark.Tag, 0, 7) == "CPSpawn";
 }
 
-Boolean IsSpawn(CSmMapLandmark _Landmark) {
-    if (!IsEnabled(_Landmark))
-        return False;
+Integer[] FindMissingNumbers(Integer[Integer] CPCounts) {
+    declare Integer[] MissingNumbers;
 
-    if (Map::GetMapTypeVersion() <= 2)
-        return TextLib::SubString(_Landmark.Tag, 0, 5) == "Spawn";
-    declare metadata Meta_IsCpSpawn for _Landmark = False;
-    return !Meta_IsCpSpawn;
+    for (Order, 1, CPCounts.count) {
+        if (!CPCounts.existskey(Order)) {
+            MissingNumbers.add(Order);
+        }
+    }
+
+    return MissingNumbers;
 }
 
 Integer GetWeaponTypeFromSpawn(CSmMapLandmark SpawnLandmark) {
@@ -95,7 +131,7 @@ Integer GetWeaponTypeFromSpawn(CSmMapLandmark SpawnLandmark) {
     if (TextLib::Length(SpawnName) > 5) {
         WeaponType = TextLib::ToInteger(TextLib::SubString(SpawnName, 9, 1));
     }
-  return WeaponType;
+    return WeaponType;
 }
 
 Ident Private_GetClosestSpawn(Ident _CheckPointId, Ident[] _SpawnIds) {
@@ -124,7 +160,7 @@ Ident GetClosestSpawn(Ident _CheckPointId) {
     declare Ident[] SpawnIds = [];
 
     foreach (Spawn in MapLandmarks_PlayerSpawn) {
-        if (IsCpSpawn(Spawn) && (Checkpoint.Order == 0 || Checkpoint.Order == Spawn.Order))
+        if (IsCpSpawn(Spawn) && (Checkpoint.Order == Spawn.Order))
             SpawnIds.add(Spawn.Id);
     }
 
@@ -134,7 +170,7 @@ Ident GetClosestSpawn(Ident _CheckPointId) {
     // If there is no spawn for the current checkpoint
     // Search for previous spawns
     foreach (Spawn in MapLandmarks_PlayerSpawn) {
-        if (IsCpSpawn(Spawn) && Checkpoint.Order > Spawn.Order)
+        if (IsCpSpawn(Spawn) && RNG::GetOrder(Checkpoint) >= RNG::GetOrder(Spawn))
             SpawnIds.add(Spawn.Id);
     }
 

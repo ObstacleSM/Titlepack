@@ -13,6 +13,7 @@ declare Integer G_RoundCooldown;
 declare Integer G_WarmupRounds;
 declare Integer G_MinTimeLeft;
 declare Integer G_MaxTimeLeft;
+declare Integer G_CheckpointMarkersCount;
 
 declare Boolean G_PvPWeapons;
 declare Boolean G_FastRespawn;
@@ -28,6 +29,7 @@ declare Real G_NextMapVotingRatio;
 
 declare Text G_BestNewRecordMsg;
 declare Text G_WorseNewRecordMsg;
+declare Text G_ForceRNGSeed;
 
 
 Integer GetTimeLimit() {
@@ -124,6 +126,14 @@ Integer GetMaxTimeLeft() {
 
 Void SetMaxTimeLeft(Integer _Value) {
 	G_MaxTimeLeft = _Value;
+}
+
+Integer GetCheckpointMarkersCount() {
+	return G_CheckpointMarkersCount;
+}
+
+Void SetCheckpointMarkersCount(Integer _Value) {
+	G_CheckpointMarkersCount = _Value;
 }
 
 
@@ -223,4 +233,12 @@ Text GetWorseNewRecordMsg() {
 
 Void SetWorseNewRecordMsg(Text _Value) {
 	G_WorseNewRecordMsg = _Value;
+}
+
+Text GetForceRNGSeed() {
+	return G_ForceRNGSeed;
+}
+
+Void SetForceRNGSeed(Text _Value) {
+	G_ForceRNGSeed = _Value;
 }

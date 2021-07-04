@@ -13,7 +13,7 @@
 Text Private_GetSmallRecords() {
     return """
 <frame id="Frame_Small_Records" class="LibCustomUI_Module" hidden="1">
-    <frame id="Frame_Background"halign="center" valign="center2" pos="139 75">
+    <frame id="Frame_Background" halign="center" valign="center2" pos="139 75">
         <quad z-index="-1" size="44 67" style="BgRaceScore2" substyle="BgCardPlayer" halign="center" valign="top" scriptevents="1"/>
         <label pos="0 -1" size="40 5" text="Records" style="TextTitle3" textsize="4" halign="center" textfont="OswaldMono" maxline="1" valign="top" textemboss="1"/>
     </frame>
@@ -112,7 +112,7 @@ Text GetLayer() {
                 Xml.Destroy(XRecords);
 
 
-
+              
                 if (!Frame_Widget.Visible)
                     Frame_Widget.Show();
 
