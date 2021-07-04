@@ -1,0 +1,154 @@
+/************************************************
+*   Obstacle Library                            *
+*   Author:     miltant                         *
+*                                               *
+*   Tools for randomizing cp order              *
+************************************************/
+
+#Include "TextLib" as TL
+#Include "MathLib" as ML
+#Include "Libs/Nadeo/ShootMania/Map.Script.txt" as Map
+
+/***************************************
+    CONSTANTS
+***************************************/
+
+#Const  Version     "2021-06-26"
+#Const  ScriptName  "Randomizer.Script.txt"
+
+/*********************************************
+  GLOBALES
+ *********************************************/
+
+declare Integer G_LastRandom;
+declare Integer[Integer] G_LandmarksOrders;
+declare Ident G_EnabledGoal;
+declare Ident G_EnabledSpawn;
+declare Ident[] G_CandidateGoals;
+declare Ident[] G_CandidateSpawns;
+
+/***************************************
+    FUNCTIONS
+***************************************/
+
+Ident GetEnabledGoal() {
+    return G_EnabledGoal;
+}
+Ident GetEnabledSpawn() {
+    return G_EnabledSpawn;
+}
+Void SetDefaultSpawn(Ident _Id) {
+    G_EnabledSpawn = _Id;
+}
+
+Void ClearCandidates() {
+    G_CandidateGoals.clear();
+    G_CandidateSpawns.clear();
+}
+
+// doesn't assert if the landmark has an order or if it is enabled...
+Integer GetOrder(CSmMapLandmark _Landmark) {
+    if (_Landmark.Order == 1 && ""^Map.Id == "EB7g1vI_m7XfzP1AV4sS8LJgGX8") {
+        declare metadata Meta_IsPortal for _Landmark = False;
+        if (Meta_IsPortal) return 8;
+    }
+
+    if (_Landmark.Order >= 0)
+        return _Landmark.Order;
+    else if (G_LandmarksOrders.existskey(_Landmark.Order))
+        return G_LandmarksOrders[_Landmark.Order];
+    
+    return 0;
+}
+
+Boolean IsEnabled(CSmMapLandmark _Landmark) {
+    if (Map::GetMapTypeVersion() <= 2)
+        return _Landmark.Tag != "No-Function";
+
+    declare metadata Meta_Enabled for _Landmark = True;
+    declare metadata Meta_Randomize for _Landmark = False;
+
+    if (Meta_Randomize && G_CandidateGoals.count > 0 && G_CandidateSpawns.count > 0) {
+        return _Landmark.Id == G_EnabledGoal || _Landmark.Id == G_EnabledSpawn;
+    } else if (Meta_Enabled){
+        return True;
+    }
+    return False;
+}
+
+Integer[Integer] GetLandmarksOrders() {
+    if (G_LandmarksOrders.count == 0)
+        return [];
+    return G_LandmarksOrders;
+}
+
+// https://en.wikipedia.org/wiki/Linear_congruential_generator
+Integer Random (Integer _Min, Integer _Max)
+{
+    declare M = 2147483648; // 2^31
+    declare A = 4280821421;
+    declare C = 521;
+    declare Seed = G_LastRandom % M;
+    
+    G_LastRandom = (A * Seed + C) % M;
+    
+    return ML::Abs(G_LastRandom % (_Max - _Min + 1)) + _Min;
+}
+
+Text InitRandom (Text _Seed)
+{
+    if (_Seed == "")
+        G_LastRandom = System.CurrentLocalDate;
+    else
+        G_LastRandom = TL::ToInteger(_Seed);
+
+    return ""^G_LastRandom;
+}
+
+Text RandomizeLandmarksWithSeed(Ident[][Integer] _CPLandmarks, Integer[] _CPTargets, Ident[] _Spawns, Ident[] _Goals, Text _Seed) {
+    declare Seed = InitRandom(_Seed);
+
+    declare Integer[Integer] ShuffleMe;
+    foreach (Order => discard in _CPLandmarks) {
+        declare CurrentIndex = Random(0, 2147483648);
+        ShuffleMe[Order] = CurrentIndex;
+    }
+    ShuffleMe = ShuffleMe.sort();
+
+    declare Integer[] Orders;
+    foreach (Order => discard in ShuffleMe)
+        Orders.add(Order);
+
+    G_LandmarksOrders.clear();
+    for (I, 0, Orders.count - 1) {
+        declare Ident[] Idents = _CPLandmarks[Orders[I]];
+        foreach (Id in Idents) {
+            G_LandmarksOrders[MapLandmarks[Id].Order] = _CPTargets[I];
+        }
+    }
+
+    G_CandidateSpawns = _Spawns;
+    if (_Spawns.count == 1) {
+        G_EnabledSpawn = _Spawns[0];
+    } else {
+        G_EnabledSpawn = _Spawns[Random(0, _Spawns.count - 1)];
+    }
+
+    G_CandidateGoals = _Goals;
+    if (_Goals.count == 1) {
+        G_EnabledGoal = _Goals[0];
+    } else {
+        G_EnabledGoal = _Goals[Random(0, _Goals.count - 1)];
+    }
+    
+    return Seed;
+}
+
+Text RandomizeLandmarks(Ident[][Integer] _CPLandmarks, Integer[] _CPTargets, Ident[] _Spawns, Ident[] _Goals) {
+    return RandomizeLandmarksWithSeed(_CPLandmarks, _CPTargets, _Spawns, _Goals, "");
+}
+
+Void ClearLandmarks() {
+    foreach (I => discard in G_LandmarksOrders)
+        G_LandmarksOrders[I] = 0;
+}
