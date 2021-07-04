@@ -1,0 +1,120 @@
+#Include "MathLib" as ML
+#Include "Libs/Nadeo/Message.Script.txt" as Message
+
+#Const  Version     "2019-01-08"
+#Const  ScriptName  "NextMapVote.Script.txt"
+
+Void Yield(Real _NextMapVotingRatio) {
+    declare VotingsNb = 0;
+
+    foreach (Player in Players) {
+        declare UI <=> UIManager.GetUI(Player);
+        if (UI == Null) continue;
+
+        declare netread Net_NextMapVote for UI = 0;
+        if (Net_NextMapVote == 1) {
+            VotingsNb += 1;
+        }
+    }
+
+    declare Remaining = ML::CeilingInteger(Players.count * _NextMapVotingRatio) - VotingsNb;
+    declare netwrite Integer Net_PlayersTotal for Teams[0];
+    declare netwrite Integer Net_PlayersVotingNext for Teams[0];
+    declare netwrite Integer Net_PlayersVotingRemaining for Teams[0];
+    Net_PlayersTotal = Players.count;
+    Net_PlayersVotingNext = VotingsNb;
+    Net_PlayersVotingRemaining = Remaining;
+
+    // End map?
+    if (VotingsNb > 0
+        && Remaining <= 0
+        && StartTime + 15000 < Now
+        && (EndTime == -1 || EndTime - 15000 > Now)
+    ) {
+        Message::SendStatusMessage(_("Voting has forced an End of the current Map."), 5000, 1);
+        EndTime = Now + 15000;
+    }
+}
+
+Text GetLayer(Real _NextMapVotingRatio) {
+    return """
+<manialink version="3" name="Obstacle:NextMapVote">
+    <frame pos="-49 90"id="Frame_NextMapVote">
+        <label id="Label_NextMapVoting" pos="0 -2" size="25 4" textsize="1" halign="left" valign="center2" textfont="OswaldMono" textcolor="080"/>
+        <quad z-index="-1" pos="12.5 -2" size="27 5" style="BgRaceScore2" substyle="BgCardPlayer" halign="center" valign="center"/>
+    </frame>
+
+<script><!--
+    #Include "TextLib" as TL
+
+    #Const  C_UseNextMapVoting  {{{(_NextMapVotingRatio > 0.0 && _NextMapVotingRatio <= 1.0)}}}
+
+    main() {
+        wait(InputPlayer != Null && Page != Null);
+
+        declare Frame_NextMapVote <=> (Page.GetFirstChild("Frame_NextMapVote") as CMlFrame);
+        declare Label_NextMapVoting <=> (Page.GetFirstChild("Label_NextMapVoting") as CMlLabel);
+
+        declare netread Net_PlayersVotingNext for Teams[0] = 0;
+        declare netread Net_PlayersTotal for Teams[0] = 0;
+        declare netread Net_PlayersVotingRemaining for Teams[0] = 0;
+
+        declare netwrite Net_NextMapVote for UI = 0;
+        declare netread Net_NextMapVotingReset for UI = 0;
+        declare LastNextMapVotingReset = -1;
+
+        while (True) {
+            yield;
+
+            declare LocalPlayer <=> InputPlayer;
+            if (GUIPlayer != Null) LocalPlayer <=> GUIPlayer;
+            if (LocalPlayer == Null) continue;
+
+            // Process events
+            foreach (Event in PendingEvents) {
+                if (Event.Type == CMlEvent::Type::KeyPress && Event.CharPressed == "2621440") {
+                    // F3 - Change next map vote
+                    if (C_UseNextMapVoting) {
+                        if (Net_NextMapVote == 1) {
+                            Net_NextMapVote = 0;
+                        } else {
+                            Net_NextMapVote = 1;
+                        }
+                    }
+                }
+            }
+
+            // Check for next map voting reset
+            if (Net_NextMapVotingReset != LastNextMapVotingReset) {
+                Net_NextMapVote = 0;
+                LastNextMapVotingReset = Net_NextMapVotingReset;
+            }
+
+            // Next map voting label
+            if (C_UseNextMapVoting) {
+                Label_NextMapVoting.Visible = True;
+                declare Text Color;
+                declare Text VotingText;
+                if (Net_NextMapVote == 1) {
+                    Color = "$0C0";
+                    VotingText = _("KEEP MAP");
+                } else {
+                    Color = "$080";
+                    VotingText = _("SKIP MAP");
+                }
+
+                declare Remaining = Net_PlayersVotingNext^"/"^Net_PlayersTotal;
+                if (Net_PlayersVotingRemaining > 0) {
+                    Remaining ^= " ("^Net_PlayersVotingRemaining^" needed)";
+                }
+
+                Label_NextMapVoting.Value = TL::Compose("%1%2: %3", Color, VotingText, Remaining);
+            } else {
+                Frame_NextMapVote.Visible = False;
+            }
+        }
+
+    }
+--></script>
+</manialink>""";
+}

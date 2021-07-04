@@ -1,0 +1,278 @@
+/************************************************
+* Obstacle Library                              *
+* Author:  smokegun                             *
+*                                               *
+* Items related functions.                      *
+************************************************/
+
+#Include "TextLib" as TL
+#Include "MathLib" as ML
+#Include "Libs/Nadeo/ShootMania/SM3.Script.txt" as SM
+#Include "Libs/smokegun/Player.Script.txt" as Player
+#Include "Libs/smokegun/Constants.Script.txt" as Constants
+
+/***************************************
+    CONSTANTS
+***************************************/
+
+#Const Version  "2021-05-07"
+#Const ScriptName "Items.Script.txt"
+
+
+declare Ident[Text] G_ItemIdents;
+declare CSmObject[] G_AnchorsObjects;
+
+Void LoadItems() {
+    G_ItemIdents[Constants::C_ItemOffzone] = ItemList_Add(Constants::C_ItemOffzone);
+    G_ItemIdents[Constants::C_ItemAmmo] = ItemList_Add(Constants::C_ItemAmmo);
+}
+
+Void Init() {
+    ItemList_Begin();
+    LoadItems();
+    ItemList_End();
+}
+
+Void Place() {
+    foreach (AnchorLandmark in MapLandmarks_ObjectAnchor) {
+
+        declare ObjectName = AnchorLandmark.ObjectAnchor.ItemName;
+
+        // should fix crash on aven unchained ?
+        if (!G_ItemIdents.existskey(ObjectName)) continue;
+
+        declare Object <=> ObjectCreate(G_ItemIdents[ObjectName]);
+        if (Object == Null) continue;
+
+        G_AnchorsObjects.add(Object);
+        Object.SetAnchor(AnchorLandmark.ObjectAnchor);
+        declare Ident AnchorLandmarkId for Object;
+        AnchorLandmarkId = AnchorLandmark.Id;
+        declare Text ItemName for Object;
+        ItemName = ObjectName;
+
+        switch (ObjectName) {
+
+            case Constants::C_ItemOffzone: {
+                    declare metadata Meta_BuffDuration for AnchorLandmark = 5.;
+                    declare Real Duration for Object;
+                    Duration = Meta_BuffDuration;
+            }
+
+            case Constants::C_ItemAmmo: {
+                    declare metadata Meta_GrantAmmoDuration for AnchorLandmark = 0.;
+                    declare metadata Meta_GrantAmmoCooldown for AnchorLandmark = 500;
+                    declare metadata Meta_GrantAmmoAmount for AnchorLandmark = 1.;
+                    declare Real Duration for Object;
+                    declare Integer Cooldown for Object;
+                    declare Real Amount for Object;
+                    Duration = Meta_GrantAmmoDuration;
+                    Cooldown = Meta_GrantAmmoCooldown;
+                    Amount = Meta_GrantAmmoAmount;
+            }
+
+        }
+    }
+}
+
+Boolean PickupItems(CSmModeEvent _Event) {
+    declare ItemName for _Event.Object = "";
+
+    declare Distance = ML::Distance(_Event.Object.AnchorLandmark.Position, _Event.Player.Position);
+
+    // fix taking item then respawning
+    if (Distance > 2) {
+        return False;
+    }
+
+    declare ItemBuffTimes = Player::getBuffTimes(_Event.Player);
+
+    if (ItemBuffTimes.existskey(ItemName) && ItemBuffTimes[ItemName] >= Now) {
+        return False;
+    }
+
+    switch (ItemName) {
+
+        case Constants::C_ItemOffzone: {
+            declare Duration for _Event.Object = 5.;
+            Player::setBuffTime(_Event.Player, ItemName, Now + ML::NearestInteger(Duration * 1000.));
+        }
+
+        case Constants::C_ItemAmmo: {
+
+            if (_Event.Player.CurAmmo == _Event.Player.CurAmmoMax) {
+                return False;
+            }
+
+            // Use cooldown on offzone shield too???
+            declare Cooldown for _Event.Object = 500;
+            if (Cooldown <= 0) {
+                Cooldown = 500;
+            }
+
+            // contains the now + cooldown from when the item was taken
+            declare Integer[Ident] ItemsActiveCooldowns for _Event.Player = [];
+
+            if (ItemsActiveCooldowns.existskey(_Event.Object.Id) && Now <= ItemsActiveCooldowns[_Event.Object.Id]) {
+                return False;
+            }
+
+            ItemsActiveCooldowns[_Event.Object.Id] = Now + Cooldown;
+
+            declare Duration for _Event.Object = 0.;
+            declare Amount for _Event.Object = 1.;
+
+
+            Player::setBuffTime(_Event.Player, ItemName, Now + ML::NearestInteger(Duration * 1000.));
+
+            declare Real AmmoItemBuffDuration for _Event.Player;
+            declare Real AmmoItemBuffAmount for _Event.Player;
+            declare Integer AmmoItemBuffTicks for _Event.Player = 0;
+            AmmoItemBuffDuration = Duration;
+            AmmoItemBuffAmount = Amount;
+            AmmoItemBuffTicks = 0;
+
+            // Instant grant
+            if (Duration <= 0.) {
+                if (Amount * _Event.Player.CurAmmoUnit +_Event.Player.CurAmmo > _Event.Player.CurAmmoMax) {
+                    SetPlayerAmmo(_Event.Player, SM::GetWeapon(_Event.Player.CurWeapon), _Event.Player.CurAmmoMax);
+                } else {
+                    AddPlayerAmmo(_Event.Player, SM::GetWeapon(_Event.Player.CurWeapon), Amount);
+                }
+            }
+        }
+
+    }
+
+    return True;
+}
+
+Void Destroy() {
+    foreach (Object in G_AnchorsObjects) {
+        ObjectDestroy(Object);
+    }
+    G_AnchorsObjects.clear();
+}
+
+Text CreateLayerItems() {
+    declare ItemCount = G_ItemIdents.count;
+    declare Manialink = """
+<manialink version="3" name="Obstacle:Items">
+    <script><!--
+        #Include "MathLib" as ML
+        #Include "TextLib" as TL
+
+        #Const C_ItemCount  {{{ItemCount}}}
+
+        main() {
+            wait(InputPlayer != Null && Page != Null && LocalUser != Null);
+
+            declare Label_Info <=> (Page.GetFirstChild("Label_Info") as CMlLabel);
+
+            declare Last_UIUpdate = 0;
+            declare Last_LabelInfoShown = 0;
+            declare Last_BuffEnds = Integer[Text];
+            declare Last_BuffDurations = Integer[Text];
+
+            while (True) {
+                yield;
+
+                if (!PageIsVisible || Last_UIUpdate + 50 > Now) continue;
+                Last_UIUpdate = Now;
+
+                declare LocalPlayer <=> InputPlayer;
+                if (GUIPlayer != Null && GUIPlayer != LocalPlayer) LocalPlayer <=> GUIPlayer;
+                if (LocalPlayer == Null) continue;
+
+                declare Index = 1;
+                declare netread Integer[Text] ItemBuffTimes for LocalPlayer = [];
+                if (LocalPlayer.SpawnStatus == CSmPlayer::ESpawnStatus::Spawned) {
+                    if (ItemBuffTimes.count == 0) {
+                        Label_Info.Visible = False;
+                    }
+
+                    foreach (ItemName => BuffTime in ItemBuffTimes) {
+                        declare Frame <=> (Page.GetFirstChild("Frame_ItemGauge"^Index) as CMlFrame);
+                        if (Frame == Null) continue;
+
+                        if (BuffTime < ArenaNow) {
+                            if (Label_Info.Visible) {
+                                Label_Info.Visible = False;
+                            }
+                            continue;
+                        }
+
+
+                        declare Gauge_Item <=> (Frame.GetFirstChild("Gauge_Item") as CMlGauge);
+                        declare Label_Time <=> (Frame.GetFirstChild("Label_Time") as CMlLabel);
+                        declare Label_Item <=> (Frame.GetFirstChild("Label_Item") as CMlLabel);
+
+                        if (Gauge_Item.Color != LocalPlayer.User.Color)
+                            Gauge_Item.Color = LocalPlayer.User.Color;
+
+                        Index += 1;
+                        Frame.Visible = True;
+
+                        // Adjust Frame Y
+                        declare Source_Y for Frame = -1000.;
+                        if (Source_Y <= -1000.) Source_Y = Frame.AbsolutePosition.Y;
+                        if (LocalPlayer != InputPlayer) {
+                            Frame.RelativePosition.Y = Source_Y + 15.;
+                        } else {
+                            Frame.RelativePosition.Y = Source_Y;
+                        }
+
+                        if (!Last_BuffEnds.existskey(ItemName) || Last_BuffEnds[ItemName] != BuffTime || !Last_BuffDurations.existskey(ItemName)) {
+                            Last_BuffEnds[ItemName] = BuffTime;
+                            Last_BuffDurations[ItemName] = BuffTime - ArenaNow;
+                        }
+
+                        declare TimeDiff = BuffTime - ArenaNow;
+
+                        if (Last_BuffDurations[ItemName] != 0) {
+                        	declare Ratio = TimeDiff / ML::ToReal(Last_BuffDurations[ItemName]);
+	                        if (Ratio < 0.) {
+	                            Ratio = 0.;
+	                        } else if (Ratio > 1.) {
+	                            Ratio = 1.;
+	                        }
+	                        Gauge_Item.Ratio = Ratio;
+
+	                        declare TimeDiffText = ML::NearestInteger(TimeDiff / 100.) / 10.;
+	                        Label_Time.Value = TimeDiffText^"s";
+                        }
+
+                        declare ItemParts = TL::Split("\\", ItemName);
+                        ItemParts = TL::Split(".", ItemParts[ItemParts.count-1]);
+                        Label_Item.Value = ItemParts[0];
+                        if (LocalPlayer != InputPlayer || Label_Info.Visible) continue;
+                        Label_Info.Value = TL::Compose(_("You picked up the %1 Item!"), ItemParts[0]);
+                        Label_Info.Visible = True;
+                    }
+                }
+                for (ExtraIndex, Index, C_ItemCount) {
+                    declare Frame <=> (Page.GetFirstChild("Frame_ItemGauge"^ExtraIndex) as CMlFrame);
+                    if (Frame == Null) continue;
+                    Frame.Visible = False;
+                }
+
+            }
+        }
+    --></script>
+    <frame id="Info">
+	      <label id="Label_Info" pos="0 40" size="110 10" translate="1" halign="center" valign="center2" textfont="OswaldMono" textsize="5"/>
+    </frame>
+    <frame id="Items">
+        <framemodel id="Model_ItemGauge">
+            <label id="Label_Time" pos="0 -0.5" textsize="2" halign="center" valign="center2" textfont="OswaldMono"/>
+            <label id="Label_Item" pos="-36.5 -0.5" textsize="2" translate="1" halign="left" valign="center2" textfont="OswaldMono"/>
+            <gauge id="Gauge_Item" size="80 14" color="11FF00BB" style="EnergyBar" drawbg="0" drawblockbg="1" halign="center" valign="center2"/>
+        </framemodel>""";
+		    for (Index, 1, ItemCount) {
+		        Manialink ^= """<frameinstance id="Frame_ItemGauge{{{Index}}}" pos="0 {{{-65 + Index * 8.3}}} -15" modelid="Model_ItemGauge" hidden="1"/>""";
+		    }
+    Manialink ^= """
+    </frame>
+</manialink>""";
+    return Manialink;
+}

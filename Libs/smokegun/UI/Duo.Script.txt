@@ -1,0 +1,330 @@
+#Include "Libs/smokegun/Structs.Script.txt" as Structs
+
+#Struct Structs::SSurvivalPlayer as SSurvivalPlayer
+
+declare Boolean G_IsEnabled;
+declare Integer G_TeamCount;
+
+Text GetLayer() {
+    log("GetLayer");
+    return """
+<manialink version="3" name="Obstacle:Duo">
+<frame id="Frame_Duo" pos="-139 50" z-index="3" hidden="1">
+    <frame id="Frame_List" pos="-20 -8" size="41 50" scroll="1" scrollmax="0 170">
+        <quad size="41 200" scriptevents="1" />
+        <frameinstance modelid="duo_player" pos="0 0" id="ranking0" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -4" id="ranking1" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -8" id="ranking2" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -12" id="ranking3" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -16" id="ranking4" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -20" id="ranking5" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -24" id="ranking6" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -28" id="ranking7" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -32" id="ranking8" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -36" id="ranking9" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -40" id="ranking10" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -44" id="ranking11" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -48" id="ranking12" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -52" id="ranking13" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -56" id="ranking14" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -60" id="ranking15" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -64" id="ranking16" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -68" id="ranking17" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -72" id="ranking18" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -76" id="ranking19" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -80" id="ranking20" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -84" id="ranking21" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -88" id="ranking22" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -92" id="ranking23" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -96" id="ranking24" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -100" id="ranking25" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -104" id="ranking26" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -108" id="ranking27" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -112" id="ranking28" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -116" id="ranking29" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -120" id="ranking30" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -124" id="ranking31" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -128" id="ranking32" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -132" id="ranking33" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -136" id="ranking34" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -140" id="ranking35" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -144" id="ranking36" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -148" id="ranking37" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -152" id="ranking38" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -156" id="ranking39" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -160" id="ranking40" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -164" id="ranking41" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -168" id="ranking42" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -172" id="ranking43" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -176" id="ranking44" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -180" id="ranking45" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -184" id="ranking46" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -188" id="ranking47" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -192" id="ranking48" hidden="0" z-index="1"/>
+        <frameinstance modelid="duo_player" pos="0 -196" id="ranking49" hidden="0" z-index="1"/>
+    </frame>
+    <frame id="Frame_Background" halign="center" valign="center2">
+        <label pos="0 -1" size="40 5" text="Players" style="TextTitle3" textsize="4" halign="center" textfont="OswaldMono" maxline="1" valign="top" textemboss="1"/>
+        <quad z-index="-1" size="44 60" style="BgRaceScore2" substyle="BgCardPlayer" halign="center" valign="top"/>
+    </frame>
+    <framemodel id="duo_player">
+        <label id="name"  pos="0 0" size="26 4" halign="left" valign="top" textsize="1" text="Mon Super Pseudo" textfont="Oswald"/>
+        <label id="associate" pos="40 0" size="14 4" halign="right" valign="top" style="TextTitle2" textsize="1" text="" textfont="OswaldMono" scriptevents="1"/>
+        <quad id="highlight" size="54 4" bgcolor="ffffffff" hidden="1"/>
+    </framemodel>
+</frame>
+<script><!--
+
+declare CMlFrame Frame_Duo;
+declare CMlFrame Frame_List;
+declare CSmPlayer LocalPlayer;
+declare Text[Text] LoginByControlId;
+
+Void UpdateView()
+{
+    declare LastLives = -1;
+    declare Rank = 0;
+    LoginByControlId.clear();
+
+    declare ClickedPlayer = "";
+    declare Matched = False;
+
+    if (LocalPlayer != Null) {
+        declare netwrite Text Net_DuoClickedPlayer for UI = "";
+        declare netread Boolean Net_DuoClickedMatched for UI = False;
+        ClickedPlayer = Net_DuoClickedPlayer;
+        Matched = Net_DuoClickedMatched;
+    }
+
+
+    declare netread Net_LayerDuoCanClick for Teams[0] = False;
+
+    foreach (Idx => Control in Frame_List.Controls) {
+        if (Idx == 0) continue;
+
+        declare Frame <=> (Control as CMlFrame);
+        declare NameLabel <=> (Frame.GetFirstChild("name") as CMlLabel);
+        declare ClickLabel <=> (Frame.GetFirstChild("associate") as CMlLabel);
+        declare Highlight <=> (Frame.GetFirstChild("highlight") as CMlQuad);
+
+        ClickLabel.Visible = Net_LayerDuoCanClick;
+
+        if (Idx-1 < Scores.count) {
+            declare Score  <=> Scores[Idx-1];
+
+            LoginByControlId[Control.ControlId] = Score.User.Login;
+
+            if (LocalPlayer != Null && (LocalPlayer.User.Login == Score.User.Login || ClickedPlayer == Score.User.Login)) {
+                Highlight.Show();
+                if (Matched) {
+                    Highlight.Opacity = 0.25;
+                }
+                else {
+                    Highlight.Opacity = 0.10;
+                }
+            }
+            else {
+                Highlight.Hide();
+            }
+
+
+            NameLabel.SetText(Score.User.Name);
+            Control.Show();
+        }
+        else {
+            Control.Hide();
+        }
+    }
+}
+
+main()
+{
+    Frame_Duo = (Page.GetFirstChild("Frame_Duo") as CMlFrame);
+    Frame_List = (Page.GetFirstChild("Frame_List") as CMlFrame);
+
+    declare netread Net_LayerDuoEnabled for Teams[0] = False;
+    declare LastUpdated = -1;
+
+    while (True) {
+        yield;
+
+        if (Net_LayerDuoEnabled) {
+            if (!Frame_Duo.Visible) {
+                Frame_Duo.Show();
+            }
+        }
+        else {
+            if (Frame_Duo.Visible) {
+                Frame_Duo.Hide();
+            }
+        }
+
+        if (!Net_LayerDuoEnabled) continue;
+
+        LocalPlayer <=> InputPlayer;
+
+        if (LastUpdated + 1000 < GameTime) {
+           UpdateView();
+           LastUpdated = GameTime;
+        }
+
+        if (LocalPlayer == Null) continue;
+
+        foreach (Event in PendingEvents) {
+            switch(Event.Type) {
+                case CMlScriptEvent::Type::MouseClick: {
+                    if (Event.Control.ControlId == "associate") {
+
+                        declare netread Net_LayerDuoCanClick for Teams[0] = False;
+                        if (!Net_LayerDuoCanClick) continue;
+
+                        declare ClickedLogin = LoginByControlId[Event.Control.Parent.ControlId];
+                        log("Cliked on "^ClickedLogin);
+
+                        // if (LocalPlayer.User.Login == ClickedLogin) continue; // whyy
+
+                        declare netwrite Text Net_DuoClickedPlayer for UI = "";
+                        if (Net_DuoClickedPlayer == ClickedLogin) {
+                            Net_DuoClickedPlayer = "";
+                        }
+                        else {
+                            Net_DuoClickedPlayer = ClickedLogin;
+                        }
+
+                        UpdateView();
+
+                        /* // for teams later
+                        if (Net_DuoAssociatesByLogin.existskey(LocalPlayer.User.Login)) {
+                            declare AmIAlreadyAssociated = False;
+                            foreach (AssociateLogin in Net_DuoAssociatesByLogin[LocalPlayer.User.Login]) {
+                                 if (AssociateLogin == ClickedLogin) {
+                                     AmIAlreadyAssociated = True;
+                                     break;
+                                 }
+                            }
+                            if (!AmIAlreadyAssociated) {
+                                Net_DuoAssociatesByLogin[LocalPlayer.User.Login].add(ClickedLogin);
+                            }
+                        }
+                        else {
+                            Net_DuoAssociatesByLogin[LocalPlayer.User.Login] = [];
+                            Net_DuoAssociatesByLogin[LocalPlayer.User.Login].add(ClickedLogin);
+                        }
+                        */
+                    }
+                }
+            }
+        }
+    }
+}
+
+--></script>
+</manialink>
+    """;
+}
+
+Void Reset()
+{
+    log("Reset");
+    declare Text[][Text] DuoAssociatesByLogin for Teams[0] = [];
+    DuoAssociatesByLogin.clear();
+
+    foreach (Player in Players) {
+        declare UI <=> UIManager.GetUI(Player);
+        if (UI == Null) continue;
+
+        declare netwrite Text Net_DuoClickedPlayer for UI = "";
+        declare netwrite Boolean Net_DuoClickedMatched for UI = False;
+
+        Net_DuoClickedPlayer = "";
+        Net_DuoClickedMatched = False;
+    }
+}
+
+Boolean UpdateLayer()
+{
+    declare IsEveryoneInTeam = False;
+    if (G_IsEnabled)
+    {
+        declare Text[][Text] DuoAssociatesByLogin for Teams[0] = [];
+
+        IsEveryoneInTeam = Players.count > 0;
+        G_TeamCount = 0;
+
+        foreach (Player in Players) {
+            declare UI <=> UIManager.GetUI(Player);
+            if (UI == Null) {
+                IsEveryoneInTeam = False;
+                continue;
+            }
+
+            declare netread Text Net_DuoClickedPlayer for UI = "";
+            declare netwrite Boolean Net_DuoClickedMatched for UI = False;
+
+            declare ClickedPlayer = Net_DuoClickedPlayer;
+            Net_DuoClickedMatched = False;
+
+
+            declare MateId = NullId;
+            foreach (Player2 in Players) {
+                if (Player2.User.Login == ClickedPlayer) {
+                    MateId = Player2.Id;
+                    break;
+                }
+            }
+
+            if (MateId != NullId) {
+                declare Mate <=> Players[MateId];
+                declare MateUI <=> UIManager.GetUI(Mate);
+                if (MateUI == Null) continue;
+
+
+                declare netread Text Net_DuoClickedPlayer as Net_DuoClickedPlayer2 for MateUI = "";
+                declare MateClickedPlayer = Net_DuoClickedPlayer2;
+
+                if (MateClickedPlayer == Player.User.Login) {
+                    // log(Player.User.Login^" matched with "^Mate.User.Login^"!");
+
+                    Net_DuoClickedMatched = True;
+                    DuoAssociatesByLogin[Player.User.Login] = [Mate.User.Login];
+                    G_TeamCount += 1;
+                }
+            }
+
+            if (IsEveryoneInTeam && !Net_DuoClickedMatched) {
+                IsEveryoneInTeam = False;
+            }
+
+        }
+    }
+
+    G_TeamCount = G_TeamCount / 2/* nb of player per team*/;
+    return IsEveryoneInTeam;
+}
+
+Void ShowLayer()
+{
+    G_IsEnabled = True;
+    declare netwrite Net_LayerDuoEnabled for Teams[0] = False;
+    declare netwrite Net_LayerDuoCanClick for Teams[0] = True;
+    Net_LayerDuoEnabled = G_IsEnabled;
+    Net_LayerDuoCanClick = True;
+}
+
+Void DisableLayer()
+{
+    declare netwrite Net_LayerDuoCanClick for Teams[0] = True;
+    Net_LayerDuoCanClick = False;
+}
+
+Void HideLayer()
+{
+    G_IsEnabled = False;
+    declare netwrite Net_LayerDuoEnabled for Teams[0] = False;
+    Net_LayerDuoEnabled = G_IsEnabled;
+}
+
+Integer GetTeamCount()
+{
+return G_TeamCount;
+}
