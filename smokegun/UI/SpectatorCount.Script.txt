@@ -1,0 +1,83 @@
+#Const  Version     "2019-01-08"
+#Const  ScriptName  "SpectatorCount.Script.txt"
+
+
+Void Yield() {
+    declare Integer[Text] SpeccedPlayers = [];
+
+    foreach (Player in Spectators) {
+        declare UI <=> UIManager.GetUI(Player);
+        if (UI == Null) continue;
+
+        declare netread Net_SpeccedTargetLogin for UI = "";
+        if (Net_SpeccedTargetLogin != "") {
+            if (!SpeccedPlayers.existskey(Net_SpeccedTargetLogin)) {
+                SpeccedPlayers[Net_SpeccedTargetLogin] = 1;
+            } else {
+                SpeccedPlayers[Net_SpeccedTargetLogin] += 1;
+            }
+        }
+    }
+
+    foreach (Player in Players) {
+        declare UI <=> UIManager.GetUI(Player);
+        if (UI == Null) continue;
+
+        declare netwrite Integer Net_NbSpectating for Player = 0;
+        if (SpeccedPlayers.existskey(Player.User.Login)) {
+            Net_NbSpectating = SpeccedPlayers[Player.User.Login];
+        } else if (Net_NbSpectating != 0) {
+            Net_NbSpectating = 0;
+        }
+    }
+}
+
+Text GetLayer() {
+    return """
+<manialink version="3" name="Obstacle:SpectatorCount">
+    <frame id="Frame_SpectateCount" pos="159 -63">
+        <quad size="8 8" style="BgRaceScore2" substyle="Tv" halign="right" valign="center2"/>
+        <label id="Label_SpectateCount" pos="-9 0" size="15 8" style="TextTitle1" textsize="3" text="0" halign="right" valign="center2" textfont="OswaldMono"/>
+    </frame>
+<script><!--
+    #Include "TextLib" as TL
+
+    main() {
+        wait(InputPlayer != Null && Page != Null);
+
+        declare Frame_SpectateCount <=> (Page.GetFirstChild("Frame_SpectateCount") as CMlFrame);
+        declare Label_SpectateCount <=> (Frame_SpectateCount.GetFirstChild("Label_SpectateCount") as CMlLabel);
+
+        declare LastNbSpectating = 0;
+        declare netwrite Net_SpeccedTargetLogin for UI = "";
+
+        while (True) {
+            yield;
+
+            declare LocalPlayer <=> InputPlayer;
+            if (GUIPlayer != Null) LocalPlayer <=> GUIPlayer;
+            if (LocalPlayer == Null) continue;
+
+            declare netread Net_NbSpectating for LocalPlayer = 0;
+            if (LastNbSpectating != Net_NbSpectating)
+            {
+                LastNbSpectating = Net_NbSpectating;
+                Label_SpectateCount.Value = TL::ToText(Net_NbSpectating);
+            }
+
+            if (LocalPlayer != Null && InputPlayer != Null && LocalPlayer.Login != InputPlayer.Login) {
+                if (Net_SpeccedTargetLogin != LocalPlayer.Login)
+                    Net_SpeccedTargetLogin = LocalPlayer.Login;
+            } else {
+                if (Net_SpeccedTargetLogin != "")
+                    Net_SpeccedTargetLogin = "";
+            }
+
+            if (Frame_SpectateCount.Visible != (LastNbSpectating != 0))
+                Frame_SpectateCount.Visible = (LastNbSpectating != 0);
+        }
+
+    }
+--></script>
+</manialink>""";
+}

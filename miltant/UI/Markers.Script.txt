@@ -1,0 +1,267 @@
+#Include "TextLib" as TL
+#Include "Libs/smokegun/Tools.Script.txt" as Tools
+#Include "Libs/miltant/Randomizer.Script.txt" as RNG
+
+
+Text Private_LandmarkToText(CSmMapLandmark _Landmark, Boolean _Short)
+{
+	declare prefix = "";
+	if (Tools::IsPortal(_Landmark)) {
+		if (_Short) prefix = "TP ";
+		else prefix = "PORTAL ";
+	}
+	else if (Tools::IsCheckpoint(_Landmark))
+		prefix = "CP ";
+	else if (Tools::IsACandidateGoal(_Landmark))
+		return "GOAL";
+	else
+		return TL::ToUpperCase(_Landmark.Tag);
+
+	declare Order = RNG::GetOrder(_Landmark);
+	if (Order != 0)
+		return prefix^" "^Order;
+	return prefix;
+}
+
+Text GetXML() {
+	declare MarkersXML = "";
+	foreach (Landmark in MapLandmarks) {
+		if (!Tools::IsCheckpoint(Landmark) && !Tools::IsACandidateGoal(Landmark) && !Tools::IsPortal(Landmark)) continue;
+
+		MarkersXML ^= """
+			<marker box="0 1.5 0"
+				manialinkframeid="{{{Landmark.Id}}}"
+				pos="{{{Tools::GetPos(Landmark.Position)}}}"
+				gauge="-1."
+			/>
+		""";
+	}
+
+	return MarkersXML;
+}
+
+Text GetLayer(Integer MarkerCount) {
+	if (MarkerCount == 0) return "";
+
+	declare ML = """
+<manialink version="3" name="Obstacle:Markers">
+	<framemodel id="mm">
+		<frame id="Content">
+			<label id="Foreground" pos="0 -0.2" z-index="2" size="20 10"
+				textfont="OswaldMono" halign="center" valign="center2"
+				textsize="2" textcolor="fff"/>
+
+			<quad id="Background_Gray" pos="0 0" z-index="0" size="10 5"
+				halign="center" valign="center" style="Bgs1InRace"
+				substyle="BgCardList"/>""";
+
+		if (MarkerCount > 1) {
+			ML ^= """
+			<quad id="Background_HighLight" pos="0 0" z-index="0" size="10 5"
+				halign="center" valign="center" style="BgsPlayerCard" hidden="1"
+				substyle="BgRacePlayerName"/>
+
+			<frame id="Gauge_Wrapper" pos="0 -1.3" z-index="1" clip="True" clipposn="0" clipsizen="10 10">
+				<quad size="0.5 0.8" pos="-4.9 -0.28" halign="left" id="Gauge_L"
+					image="file://Media/Images/Obstacle/Script/markers_gauge_l.png"/>
+				<quad size="8.8 0.9" pos="-4.4 -0.18" halign="left" id="Gauge_Fill"
+					image="file://Media/Images/Obstacle/Script/markers_gauge_fill.png"/>
+				<quad size="0.5 0.8" pos="4.4 -0.28" halign="left" id="Gauge_R"
+					image="file://Media/Images/Obstacle/Script/markers_gauge_r.png"/>
+			</frame>""";
+		}
+		ML ^= """
+		</frame>
+	</framemodel>
+	<frame id="Checkpoints">
+		""";
+
+	foreach (Landmark in MapLandmarks) {
+		if (!Tools::IsCheckpoint(Landmark) && !Tools::IsACandidateGoal(Landmark) && !Tools::IsPortal(Landmark)) continue;
+		ML ^= """<frame><frameinstance modelid="mm" id="{{{Landmark.Id}}}" data-txt="{{{Private_LandmarkToText(Landmark, MarkerCount > 1)}}}"/></frame>""";
+	}
+
+	ML ^= """
+	</frame>
+	<script><!--
+#Include "TextLib" as TL
+#Include "MathLib" as ML
+
+// Kinda From Tools.Script.txt
+
+Boolean IsEnabled(CSmMapLandmark _Landmark) {
+	if (_Landmark.Tag == "No-Function")
+		return False;
+
+	declare metadata Meta_Enabled for _Landmark = True;
+	declare metadata Meta_Randomize for _Landmark = False;
+	""";
+
+	if (RNG::GetEnabledGoal() != NullId) {
+		ML ^= """if (Meta_Randomize) {
+			return ""^_Landmark.Id == "{{{RNG::GetEnabledGoal()}}}" || ""^_Landmark.Id == "{{{RNG::GetEnabledSpawn()}}}";
+		} else """;
+	}
+
+	ML ^= """
+	if (Meta_Enabled) {
+		return True;
+	}
+	return False;
+}
+
+main() {
+	wait(InputPlayer != Null && Page != Null);
+
+	declare Frame_Checkpoints = (Page.GetFirstChild("Checkpoints") as CMlFrame);
+	declare netread Integer Net_CheckpointsTotal for Teams[0];    declare LastCpProgress = -1;
+
+	declare Latest_Distance_Update = Now;
+	declare CMlFrame[Ident] NextLandmarksGaugeCache = [];
+	declare CSmMapLandmark[Ident][Integer] LandmarksCache = [];
+
+	foreach (CP_Marker_Frame in Frame_Checkpoints.Controls) {
+		declare CP_Frame = (CP_Marker_Frame as CMlFrame);
+		declare CP_Marker = (CP_Frame.Controls[0] as CMlFrame);
+		declare CP_Foreground = (CP_Frame.GetFirstChild("Foreground") as CMlLabel);
+		
+		CP_Marker.Visible = False;
+		if (CP_Marker.DataAttributeExists("txt")) {
+			declare Description = CP_Marker.DataAttributeGet("txt");
+			CP_Foreground.SetText(Description);
+
+			declare Text[] Parts = TL::Split(" ", Description);
+			declare CP_Order = TL::ToInteger(Parts[Parts.count - 1]);
+
+			if (Parts[0] == "PORTAL") {
+				declare CP_Background_Gray = CP_Frame.GetFirstChild("Background_Gray");
+				CP_Background_Gray.Size.X = 15.;
+			}
+
+			foreach (Landmark in MapLandmarks) {
+				if (""^Landmark.Id == CP_Marker.ControlId) {
+					if (!LandmarksCache.existskey(CP_Order))
+						LandmarksCache[CP_Order] = [];
+					LandmarksCache[CP_Order][CP_Frame.Id] <=> Landmark;
+					break;
+				}
+			}
+		}
+	}
+	
+	while (True) {
+		yield;
+
+		declare LocalPlayer <=> InputPlayer;
+		if (GUIPlayer != Null) LocalPlayer <=> GUIPlayer;
+		if (LocalPlayer == Null) continue;
+
+		declare netread Integer Net_CpProgress for LocalPlayer;
+		declare netread Text[] LastCheckpointsIdsStr for LocalPlayer;
+		declare netread Integer[] PreviousCheckpointsOrder for LocalPlayer;
+""";
+
+	if (MarkerCount > 1) {
+		ML ^= """
+		if (Latest_Distance_Update + 50 < Now) {
+			Latest_Distance_Update = Now;
+
+			foreach (Id => Gauge_Frame in NextLandmarksGaugeCache) {
+				declare PlayerPosProjection = LocalPlayer.Position;
+				PlayerPosProjection.Y = 0.;
+
+				declare CPPosProjection = MapLandmarks[Id].Position;
+				CPPosProjection.Y = 0.;
+
+				declare Distance = ML::Distance(PlayerPosProjection, CPPosProjection);
+
+
+				declare CP_Background_Gray = Gauge_Frame.GetFirstChild("Background_Gray");
+				declare CP_Background_HighLight = Gauge_Frame.GetFirstChild("Background_HighLight");
+				declare MarkerSize = CP_Background_Gray.Size.X;
+				if (CP_Background_HighLight != Null && CP_Background_HighLight.Visible) {
+					MarkerSize = CP_Background_HighLight.Size.X;
+				}
+
+				declare Gauge = (Gauge_Frame.GetFirstChild("Gauge_Wrapper") as CMlFrame);
+				Gauge.ClipWindowRelativePosition.X = - MarkerSize * (ML::Clamp(Distance, 8., 384.) - 8) / 376.;
+			}
+		}""";
+	}
+
+	ML ^= """
+		if (LastCpProgress != Net_CpProgress) {
+			LastCpProgress = Net_CpProgress;
+			NextLandmarksGaugeCache.clear();
+
+			// Update the visibility of each marker
+			foreach (CP_Marker_Frame in Frame_Checkpoints.Controls) {
+				declare CP_Frame = (CP_Marker_Frame as CMlFrame);
+				declare CP_Marker = (CP_Frame.Controls[0] as CMlFrame);
+				declare CP_Background_Gray = CP_Frame.GetFirstChild("Background_Gray");
+""";if(MarkerCount>1){ML^="""declare CP_Background_HighLight = CP_Frame.GetFirstChild("Background_HighLight");""";}ML^="""
+
+				if (!CP_Marker.DataAttributeExists("txt"))
+					continue;
+				declare Text[] Parts = TL::Split(" ", CP_Marker.DataAttributeGet("txt"));
+				declare Order = TL::ToInteger(Parts[Parts.count - 1]);
+				declare CP_Type = Parts[0];
+
+				if (!LandmarksCache[Order].existskey(CP_Frame.Id))
+					continue;
+				declare CSmMapLandmark CP_Landmark <=> LandmarksCache[Order][CP_Frame.Id];
+
+
+				if (CP_Type == "GOAL")
+				{
+					if (IsEnabled(CP_Landmark)) {
+						CP_Frame.Visible = (Net_CpProgress + {{{MarkerCount}}} > Net_CheckpointsTotal);
+
+""";if(MarkerCount>1){ML^="""CP_Background_HighLight.Visible = (Net_CpProgress == Net_CheckpointsTotal) && ({{{MarkerCount}}} > 1);""";}ML^="""
+						CP_Background_Gray.Visible = (Net_CpProgress == Net_CheckpointsTotal) && ({{{MarkerCount}}} == 1);
+					} else {
+						CP_Frame.Visible = False;
+					}
+				}
+				else if (CP_Type == "CP" || CP_Type == "PORTAL")
+				{
+					if (Order == 0) {
+						CP_Frame.Visible = True;
+
+						if (CP_Landmark.Order == 0) {
+							if (LastCheckpointsIdsStr.exists(""^CP_Landmark.Id))
+								CP_Frame.Visible = False;
+						} else {
+							if (PreviousCheckpointsOrder.exists(CP_Landmark.Order))
+								CP_Frame.Visible = False;
+						}
+					} else {
+						CP_Frame.Visible = (Order == 0 || Order > Net_CpProgress) && Order < Net_CpProgress + 1 + {{{MarkerCount}}};
+
+""";if(MarkerCount>1){ML^="""CP_Background_HighLight.Visible = (Net_CpProgress == Order - 1) && ({{{MarkerCount}}} > 1);""";}ML^="""
+						CP_Background_Gray.Visible = (Net_CpProgress == Order - 1) && ({{{MarkerCount}}} == 1);
+					}
+				}
+		""";
+
+		if (MarkerCount > 1) {
+			ML ^= """
+				if (CP_Frame.Visible) {
+					declare Gauge_Frame = (CP_Frame.GetFirstChild("Gauge_Wrapper") as CMlFrame);
+					//TODO.Visible = CP_Background_HighLight.Visible;
+
+					NextLandmarksGaugeCache[CP_Landmark.Id] = CP_Frame;
+				}""";
+		}
+
+		ML ^= """
+			}
+		}
+	}
+}
+	--></script>
+</manialink>
+	""";
+
+	return ML;
+}

@@ -1,0 +1,47 @@
+/*********************************************
+* Obstacle Library                           *
+* Author:  smokegun                          *
+*                                            *
+* Obstacle functions.                        *
+*********************************************/
+
+#Include "TextLib" as TL
+
+#Const  Version     "2017-07-28"
+#Const  ScriptName  "Record.Script.txt"
+
+/*           STRUCTURE
+<response>
+  <records>
+    <player>
+      <login>smokegun</login>
+      <nickname>$6CFम$fffscҽητ$6CF « Şӎo$fffƙэ$z</nickname>
+    </player>
+    <time>6350</time>
+    <timeago>1 day ago</timeago>
+    <respawnCount>0</respawnCount>
+    <tryCount>31</tryCount>
+  </records>
+</response>
+*/
+
+Text GetContent(CXmlNode _Node, Text _Field) {
+    return _Node.GetFirstChild(_Field).TextContents;
+}
+
+CXmlNode GetPlayer(CXmlNode _Node) {
+    return _Node.GetFirstChild("player");
+}
+
+Text GetPlayerField(CXmlNode _Node, Text _Field) {
+    return GetContent(GetPlayer(_Node), _Field);
+}
+
+Text GetField(CXmlNode _Node, Text _Field) {
+    return GetContent(_Node, _Field);
+}
+
+Text GetTime(CXmlNode _Node) {
+    declare time = GetField(_Node, "time");
+    return TL::TimeToText(TL::ToInteger(time), True);
+}
