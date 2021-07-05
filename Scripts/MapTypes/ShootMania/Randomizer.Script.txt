@@ -1,0 +1,1327 @@
+#RequireContext CSmMapType
+
+#Include "MathLib" as ML
+#Include "TextLib" as TL
+#Include "Libs/Nadeo/Anchor.Script.txt" as Anchor
+#Include "Libs/Nadeo/MapType.Script.txt" as MapType
+
+declare Ident G_LastAnchorId;
+declare Ident G_TestSpawnAnchorId;
+declare Boolean G_ComesFromPlaceMode_Test;
+
+declare Text G_CurrentWindow;
+
+Boolean IsEnabled(CAnchorData _Landmark)
+{
+    declare metadata Meta_Enabled for _Landmark = True;
+    return Meta_Enabled;
+}
+
+Boolean IsRandom(CAnchorData _Landmark)
+{
+    declare metadata Meta_Randomize for _Landmark = False;
+    return Meta_Randomize;
+}
+
+
+Boolean IsGoal(CAnchorData _Landmark)
+{
+    if (!IsEnabled(_Landmark) && !IsRandom(_Landmark))
+        return False;
+
+    declare metadata Meta_CPType for _Landmark = 0;
+    return _Landmark.Tag == "Goal" || Meta_CPType == 2;
+}
+
+
+Boolean IsCheckpoint(CAnchorData _Landmark)
+{
+    if (!IsEnabled(_Landmark))
+        return False;
+
+    declare metadata Meta_CPType for _Landmark = 0;
+    return _Landmark.Tag == "Checkpoint" && (Meta_CPType == 0 || Meta_CPType == 1);
+}
+
+
+Boolean IsPortal(CAnchorData _Landmark)
+{
+    if (!IsEnabled(_Landmark))
+        return False;
+
+    declare metadata Meta_IsPortal for _Landmark = False;
+    return Meta_IsPortal;
+}
+
+
+Boolean IsCpSpawn(CAnchorData _Landmark)
+{
+    if (!IsEnabled(_Landmark))
+        return False;
+
+    declare metadata Meta_IsCpSpawn for _Landmark = False;
+    return Meta_IsCpSpawn;
+}
+
+Text GetStylesheet()
+{
+    return """
+        <stylesheet>
+            <style class="text" bgcolor="FFFF" textfont="Oswald" style="TextTitle3" focusareacolor1="0000" focusareacolor2="0000" textcolor="FFFFFFFF"/>
+            <style class="entry" focusareacolor1="797979AA" focusareacolor2="292929AA" textsize="2"/>
+        </stylesheet>
+    """;
+}
+
+Text Select2(Text _Position, Text _Option1, Text _Option2, Text _Selector)
+{
+    return """
+        <frame pos="{{{_Position}}}}">
+            <label id="{{{_Option1}}}"  pos="-10 -8.5" size="20 5" text="{{{_Option1}}}" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
+            <label id="{{{_Option2}}}"  pos="10 -8.5" size="20 5" text="{{{_Option2}}}" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
+            <quad  id="{{{_Selector}}}" pos="-20 -6" size="20 5" bgcolor="292929AA"/>
+            <quad pos="0 -5.5" size="41 6" bgcolor="797979AA" halign="center"/>
+        </frame>
+    """;
+}
+
+Text Select3(Text _Position, Text _Option1, Text _Option2, Text _Option3, Text _Selector)
+{
+    return """
+        <frame pos="{{{_Position}}}}">
+            <label id="{{{_Option1}}}"  pos="-20 -2.5" size="20 5" text="{{{_Option1}}}" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
+            <label id="{{{_Option2}}}"  pos="0 -2.5" size="20 5" text="{{{_Option2}}}" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
+            <label id="{{{_Option3}}}"  pos="20 -2.5" size="20 5" text="{{{_Option3}}}" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
+            <quad  id="{{{_Selector}}}" pos="-30 0" size="20 5" bgcolor="292929AA"/>
+            <quad pos="0 0.5" size="61 6" bgcolor="797979AA" halign="center"/>
+        </frame>
+    """;
+}
+
+Text Select4(Text _Position, Text _Option1, Text _Option2, Text _Option3, Text _Option4, Text _Selector)
+{
+    return """
+    <frame pos="{{{_Position}}}">
+        <label id="{{{_Option1}}}" pos="-30 -2.5" size="20 5" text="{{{_Option1}}}" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
+        <label id="{{{_Option2}}}" pos="-10 -2.5" size="20 5" text="{{{_Option2}}}" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
+        <label id="{{{_Option3}}}" pos="10 -2.5" size="20 5"  text="{{{_Option3}}}" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
+        <label id="{{{_Option4}}}" pos="30 -2.5" size="20 5"  text="{{{_Option4}}}" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
+        <quad  id="{{{_Selector}}}" pos="-20 0" size="20 5" bgcolor="292929AA"/>
+        <quad pos="0 0.5" size="81 6" bgcolor="797979AA" halign="center"/>
+    </frame>
+    """;
+}
+
+Text Entry(Text _Position, Text _Entry)
+{
+    return """
+        <frame pos="{{{_Position}}}">
+            <entry id="{{{_Entry}}}" pos="0 0"size="20 5" class="entry" default="0" textfont="Oswald" halign="center" valign="center2"/>
+            <quad pos="0 0" size="21 6" bgcolor="797979AA" halign="center" valign="center"/>
+        </frame>
+    """;
+}
+
+Text Checkbox(Text _Position, Text _Id)
+{
+    return """
+        <frame pos="{{{_Position}}}">
+            <label pos="0 0" z-index="0" size="5 5" text="✖" halign="center" valign="center2" scriptevents="1" id="{{{_Id}}}"/>
+            <quad pos="2.5 2.5" z-index="0" size="5 5" bgcolor="797979AA" halign="right" valign="top"/>
+        </frame>
+    """;
+}
+
+Text Property(Text _Position, Text _Title, Text _Content)
+{
+    return """
+        <frame pos="{{{_Position}}}">
+            <label pos="0 0" size="20 5" class="text" text="{{{_Title}}}" halign="center" valign="center2" textsize="3"/>
+            {{{_Content}}}
+        </frame>
+    """;
+}
+
+Text BigProperty(Text _Position, Text _Title, Text _Content)
+{
+    return """
+        <frame pos="{{{_Position}}}">
+            <label pos="0 0" size="75 7" class="text" text="{{{_Title}}}" textsize="4" halign="center" valign="center2"/>
+            {{{_Content}}}
+        </frame>
+    """;
+}
+
+Text MakeWindow(Text _Title, Text _Content)
+{
+    return """
+<frame pos="125 20" scale="0.75" z-index="-1">
+    <frame>
+        <label pos="0 40" size="75 10" class="text" text="{{{_Title}}}" textsize="5" halign="center" valign="center2"/>
+        <label pos="42.5 42.5" size="5 5" text="❌" valign="center" halign="center" focusareacolor2="FF0000FF" scriptevents="1" textsize="2" focusareacolor1="0000" scriptaction="Close"/>
+        {{{Select2("0 40", "Enable", "Disable", "Enabled_Selector")}}}
+    </frame>
+    <frame id="properties" pos="0 10">
+        {{{_Content}}}
+    </frame>
+    <quad pos="-45 45" size="90 115" bgcolor="000000AA" scriptevents="1"/>
+</frame>
+    """;
+}
+
+Text MakeWindowWithRandomize(Text _Title, Text _Content)
+{
+    return """
+<frame pos="125 20" scale="0.75" z-index="-1">
+    <frame>
+        <label pos="0 40" size="75 10" class="text" text="{{{_Title}}}" textsize="5" halign="center" valign="center2"/>
+        <label pos="42.5 42.5" size="5 5" text="❌" valign="center" halign="center" focusareacolor2="FF0000FF" scriptevents="1" textsize="2" focusareacolor1="0000" scriptaction="Close"/>
+        {{{Select3("0 35", "Enable", "Disable", "Random", "Enabled_Selector")}}}
+    </frame>
+    <frame id="properties" pos="0 10">
+        {{{_Content}}}
+    </frame>
+    <quad pos="-45 45" size="90 115" bgcolor="000000AA" scriptevents="1"/>
+</frame>
+    """;
+}
+
+Text MakeWindowWithoutEnabled(Text _Title, Text _Content)
+{
+    return """
+<frame pos="125 20" scale="0.75" z-index="-1">
+    <frame>
+        <label pos="0 40" size="75 10" class="text" text="{{{_Title}}}" textsize="5" halign="center" valign="center2"/>
+        <label pos="42.5 42.5" size="5 5" text="❌" valign="center" halign="center" focusareacolor2="FF0000FF" scriptevents="1" textsize="2" focusareacolor1="0000" scriptaction="Close"/>
+    </frame>
+    <frame id="properties" pos="0 10">
+        {{{_Content}}}
+    </frame>
+    <quad pos="-45 45" size="90 115" bgcolor="000000AA" scriptevents="1"/>
+</frame>
+    """;
+}
+
+Void SetWindow(Text _Window)
+{
+    G_CurrentWindow = _Window;
+}
+
+Text GetML()
+{
+    return """
+    {{{GetStylesheet()}}}
+    {{{G_CurrentWindow}}}
+    """;
+}
+
+Text Private_WeaponUpdate()
+{
+    return """
+    declare Integer Weapon for Page;
+    declare Real Weapon_Gain for Page;
+    declare Integer Weapon_Amount for Page;
+    declare Integer Stamina for Page;
+    declare Real Stamina_Gain for Page;
+    declare Real Stamina_Amount for Page;
+
+    declare Quad_Weapon_Selector <=> (Frame_Properties.GetFirstChild("Weapon_Selector") as CMlQuad);
+    declare Entry_Weapon_Gain <=> (Frame_Properties.GetFirstChild("Entry_Weapon_Gain") as CMlEntry);
+    declare Entry_Weapon_Amount <=> (Frame_Properties.GetFirstChild("Entry_Weapon_Amount") as CMlEntry);
+    declare Quad_Stamina_Selector <=> (Frame_Properties.GetFirstChild("Stamina_Selector") as CMlQuad);
+    declare Entry_Stamina_Gain <=> (Frame_Properties.GetFirstChild("Entry_Stamina_Gain") as CMlEntry);
+    declare Entry_Stamina_Amount <=> (Frame_Properties.GetFirstChild("Entry_Stamina_Amount") as CMlEntry);
+
+    Quad_Weapon_Selector.RelativePosition_V3.X = -40. + Weapon*20.;
+    Quad_Stamina_Selector.RelativePosition_V3.X = -30 + Stamina*20.;
+
+    Entry_Weapon_Gain.SetText(TL::ToText(Weapon_Gain*100), False);
+    Entry_Weapon_Amount.SetText(TL::ToText(Weapon_Amount), False);
+    Entry_Stamina_Gain.SetText(TL::ToText(Stamina_Gain*100), False);
+    Entry_Stamina_Amount.SetText(TL::ToText(Stamina_Amount*100), False);
+    """;
+}
+
+
+Void Load()
+{
+    log(Now ^ "> Loaded.");
+    if (Map.TMObjective_AuthorTime == -1)
+        Map.TMObjective_AuthorTime = 1;
+}
+
+
+Void Unload()
+{
+}
+
+
+Void Init()
+{
+    MapType::SetVersion(3);
+    CustomEditAnchorData = True;
+}
+
+
+Void InitBasePageVariables(CAnchorData _Anchor)
+{
+    declare Boolean Enabled for ManialinkPage;
+    declare metadata Meta_Enabled for _Anchor = True;
+    Enabled = Meta_Enabled;
+
+    declare Boolean Randomize for ManialinkPage;
+    declare metadata Meta_Randomize for _Anchor = False;
+    Randomize = Meta_Randomize;
+}
+
+
+Void SaveBasePageVariables(CAnchorData _Anchor)
+{
+    declare Boolean Enabled for ManialinkPage;
+    declare metadata Meta_Enabled for _Anchor = True;
+    Meta_Enabled = Enabled;
+
+    declare Boolean Randomize for ManialinkPage;
+    declare metadata Meta_Randomize for _Anchor = False;
+    Meta_Randomize = Randomize;
+}
+
+
+Void InitWeaponPageVariables(CAnchorData _Anchor)
+{
+    declare Integer Weapon for ManialinkPage;
+    declare Real Weapon_Gain for ManialinkPage;
+    declare Integer Weapon_Amount for ManialinkPage;
+    declare Integer Stamina for ManialinkPage;
+    declare Real Stamina_Gain for ManialinkPage;
+    declare Real Stamina_Amount for ManialinkPage;
+
+    declare metadata Meta_Weapon for _Anchor = 1;
+    declare metadata Meta_Weapon_Gain for _Anchor = 1.0;
+    declare metadata Meta_Weapon_Amount for _Anchor = 4;
+    declare metadata Meta_Stamina for _Anchor = 0;
+    declare metadata Meta_Stamina_Gain for _Anchor = 1.0;
+    declare metadata Meta_Stamina_Amount for _Anchor = 1.0;
+
+    Weapon = Meta_Weapon;
+    Weapon_Gain = Meta_Weapon_Gain;
+    Weapon_Amount = Meta_Weapon_Amount;
+    Stamina = Meta_Stamina;
+    Stamina_Gain = Meta_Stamina_Gain;
+    Stamina_Amount = Meta_Stamina_Amount;
+}
+
+
+Void SaveWeaponPageVariables(CAnchorData _Anchor)
+{
+    declare Integer Weapon for ManialinkPage;
+    declare Real Weapon_Gain for ManialinkPage;
+    declare Integer Weapon_Amount for ManialinkPage;
+    declare Integer Stamina for ManialinkPage;
+    declare Real Stamina_Gain for ManialinkPage;
+    declare Real Stamina_Amount for ManialinkPage;
+
+    declare metadata Meta_Weapon for _Anchor = 1;
+    declare metadata Meta_Weapon_Gain for _Anchor = 1.0;
+    declare metadata Meta_Weapon_Amount for _Anchor = 4;
+    declare metadata Meta_Stamina for _Anchor = 0;
+    declare metadata Meta_Stamina_Gain for _Anchor = 1.0;
+    declare metadata Meta_Stamina_Amount for _Anchor = 1.0;
+
+    Meta_Weapon = Weapon;
+    Meta_Weapon_Gain = Weapon_Gain;
+    Meta_Weapon_Amount = Weapon_Amount;
+    Meta_Stamina = Stamina;
+    Meta_Stamina_Gain = Stamina_Gain;
+    Meta_Stamina_Amount = Stamina_Amount;
+}
+
+
+Void EditGoal(CAnchorData _Goal)
+{
+    InitBasePageVariables(_Goal);
+
+    SetWindow(MakeWindowWithRandomize("Edit goal", ""));
+    ManialinkText = """
+    <manialink version="3" name="Obstacle:EditGoal">
+    {{{GetML()}}}
+    <script><!--
+    #Include "TextLib" as TL
+
+    Void UpdateView() {
+        declare Boolean Enabled for Page;
+        declare Boolean Randomize for Page;
+        declare Boolean Saved for Page;
+
+        declare Quad_Enabled_Selector <=> (Page.GetFirstChild("Enabled_Selector") as CMlQuad);
+        if (Randomize) {
+            Quad_Enabled_Selector.RelativePosition_V3.X = 10.;
+        } else if (Enabled) {
+            Quad_Enabled_Selector.RelativePosition_V3.X = -30.;
+        }
+        else {
+            Quad_Enabled_Selector.RelativePosition_V3.X = -10.;
+        }
+
+        SendCustomEvent("Event_Save_Goal", Text[]);
+    }
+
+    main() {
+        declare Boolean Enabled for Page;
+        declare Boolean Randomize for Page;
+        declare NeedUpdate = False;
+        UpdateView();
+
+        while (True) {
+            yield;
+
+            if (NeedUpdate) {
+                UpdateView();
+                NeedUpdate = False;
+            }
+
+            foreach (Event in PendingEvents) {
+                switch (Event.Type){
+                    case CMlEvent::Type::MouseClick: {
+                        switch (Event.ControlId) {
+                            case "Enable" : {
+                                Enabled = True;
+                                Randomize = False;
+                                NeedUpdate = True;
+                            }
+                            case "Random" : {
+                                Randomize = True;
+                                Enabled = True;
+                                NeedUpdate = True;
+                            }
+                            case "Disable" : {
+                                Enabled = False;
+                                Randomize = False;
+                                NeedUpdate = True;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    --></script>
+    </manialink>
+    """;
+}
+
+
+Void SaveGoalSettings()
+{
+    if (!AnchorData.existskey(G_LastAnchorId))
+        return;
+
+    declare Anchor <=> AnchorData[G_LastAnchorId];
+    if (Anchor.Tag != "Goal")
+        return;
+
+    SaveBasePageVariables(Anchor);
+}
+
+
+Void EditCheckpoint(CAnchorData _Checkpoint)
+{
+    /// --- Variables
+    InitBasePageVariables(_Checkpoint);
+
+    declare Integer Order for ManialinkPage;
+    declare Integer CPType for ManialinkPage;
+    declare Boolean IsPortal for ManialinkPage;
+    declare Boolean RefillWeapon for ManialinkPage;
+    declare Boolean EmptyWeapon for ManialinkPage;
+    declare Boolean RefillStamina for ManialinkPage;
+
+    declare metadata Meta_CPType for _Checkpoint = 0;
+    declare metadata Meta_IsPortal for _Checkpoint = False;
+    declare metadata Meta_RefillWeapon for _Checkpoint = False;
+    declare metadata Meta_EmptyWeapon for _Checkpoint = False;
+    declare metadata Meta_RefillStamina for _Checkpoint = False;
+
+    Order = _Checkpoint.Order;
+    CPType = Meta_CPType;
+    IsPortal = Meta_IsPortal;
+    RefillWeapon = Meta_RefillWeapon;
+    EmptyWeapon = Meta_EmptyWeapon;
+    RefillStamina = Meta_RefillStamina;
+
+    InitWeaponPageVariables(_Checkpoint);
+
+    /// --- Manialink
+    declare Properties = """
+        <frame id="Basic" pos="0 15">
+            {{{Property("0 -2.5", "Type", Select3("0 -3.5", "Checkpoint", "Portal", "Goal", "Type_Selector"))}}}
+            {{{Property("0 -15.5", "Order", Entry("0 -6", "Entry_Order"))}}}
+        </frame>
+
+        <frame id="Weapon" pos="0 -32.5">
+            {{{BigProperty("0 18", "Weapon", Select4("0 -3.5", "Laser", "Rocket", "Nucleus", "Arrow", "Weapon_Selector"))}}}
+            {{{Property("-12 5.5", "Gain (10%-1000%)", Entry("0 -5.5", "Entry_Weapon_Gain"))}}}
+            {{{Property("12 5.5", "Amount (0-10)", Entry("0 -5.5", "Entry_Weapon_Amount"))}}}
+
+            {{{Property("-15 -7.5", "Refill", Checkbox("10 0", "Checkbox_Fill_Weapon"))}}}
+            {{{Property("7.5 -7.5", "Empty", Checkbox("10 0", "Checkbox_Empty_Weapon"))}}}
+        </frame>
+
+        <frame id="Stamina" pos="0 -67.5">
+            {{{BigProperty("0 18", "Stamina", Select3("0 -3.5", "Normal", "Custom", "Unlimited", "Stamina_Selector"))}}}
+            {{{Property("-12 5.5", "Gain (10%-100%)", Entry("0 -5.5", "Entry_Stamina_Gain"))}}}
+            {{{Property("12 5.5", "Amount (10%-300%)", Entry("0 -5.5", "Entry_Stamina_Amount"))}}}
+
+            {{{Property("-15 -7.5", "Refill", Checkbox("10 0", "Checkbox_Fill_Stamina"))}}}
+        </frame>
+    """;
+
+    SetWindow(MakeWindow("Edit checkpoint", Properties));
+
+    ManialinkText = """
+    <manialink version="3" name="Obstacle:EditCheckpoint">
+    {{{GetML()}}}
+    <script><!--
+    #Include "TextLib" as TL
+
+    Void UpdateView() {
+        declare Boolean Enabled for Page;
+        declare Boolean IsPortal for Page;
+        declare Boolean RefillWeapon for Page;
+        declare Boolean EmptyWeapon for Page;
+        declare Boolean RefillStamina for Page;
+        declare Integer CPType for Page;
+        declare Integer Order for Page;
+
+        declare Quad_Enabled_Selector <=> (Page.GetFirstChild("Enabled_Selector") as CMlQuad);
+        declare Frame_Properties <=> (Page.GetFirstChild("properties") as CMlFrame);
+        declare Quad_Type_Selector <=> (Frame_Properties.GetFirstChild("Type_Selector") as CMlQuad);
+        declare Entry_Order <=> (Frame_Properties.GetFirstChild("Entry_Order") as CMlEntry);
+        declare Label_RefillWeapon <=> (Page.GetFirstChild("Checkbox_Fill_Weapon") as CMlLabel);
+        declare Label_EmptyWeapon <=> (Page.GetFirstChild("Checkbox_Empty_Weapon") as CMlLabel);
+        declare Label_RefillStamina <=> (Page.GetFirstChild("Checkbox_Fill_Stamina") as CMlLabel);
+
+        if (Enabled) {
+            Quad_Enabled_Selector.RelativePosition_V3.X = -20.;
+            Frame_Properties.ZIndex = 1.;
+        } else {
+            Quad_Enabled_Selector.RelativePosition_V3.X = 0.;
+            Frame_Properties.ZIndex = -1.;
+        }
+
+        // CP - PORTAL - GOAL
+        Quad_Type_Selector.RelativePosition_V3.X = -30 + CPType*20.;
+
+        Entry_Order.SetText(TL::ToText(Order), False);
+
+        {{{Private_WeaponUpdate()}}}
+
+        if (!RefillWeapon && Label_RefillWeapon.Value != "") {
+            Label_RefillWeapon.SetText("");
+        }
+        if (RefillWeapon && Label_RefillWeapon.Value != "✖") {
+            Label_RefillWeapon.SetText("✖");
+        }
+
+        if (!EmptyWeapon && Label_EmptyWeapon.Value != "") {
+            Label_EmptyWeapon.SetText("");
+        }
+        if (EmptyWeapon && Label_EmptyWeapon.Value != "✖") {
+            Label_EmptyWeapon.SetText("✖");
+        }
+
+        if (!RefillStamina && Label_RefillStamina.Value != "") {
+            Label_RefillStamina.SetText("");
+        }
+        if (RefillStamina && Label_RefillStamina.Value != "✖") {
+            Label_RefillStamina.SetText("✖");
+        }
+
+        SendCustomEvent("Event_Save_Checkpoint", Text[]);
+    }
+
+    main() {
+        declare Boolean Enabled for Page;
+        declare Integer Order for Page;
+        declare Boolean IsPortal for Page;
+        declare Boolean RefillWeapon for Page;
+        declare Boolean EmptyWeapon for Page;
+        declare Boolean RefillStamina for Page;
+        declare Integer CPType for Page;
+        declare Integer Weapon for Page;
+        declare Real Weapon_Gain for Page;
+        declare Integer Weapon_Amount for Page;
+        declare Integer Stamina for Page;
+        declare Real Stamina_Gain for Page;
+        declare Real Stamina_Amount for Page;
+        declare NeedUpdate = False;
+        UpdateView();
+
+        while (True) {
+            yield;
+
+            if (NeedUpdate) {
+                UpdateView();
+                NeedUpdate = False;
+            }
+
+            foreach (Event in PendingEvents) {
+                switch (Event.Type) {
+                    case CMlEvent::Type::MouseClick: {
+                        switch (Event.ControlId) {
+                            case "Enable" : Enabled = True;
+                            case "Disable" : Enabled = False;
+                            case "Checkpoint" : CPType = 0;
+                            case "Portal" : CPType = 1;
+                            case "Goal" : CPType = 2;
+                            case "Laser" : Weapon = 0;
+                            case "Rocket" : Weapon = 1;
+                            case "Nucleus" : Weapon = 2;
+                            case "Arrow" : Weapon = 3;
+                            case "Normal" : {
+                                Stamina = 0;
+                                Stamina_Gain = 1.;
+                                Stamina_Amount = 1.;
+                            }
+                            case "Custom" : Stamina = 1;
+                            case "Unlimited" : Stamina = 2;
+                            case "Checkbox_Fill_Weapon": RefillWeapon = !RefillWeapon;
+                            case "Checkbox_Empty_Weapon": EmptyWeapon = !EmptyWeapon;
+                            case "Checkbox_Fill_Stamina": RefillStamina = !RefillStamina;
+                        }
+                        IsPortal = CPType == 1;
+                        NeedUpdate = True;
+                    }
+                    case CMlScriptEvent::Type::EntrySubmit: {
+                        declare Entry <=> (Event.Control as CMlEntry);
+
+                        switch(Entry.ControlId) {
+                            case "Entry_Order": Order = TL::ToInteger(Entry.Value);
+                            case "Entry_Weapon_Gain": Weapon_Gain = TL::ToReal(Entry.Value)/100;
+                            case "Entry_Weapon_Amount": Weapon_Amount = TL::ToInteger(Entry.Value);
+                            case "Entry_Stamina_Gain": Stamina_Gain = TL::ToReal(Entry.Value)/100;
+                            case "Entry_Stamina_Amount": Stamina_Amount = TL::ToReal(Entry.Value)/100;
+                        }
+                        NeedUpdate = True;
+                    }
+                }
+            }
+        }
+    }
+    --></script>
+    </manialink>
+    """;
+}
+
+
+Void SaveCheckpointSettings()
+{
+    if (!AnchorData.existskey(G_LastAnchorId))
+        return;
+
+    declare Anchor <=> AnchorData[G_LastAnchorId];
+    if (Anchor.Tag != "Checkpoint")
+        return;
+
+    declare Integer Order for ManialinkPage;
+    declare Boolean RefillWeapon for ManialinkPage;
+    declare Boolean EmptyWeapon for ManialinkPage;
+    declare Boolean RefillStamina for ManialinkPage;
+    Anchor.Order = Order;
+
+    declare Integer CPType for ManialinkPage;
+    declare metadata Meta_IsPortal for Anchor = False;
+    declare metadata Meta_RefillWeapon for Anchor = False;
+    declare metadata Meta_EmptyWeapon for Anchor = False;
+    declare metadata Meta_RefillStamina for Anchor = False;
+    declare metadata Meta_CPType for Anchor = 0;
+    Meta_CPType = CPType;
+    Meta_IsPortal = CPType == 1;
+    Meta_RefillWeapon = RefillWeapon;
+    Meta_EmptyWeapon = EmptyWeapon;
+    Meta_RefillStamina = RefillStamina;
+
+
+    SaveBasePageVariables(Anchor);
+    SaveWeaponPageVariables(Anchor);
+}
+
+
+Void EditSpawn(CAnchorData _Spawn)
+{
+    /// --- Variables
+    InitBasePageVariables(_Spawn);
+
+    declare Integer Order for ManialinkPage;
+    declare Boolean IsCpSpawn for ManialinkPage;
+    declare metadata Meta_IsCpSpawn for _Spawn = False;
+
+    Order = _Spawn.Order;
+    IsCpSpawn = Meta_IsCpSpawn;
+
+    InitWeaponPageVariables(_Spawn);
+
+    /// --- Manialink
+    declare Properties = """
+        <frame id="Basic" pos="0 15">
+            {{{Property("0 -2.5", "Type", Select2("0 2.5", "Spawn", "CPSpawn", "Type_Selector"))}}}
+            {{{Property("0 -15.5", "Order", Entry("0 -6", "Entry_Order"))}}}
+        </frame>
+        <frame id="Weapon" pos="0 -32.5">
+            {{{BigProperty("0 18", "Weapon", Select4("0 -3.5", "Laser", "Rocket", "Nucleus", "Arrow", "Weapon_Selector"))}}}
+            {{{Property("-12 5.5", "Gain (10%-1000%)", Entry("0 -5.5", "Entry_Weapon_Gain"))}}}
+            {{{Property("12 5.5", "Amount (0-10)", Entry("0 -5.5", "Entry_Weapon_Amount"))}}}
+        </frame>
+        <frame id="Stamina" pos="0 -67.5">
+            {{{BigProperty("0 18", "Stamina", Select3("0 -3.5", "Normal", "Custom", "Unlimited", "Stamina_Selector"))}}}
+            {{{Property("-12 5.5", "Gain (10%-100%)", Entry("0 -5.5", "Entry_Stamina_Gain"))}}}
+            {{{Property("12 5.5", "Amount (10%-300%)", Entry("0 -5.5", "Entry_Stamina_Amount"))}}}
+        </frame>
+    """;
+
+    SetWindow(MakeWindowWithRandomize("Edit spawn", Properties));
+
+    ManialinkText = """
+    <manialink version="3" name="Obstacle:EditSpawn">
+    {{{GetML()}}}
+    <script><!--
+    #Include "TextLib" as TL
+
+    Void UpdateView() {
+        declare Boolean Enabled for Page;
+        declare Boolean Randomize for Page;
+        declare Boolean IsCpSpawn for Page;
+        declare Integer Order for Page;
+
+        declare Quad_Enabled_Selector <=> (Page.GetFirstChild("Enabled_Selector") as CMlQuad);
+        declare Frame_Properties <=> (Page.GetFirstChild("properties") as CMlFrame);
+        declare Quad_Type_Selector <=> (Frame_Properties.GetFirstChild("Type_Selector") as CMlQuad);
+        declare Entry_Order <=> (Frame_Properties.GetFirstChild("Entry_Order") as CMlEntry);
+
+        if (Randomize && !IsCpSpawn) {
+            Quad_Enabled_Selector.RelativePosition_V3.X = 10.;
+        } else if (Enabled) {
+            Quad_Enabled_Selector.RelativePosition_V3.X = -30.;
+            Frame_Properties.ZIndex = 1.;
+        } else {
+            Quad_Enabled_Selector.RelativePosition_V3.X = -10.;
+            Frame_Properties.ZIndex = -1.;
+        }
+
+        if (!IsCpSpawn)
+            Quad_Type_Selector.RelativePosition_V3.X = -20.;
+        else
+            Quad_Type_Selector.RelativePosition_V3.X = 0.;
+
+        Entry_Order.SetText(TL::ToText(Order), False);
+        {{{Private_WeaponUpdate()}}}
+
+        SendCustomEvent("Event_Save_Spawn", Text[]);
+    }
+
+    main() {
+        declare Boolean Enabled for Page;
+        declare Boolean Randomize for Page;
+        declare Integer Order for Page;
+        declare Boolean IsCpSpawn for Page;
+        declare Integer Weapon for Page;
+        declare Real Weapon_Gain for Page;
+        declare Integer Weapon_Amount for Page;
+        declare Integer Stamina for Page;
+        declare Real Stamina_Gain for Page;
+        declare Real Stamina_Amount for Page;
+        declare NeedUpdate = False;
+        UpdateView();
+
+        while (True) {
+            yield;
+
+            if (NeedUpdate) {
+                UpdateView();
+                NeedUpdate = False;
+            }
+
+            foreach (Event in PendingEvents) {
+                switch (Event.Type) {
+                    case CMlEvent::Type::MouseClick: {
+                        switch (Event.ControlId) {
+                            case "Random" : {
+                                if (!IsCpSpawn) {
+                                    Randomize = True;
+                                    Enabled = True;
+                                    NeedUpdate = True;
+                                }
+                            }
+                            case "Enable" : {
+                                Enabled = True;
+                                Randomize = False;
+                                NeedUpdate = True;
+                            }
+                            case "Disable" : {
+                                Enabled = False;
+                                Randomize = False;
+                                NeedUpdate = True;
+                            }
+                            case "Spawn" : {
+                                IsCpSpawn = False;
+                                NeedUpdate = True;
+                            }
+                            case "CPSpawn" : {
+                                IsCpSpawn = True;
+                                NeedUpdate = True;
+                            }
+                            case "Laser" : {
+                                Weapon = 0;
+                                NeedUpdate = True;
+                            }
+                            case "Rocket" : {
+                                Weapon = 1;
+                                NeedUpdate = True;
+                            }
+                            case "Nucleus" : {
+                                Weapon = 2;
+                                NeedUpdate = True;
+                            }
+                            case "Arrow" : {
+                                Weapon = 3;
+                                NeedUpdate = True;
+                            }
+                            case "Normal" : {
+                                Stamina = 0;
+                                Stamina_Gain = 1.;
+                                Stamina_Amount = 1.;
+                                NeedUpdate = True;
+                            }
+                            case "Custom" : {
+                                Stamina = 1;
+                                NeedUpdate = True;
+                            }
+                            case "Unlimited" : {
+                                Stamina = 2;
+                                NeedUpdate = True;
+                            }
+                        }
+                    }
+                    case CMlScriptEvent::Type::EntrySubmit: {
+                        declare Entry <=> (Event.Control as CMlEntry);
+                        switch(Entry.ControlId) {
+                            case "Entry_Order": {
+                                Order = TL::ToInteger(Entry.Value);
+                            }
+                            case "Entry_Weapon_Gain": {
+                                Weapon_Gain = TL::ToReal(Entry.Value)/100;
+                            }
+                            case "Entry_Weapon_Amount": {
+                                Weapon_Amount = TL::ToInteger(Entry.Value);
+                            }
+                            case "Entry_Stamina_Gain": {
+                                Stamina_Gain = TL::ToReal(Entry.Value)/100;
+                            }
+                            case "Entry_Stamina_Amount": {
+                                Stamina_Amount = TL::ToReal(Entry.Value)/100;
+                            }
+                        }
+                        NeedUpdate = True;
+                    }
+                }
+            }
+        }
+    }
+    --></script>
+    </manialink>
+    """;
+}
+
+
+Void SaveSpawnSettings()
+{
+    if (!AnchorData.existskey(G_LastAnchorId))
+        return;
+
+    declare Anchor <=> AnchorData[G_LastAnchorId];
+    if (Anchor.Tag != "Spawn")
+        return;
+
+    declare Integer Order for ManialinkPage;
+    Anchor.Order = Order;
+
+    declare Boolean IsCpSpawn for ManialinkPage;
+    declare metadata Meta_IsCpSpawn for Anchor = False;
+    Meta_IsCpSpawn = IsCpSpawn;
+
+    SaveBasePageVariables(Anchor);
+    SaveWeaponPageVariables(Anchor);
+}
+
+
+Void EditAmmoItem(CAnchorData _Item)
+{
+    /// --- Variables
+    declare Real Amount for ManialinkPage;
+    declare metadata Meta_GrantAmmoAmount for _Item = 1.;
+    Amount = Meta_GrantAmmoAmount;
+
+    declare Real Duration for ManialinkPage;
+    declare metadata Meta_GrantAmmoDuration for _Item = 0.;
+    Duration = Meta_GrantAmmoDuration;
+
+    declare Integer Cooldown for ManialinkPage;
+    declare metadata Meta_GrantAmmoCooldown for _Item = 500;
+    Cooldown = Meta_GrantAmmoCooldown;
+
+    /// --- Manialink
+    declare Properties = """
+        <frame id="Basic" pos="0 25">
+            {{{Property("0 -2.5", "Type", Select2("0 2.5", "Instantly", "Duration", "Duration_Selector"))}}}
+            {{{Property("0 -15.5", "Duration", Entry("0 -6", "Entry_Duration"))}}}
+            {{{Property("0 -28.5", "Cooldown (ms)", Entry("0 -6", "Entry_Cooldown"))}}}
+            {{{Property("0 -41.5", "Amount", Entry("0 -6", "Entry_Amount"))}}}
+        </frame>
+    """;
+
+    SetWindow(MakeWindowWithoutEnabled("Edit Ammo Item", Properties));
+
+    ManialinkText = """
+    <manialink version="3" name="Obstacle:EditAmmoItem">
+    {{{GetML()}}}
+    <script><!--
+    #Include "TextLib" as TL
+
+    Void UpdateView() {
+        declare Real Duration for Page;
+        declare Integer Cooldown for Page;
+        declare Boolean Saved for Page;
+        declare Real Amount for Page;
+
+        declare Quad_Duration_Selector <=> (Page.GetFirstChild("Duration_Selector") as CMlQuad);
+
+        if (Duration == 0.) {
+            Quad_Duration_Selector.RelativePosition_V3.X = -20.;
+        } else {
+            Quad_Duration_Selector.RelativePosition_V3.X = 0.;
+        }
+
+        declare Entry_Duration <=> (Page.GetFirstChild("Entry_Duration") as CMlEntry);
+        if (TL::ToReal(Entry_Duration.Value) != Duration) {
+            Entry_Duration.Value = ""^Duration;
+        }
+
+        declare Entry_Cooldown <=> (Page.GetFirstChild("Entry_Cooldown") as CMlEntry);
+        if (TL::ToInteger(Entry_Cooldown.Value) != Cooldown) {
+            Entry_Cooldown.Value = ""^Cooldown;
+        }
+
+        declare Entry_Amount <=> (Page.GetFirstChild("Entry_Amount") as CMlEntry);
+        if (TL::ToReal(Entry_Amount.Value) != Amount) {
+            Entry_Amount.Value = ""^Amount;
+        }
+
+        SendCustomEvent("Event_Save_AmmoItem", Text[]);
+    }
+
+    main() {
+        declare Real Duration for Page;
+        declare Integer Cooldown for Page;
+        declare Real Amount for Page;
+        declare NeedUpdate = False;
+        UpdateView();
+
+        while (True) {
+            yield;
+
+            if (NeedUpdate) {
+                UpdateView();
+                NeedUpdate = False;
+            }
+
+            foreach (Event in PendingEvents) {
+                switch (Event.Type){
+                    case CMlScriptEvent::Type::MouseClick: {
+                        switch (Event.ControlId) {
+                            case "Instantly" : {
+                                NeedUpdate = True;
+                                Duration = 0.;
+                            }
+                            case "Duration" : {
+                                if (Duration == 0.)
+                                    Duration = 1.;
+                                NeedUpdate = True;
+                            }
+                        }
+                    }
+                    case CMlScriptEvent::Type::EntrySubmit: {
+                        declare Entry <=> (Event.Control as CMlEntry);
+                        switch(Entry.ControlId) {
+                            case "Entry_Duration": {
+                                Duration = TL::ToReal(Entry.Value);
+                                NeedUpdate = True;
+                            }
+                            case "Entry_Cooldown": {
+                                Cooldown = TL::ToInteger(Entry.Value);
+                                NeedUpdate = True;
+                            }
+                            case "Entry_Amount": {
+                                Amount = TL::ToReal(Entry.Value);
+                            }
+                        }
+                        NeedUpdate = True;
+                    }
+                }
+            }
+        }
+    }
+    --></script>
+    </manialink>
+    """;
+}
+
+
+Void SaveAmmoItemSettings()
+{
+    if (!AnchorData.existskey(G_LastAnchorId))
+        return;
+
+    declare Anchor <=> AnchorData[G_LastAnchorId];
+    if (Anchor.Tag != "Ammo")
+        return;
+
+    declare Real Amount for ManialinkPage;
+    declare metadata Meta_GrantAmmoAmount for Anchor = 1.;
+    Meta_GrantAmmoAmount = Amount;
+
+    declare Real Duration for ManialinkPage;
+    declare metadata Meta_GrantAmmoDuration for Anchor = 0.;
+    Meta_GrantAmmoDuration = Duration;
+
+    declare Integer Cooldown for ManialinkPage;
+    declare metadata Meta_GrantAmmoCooldown for Anchor = 500;
+    Meta_GrantAmmoCooldown = Cooldown;
+}
+
+
+Void EditOffzoneShieldItem(CAnchorData _Item)
+{
+    /// --- Variables
+    declare Real Duration for ManialinkPage;
+    declare metadata Meta_BuffDuration for _Item = 0.;
+    Duration = Meta_BuffDuration;
+
+    /// --- Manialink
+    declare Properties = """
+        <frame id="Basic" pos="0 25">
+            {{{Property("0 -2.5", "Duration", Entry("0 -6", "Entry_Duration"))}}}
+        </frame>
+    """;
+
+    SetWindow(MakeWindowWithoutEnabled("Edit OffzoneShield Item", Properties));
+
+    ManialinkText = """
+    <manialink version="3" name="Obstacle:EditOffzoneShieldItem">
+    {{{GetML()}}}
+    <script><!--
+    #Include "TextLib" as TL
+
+    Void UpdateView() {
+        declare Real Duration for Page;
+
+        declare Entry_Duration <=> (Page.GetFirstChild("Entry_Duration") as CMlEntry);
+        if (TL::ToReal(Entry_Duration.Value) != Duration) {
+            Entry_Duration.Value = ""^Duration;
+        }
+        SendCustomEvent("Event_Save_OffzoneShieldItem", Text[]);
+    }
+
+    main() {
+        declare Real Duration for Page;
+        declare Real Amount for Page;
+        declare NeedUpdate = False;
+        UpdateView();
+
+        while (True) {
+            yield;
+
+            if (NeedUpdate) {
+                UpdateView();
+                NeedUpdate = False;
+            }
+
+            foreach (Event in PendingEvents) {
+                switch (Event.Type){
+                    case CMlScriptEvent::Type::EntrySubmit: {
+                        declare Entry <=> (Event.Control as CMlEntry);
+                        switch(Entry.ControlId) {
+                            case "Entry_Duration": {
+                                Duration = TL::ToReal(Entry.Value);
+                                NeedUpdate = True;
+                            }
+                        }
+                        NeedUpdate = True;
+                    }
+                }
+            }
+        }
+    }
+    --></script>
+    </manialink>
+    """;
+}
+
+
+Void SaveOffzoneShieldItemSettings()
+{
+    if (!AnchorData.existskey(G_LastAnchorId))
+        return;
+
+    declare Anchor <=> AnchorData[G_LastAnchorId];
+    if (Anchor.Tag != "OffzoneShield")
+        return;
+
+    declare Real Duration for ManialinkPage;
+    declare metadata Meta_BuffDuration for Anchor = 0.;
+    Meta_BuffDuration = Duration;
+}
+
+
+Void UpdateValidability()
+{
+    declare StartSpawns = 0;
+    declare RandomStartSpawns = 0;
+    declare Goals = 0;
+    declare Integer[Integer] CPCounts = [];
+
+    foreach (Anchor in AnchorData)
+    {
+        if (!IsEnabled(Anchor))
+            continue;
+
+        switch (Anchor.Tag)
+        {
+            case "Spawn":
+            {
+                if (!IsCpSpawn(Anchor) && !IsRandom(Anchor))
+                {
+                    StartSpawns += 1;
+                    if (StartSpawns > 1)
+                    {
+                        ValidationStatus = CSmMapType::ValidationStatus::NotValidable;
+                        ValidabilityRequirementsMessage = _("You must place at most one enabled Start Spawn.");
+                        return;
+                    }
+                }
+                else if (IsRandom(Anchor))
+                {
+                    RandomStartSpawns += 1;
+                }
+            }
+            default :
+            {
+                if (IsGoal(Anchor))
+                {
+                    Goals += 1;
+                }
+                else if (IsCheckpoint(Anchor))
+                {
+                    if (!CPCounts.existskey(Anchor.Order)) {
+                        CPCounts[Anchor.Order] = 0;
+                    }
+                    CPCounts[Anchor.Order] += 1;
+                }
+            }
+        }
+    }
+
+    declare MaxOrder = 0;
+    foreach (Order => Count in CPCounts) {
+        MaxOrder = ML::Max(MaxOrder, Order);
+    }
+
+
+    if (StartSpawns == 0 && RandomStartSpawns == 0)
+    {
+        ValidationStatus = CSmMapType::ValidationStatus::NotValidable;
+        ValidabilityRequirementsMessage = _("You must place at least one Start Spawn.");
+    }
+    else if (Goals == 0)
+    {
+        ValidationStatus = CSmMapType::ValidationStatus::NotValidable;
+        ValidabilityRequirementsMessage = _("You must place at least one Goal.");
+    }
+    else if (CPCounts.existskey(0))
+    {
+        ValidationStatus = CSmMapType::ValidationStatus::NotValidable;
+        ValidabilityRequirementsMessage = _("Every checkpoint needs to have an order.");
+    }
+    else
+    {
+        declare IsOk = True;
+        declare Missing = -1;
+
+        for (Order, 1, MaxOrder) {
+            if (!CPCounts.existskey(Order)) {
+                Missing = Order;
+                IsOk = False;
+                break;
+            }
+        }
+
+        if (IsOk) {
+            ValidationStatus = CSmMapType::ValidationStatus::Validated;
+        }
+        else {
+            ValidationStatus = CSmMapType::ValidationStatus::NotValidable;
+            ValidabilityRequirementsMessage = "Missing checkpoint #"^Missing;
+        }
+    }
+}
+
+
+Void Loop()
+{
+    foreach (Event in PendingEvents)
+    {
+        switch (Event.Type)
+        {
+            case CMapEditorPluginEvent::Type::MapModified:
+            {
+                UpdateValidability();
+            }
+
+            case CMapEditorPluginEvent::Type::EditAnchor:
+            {
+                if (!AnchorData.existskey(Event.EditedAnchorDataId))
+                    continue;
+
+                declare Anchor <=> AnchorData[Event.EditedAnchorDataId];
+                ManialinkText = "";
+
+                switch (Anchor.DefaultTag)
+                {
+                    case "Goal":
+                        EditGoal(Anchor);
+                    case "Checkpoint":
+                        EditCheckpoint(Anchor);
+                    case "Spawn":
+                        EditSpawn(Anchor);
+                    case "Ammo":
+                        EditAmmoItem(Anchor);
+                    case "OffzoneShield":
+                        EditOffzoneShieldItem(Anchor);
+                    default :
+                        continue;
+                }
+
+                G_LastAnchorId = Anchor.Id;
+            }
+
+            case CMapEditorPluginEvent::Type::StartValidation:
+            {
+                TestMapWithMode("Obstacle.Script.txt");
+            }
+
+            case CMapEditorPluginEvent::Type::CursorChange:
+            {
+                if (PlaceMode != CMapEditorPlugin::PlaceMode::Test) {
+                    if (G_ComesFromPlaceMode_Test) {
+                        CustomSelectionCoords.clear();
+                        G_ComesFromPlaceMode_Test = False;
+                    }
+
+                    continue;
+                }
+
+                declare AnchorFound = False;
+                foreach (Anchor in AnchorData) {
+                    if (Anchor.Block == Null || !(IsCheckpoint(Anchor) || IsPortal(Anchor))) continue;
+
+                    declare Vec3Coord = GetVec3FromCoord(Cursor.Coord);
+                    if (Anchor.Position[0] < Vec3Coord[0] + 1 && Anchor.Position[0] > Vec3Coord[0] - 1)
+                    if (Anchor.Position[1] < Vec3Coord[1] + 3 && Anchor.Position[1] > Vec3Coord[1] - 3)
+                    if (Anchor.Position[2] < Vec3Coord[2] + 1 && Anchor.Position[2] > Vec3Coord[2] - 1) {
+                        AnchorFound = True;
+                        G_TestSpawnAnchorId = Anchor.Id;
+
+                        break;
+                    }
+                }
+
+                CustomSelectionCoords.clear();
+
+                if (AnchorFound) {
+                    EnableMapTypeStartTest = True;
+                    CustomSelectionRGB = <.2, 1., .2>;
+                    CustomSelectionCoords.add(AnchorData[G_TestSpawnAnchorId].Block.Coord + <0, 1, 0>);
+                } else {
+                    EnableMapTypeStartTest = False;
+
+                    G_TestSpawnAnchorId = NullId;
+                }
+
+                G_ComesFromPlaceMode_Test = True;
+            }
+
+            case CMapEditorPluginEvent::Type::StartTest:
+            {
+                if (G_TestSpawnAnchorId != NullId) {
+                    declare Editor_WayPointSpawn_Tag for Mode = "";
+                    declare Editor_WayPointSpawn_Order for Mode = 0;
+                    declare Vec3 Editor_WayPointSpawn_Position for Mode = <0., 0., 0.>;
+                    
+                    Editor_WayPointSpawn_Tag = AnchorData[G_TestSpawnAnchorId].Tag;
+                    Editor_WayPointSpawn_Order = AnchorData[G_TestSpawnAnchorId].Order;
+                    Editor_WayPointSpawn_Position = AnchorData[G_TestSpawnAnchorId].Position;
+
+                    ValidationStatus = CSmMapType::ValidationStatus::Validated;
+                    yield;
+
+                    Validate();
+                    TestMapWithMode("Obstacle.Script.txt");
+
+                    yield;
+                    UpdateValidability();
+                    Editor_WayPointSpawn_Tag = "";
+                }
+            }
+
+            case CMapEditorPluginEvent::Type::EditObjectives:
+            {
+                DisplayDefaultSetObjectivesDialog();
+            }
+
+            case CMapEditorPluginEvent::Type::LayerCustomEvent:
+            {
+                switch (Event.CustomEventType)
+                {
+                    case "Close":
+                        ManialinkText = "";
+                    case "Event_Save_Goal":
+                        SaveGoalSettings();
+                    case "Event_Save_Checkpoint":
+                        SaveCheckpointSettings();
+                    case "Event_Save_Spawn":
+                        SaveSpawnSettings();
+                    case "Event_Save_AmmoItem":
+                        SaveAmmoItemSettings();
+                    case "Event_Save_OffzoneShieldItem":
+                        SaveOffzoneShieldItemSettings();
+                }
+
+                UpdateValidability();
+            }
+
+        }
+    }
+}
+
+
+main()
+{
+    Load();
+    Init();
+    UpdateValidability();
+    while (True)
+    {
+        Loop();
+        yield;
+    }
+    Unload();
+}

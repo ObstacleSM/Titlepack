@@ -1,7 +1,7 @@
 #Extends "Modes/ShootMania/Base/ModeShootMania.Script.txt"
 
-#Const CompatibleMapTypes "ObstacleArena,ObstacleTitleArena,ObstacleTitleArenaOld,TimeAttackArena,ObstacleBetaArena"
-#Const Version           "1.7.2"
+#Const CompatibleMapTypes "ObstacleArena,ObstacleTitleArena,ObstacleTitleArenaOld,TimeAttackArena,ObstacleBetaArena,Randomizer"
+#Const Version           "1.9"
 #Const ScriptName        "Modes/ShootMania/Obstacle.Script.txt"
 
 // ---------------------------------- //
@@ -16,7 +16,7 @@
 #Include "Libs/smokegun/ObstacleLib.Script.txt" as Obstacle
 #Include "Libs/smokegun/Constants.Script.txt" as Constants
 
-#Include "Libs/smokegun/UI/Markers.Script.txt" as Markers
+#Include "Libs/miltant/UI/Markers.Script.txt" as Markers
 #Include "Libs/smokegun/UI/RecordsWidget.Script.txt" as RecordsWidget
 #Include "Libs/smokegun/UI/TimeDiff.Script.txt" as TimeDiff
 #Include "Libs/smokegun/UI/Chrono.Script.txt" as Chrono
@@ -34,6 +34,7 @@
 #Include "Libs/smokegun/Weapons.Script.txt" as Weapons
 #Include "Libs/smokegun/Settings.Script.txt" as Settings
 #Include "Libs/smokegun/Tools.Script.txt" as Tools
+#Include "Libs/miltant/Randomizer.Script.txt" as RNG
 
 #Include "Libs/smokegun/Score.Script.txt" as ObsScores
 
@@ -53,6 +54,9 @@
 #Setting S_LegacyRespawn False as "<hidden>"
 #Setting S_BestNewRecordMsg "%1$z made a new record ! (%2)" as "<hidden>"
 #Setting S_WorseNewRecordMsg "$zToo late by %4 (previous was %3)!" as "<hidden>"
+#Setting S_CheckpointMarkersCount 1 as "Count of different checkpoint markers"
+
+#Setting S_ForceRNGSeed "" as "Seed to use for randomizer maps (Integer)"
 
 #Setting S_ScriptEnvironment "production"
 
@@ -67,7 +71,10 @@
 
 
 declare Ident   G_InvisibleSkinId;
+declare Ident   G_ObstacleModelId;
+declare Ident   G_DashActionId;
 declare Boolean G_EnableRecords;
+declare Ident   G_WayPointSpawn;
 
 ***Match_LogVersions***
 ***
@@ -151,7 +158,8 @@ SpawnScreen::CreateScores("Score.Points");
 ***Match_InitServer***
 ***
 ItemList_Begin();
-G_InvisibleSkinId = ItemList_Add("InvisibleBot.Item.Gbx");
+G_InvisibleSkinId = ItemList_AddWithSkin("DefaultPlayerModel", Constants::C_InvisibleSkin);
+//G_ObstacleModelId = ItemList_AddWithSkin(Constants::C_ObstacleModel, "Profile");
 Items::LoadItems();
 ItemList_End();
 ***
@@ -168,6 +176,8 @@ CreateUI();
 if (Settings::GetEnableRecords()) {
     API::Init();
 }
+
+Obstacle::LoadActions();
 ***
 
 ***Match_InitMap***
@@ -175,6 +185,7 @@ if (Settings::GetEnableRecords()) {
 declare PrevTimeLimit = -1;
 declare PrevPvPWeapons = S_PvPWeapons;
 declare LastUpdate = -1;
+declare NextLowTimeMessage = 0;
 ***
 
 ***Match_StartMap***
@@ -182,14 +193,63 @@ declare LastUpdate = -1;
 // This needs to be called before PrepareMap to have the right settings
 UpdateSettings();
 
+
+declare Editor_WayPointSpawn_Tag for This = "";
+
+if (Editor_WayPointSpawn_Tag != "") {
+    declare Editor_WayPointSpawn_Order for This = 0;
+    declare Vec3 Editor_WayPointSpawn_Position for This = <0., 0., 0.>;
+    
+    foreach (Landmark in MapLandmarks) {
+        if (Landmark.Tag == Editor_WayPointSpawn_Tag &&
+            Landmark.Order == Editor_WayPointSpawn_Order &&
+            Landmark.Position == Editor_WayPointSpawn_Position) {
+
+            G_WayPointSpawn = Landmark.Id;
+            break;
+        }
+    }
+}
 // map is invalid
-if (!Obstacle::PrepareMap())
+if (!Obstacle::PrepareMap(ModeInfo::GetName()) && Editor_WayPointSpawn_Tag == "")
 {
     MB_Private_StopMap();
 }
 
+if (Obstacle::IsRandomizerMap()) {
+    declare Text Seed = "";
+
+    if (Settings::GetForceRNGSeed() == "") {
+        Seed = RNG::RandomizeLandmarksWithSeed(
+            Obstacle::GetRNGLandmarks(), Obstacle::GetRNGTargetNumbers(),
+            Obstacle::GetSpawnLandmarks(), Obstacle::GetGoalLandmarks(),
+            ""
+        );
+
+        UIManager.UIAll.SendChat("""Map randomized with the seed $<$f80{{{Seed}}}$>.""");
+    } else if (Settings::GetForceRNGSeed() == "0") {
+        RNG::ClearLandmarks();
+        UIManager.UIAll.SendChat("""Randomizer map: checkpoints left with no particular order accordingly to the value of the setting ForceRNGSeed.""");
+    } else {
+        Seed = RNG::RandomizeLandmarksWithSeed(
+            Obstacle::GetRNGLandmarks(), Obstacle::GetRNGTargetNumbers(),
+            Obstacle::GetSpawnLandmarks(), Obstacle::GetGoalLandmarks(),
+            Settings::GetForceRNGSeed()
+        );
+
+        UIManager.UIAll.SendChat("""Map randomized with the seed $<$f80{{{Seed}}}$> (forced by script settings).""");
+    }
+
+    G_EnableRecords = False;
+    Layers::Detach("Records");
+} else if (G_EnableRecords) {
+    G_EnableRecords = True;
+    Layers::Create("Records", RecordsWidget::GetLayer());
+    Layers::Attach("Records");
+}
+
 UIManager.UIAll.MarkersXML = Markers::GetXML();
-Layers::Update("Markers", Markers::GetLayer());
+Layers::Update("Markers", Markers::GetLayer(S_CheckpointMarkersCount));
 
 Items::Place();
 
@@ -228,6 +288,11 @@ if (Settings::GetEnableRecords()) {
 if (EndTime > 0 && Now > EndTime) {
     Message::SendBigMessage(_("Time limit reached"),    2000, 3, CUIConfig::EUISound::Silence, 0);
     MB_Private_StopMatch();
+}
+
+if ((EndTime - StartTime) > 60000 && Now > EndTime - 300500 && Now < EndTime - 290000 && Now > NextLowTimeMessage) {
+    UIManager.UIAll.SendChat("Warning: the map ends in $<$f805$> minutes!");
+    NextLowTimeMessage = Now + 305000;
 }
 
 foreach (Event in UIManager.PendingEvents) {
@@ -273,6 +338,10 @@ foreach (Event in PendingEvents) {
         case CSmModeEvent::EType::OnHit: {
             // Disable the loose of armor when hit
             Events::Invalid(Event);
+        }
+
+        case CSmModeEvent::EType::OnActionCustomEvent : {
+            // :'(
         }
 
         case CSmModeEvent::EType::OnPlayerRequestRespawn: {
@@ -333,12 +402,18 @@ foreach (Player in Players) {
         }
 
         case CSmPlayer::ESpawnStatus::Spawned: {
+            if (G_WayPointSpawn != NullId && Player::getLastCheckpoint(Player) == NullId) {
+                declare Editor_WayPointSpawn_Tag for This = "";
+                if (Editor_WayPointSpawn_Tag != "")
+                    Obstacle::JumpToCheckpointIdent_ByPassSpawn(Player, G_WayPointSpawn);
+            }
+            
             SpecKeys::UpdateLayer(Player);
 
             // Unlimited stam
             declare StaminaUnlimited for Player = False;
-            if (StaminaUnlimited && Player.Stamina < 7500) {
-                Player.Stamina = 10800;
+            if (StaminaUnlimited && Player.Stamina != ML::TruncInteger(Player.StaminaMaxValue / 1.8)) {
+                Player.Stamina = ML::TruncInteger(Player.StaminaMaxValue / 1.8);
             }
 
             // Effects on respawn
@@ -446,18 +521,19 @@ Void CreateUI() {
     Layers::SetType("Markers", CUILayer::EUILayerType::Markers);
     Layers::Create("Items", Items::CreateLayerItems());
 
+    Layers::Create("SurvivalRanking", SurvivalRanking::GetLayer());
+
     if (Settings::GetEnableRecords()) {
         Layers::Create("Records", RecordsWidget::GetLayer());
+        Layers::Attach("Records");
     }
-    Layers::Create("SurvivalRanking", SurvivalRanking::GetLayer());
 
     Layers::Attach("Chrono");
     Layers::Attach("TimeDiff");
     Layers::Attach("CpProgress");
     Layers::Attach("CPTimes");
-    Layers::Attach("Markers");
     Layers::Attach("Items");
-    Layers::Attach("Records");
+    Layers::Attach("Markers");
     Layers::Attach("SpectatorCount");
     Layers::Attach("NextMapVote");
     Layers::Attach("RespawnBehavior");
@@ -546,5 +622,14 @@ Void UpdateSettings() {
 
     if (S_EnablePlayerHighlight != Settings::GetEnablePlayerHighlight()) {
         Settings::SetEnablePlayerHighlight(S_EnablePlayerHighlight);
+    }
+
+    if (S_ForceRNGSeed != Settings::GetForceRNGSeed()) {
+        Settings::SetForceRNGSeed(S_ForceRNGSeed);
+    }
+
+    if (S_CheckpointMarkersCount != Settings::GetCheckpointMarkersCount()) {
+        Settings::SetCheckpointMarkersCount(S_CheckpointMarkersCount);
+        Layers::Update("Markers", Markers::GetLayer(S_CheckpointMarkersCount));
     }
 }

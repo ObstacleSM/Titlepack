@@ -1,0 +1,80 @@
+/*****************************************
+*      Auto Number CP Editor Plugin      *
+*    Author Discord:     МiLТanТ#7489    *
+*****************************************/
+
+#RequireContext CMapEditorPlugin
+#Include "TextLib" as TextLib
+
+#Const	ScriptName	"AutoNumberCP.Script.txt"
+#Const	Version		"1.0 (2021-03-30)"
+
+
+Boolean IsEnabled(CAnchorData _Landmark) {
+	declare metadata LibMapType_MapTypeVersion for Map = 0;
+	if (LibMapType_MapTypeVersion <= 2)
+		return _Landmark.Tag != "No-Function";
+	
+	declare metadata Meta_Enabled for _Landmark = True;
+	return Meta_Enabled;
+}
+
+Boolean IsCheckpoint(CAnchorData _Landmark) {
+	declare metadata LibMapType_MapTypeVersion for Map = 0;
+	if (LibMapType_MapTypeVersion <= 2)
+		return _Landmark.Tag == "Portal" || "Checkpoint" == TextLib::SubText(_Landmark.Tag, 0, 10);
+
+
+	declare metadata Meta_IsPortal for _Landmark = False;
+	if (Meta_IsPortal) return True;
+	
+	declare metadata Meta_CPType for _Landmark = 0;
+	return _Landmark.Tag == "Checkpoint"
+			&& (Meta_CPType == 0 || Meta_CPType == 1);
+}
+
+
+main() {
+	while (True) {
+		yield;
+		
+		if (This.EditMode == CEditorPlugin::EditMode::Place) {
+			foreach (Event in PendingEvents) {
+				if (Event.Type == CEditorPluginEvent::Type::MapModified) {
+					declare CAnchorData[][Integer] CPCounts = [];
+					
+					foreach (Anchor in This.AnchorData)
+					{
+						if (!IsEnabled(Anchor))
+							continue;
+						
+						if (IsCheckpoint(Anchor))
+						{
+							if (!CPCounts.existskey(Anchor.Order)) {
+								CPCounts[Anchor.Order] = [];
+							}
+							
+							CPCounts[Anchor.Order].add(Anchor);
+						}
+					}
+					
+					if (CPCounts.existskey(0))
+					{
+						declare I = 1;
+						while (CPCounts[0].count > 0)
+						{
+							if (!CPCounts.existskey(I))
+							{
+								CPCounts[0][0].Order = I;
+								CPCounts[I] = []; // no one should read this anyway
+								CPCounts[0].removekey(0);
+							}
+							
+							I += 1;
+						}
+					}
+				}
+			}
+		}
+	}
+}

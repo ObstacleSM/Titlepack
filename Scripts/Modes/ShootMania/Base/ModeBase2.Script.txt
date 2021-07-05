@@ -200,7 +200,7 @@ if (MB_Settings_UseDefaultScores) {
 ***
 
 ***MB_Private_StartTurn***
-***
+***			
 if (MB_Settings_UseDefaultTimer) {
 	StartTime = Now;
 }
@@ -269,7 +269,7 @@ if (MB_Settings_UseDefaultChannelProgression && ChannelProgression::IsEnabled())
 if (MB_Settings_UseDefaultPodiumSequence && !MB_Private_SkipPodiumSequence) {
 	UIManager.UIAll.BigMessageSound = CUIConfig::EUISound::EndRound;
 	UIManager.UIAll.BigMessageSoundVariant = 0;
-
+	
 	declare MB_Private_Message = _("|Match|Draw");
 	if (UseClans) {
 		declare MB_Private_TeamId = Scores::GetClanWinner() - 1;
@@ -284,7 +284,7 @@ if (MB_Settings_UseDefaultPodiumSequence && !MB_Private_SkipPodiumSequence) {
 			else MB_Private_Message = MM_TL::Compose(_("$<%1$> wins the map!"), MB_Private_Score.User.Name);
 		}
 	}
-
+	
 	UIManager.UIAll.BigMessage = MB_Private_Message;
 }
 ***

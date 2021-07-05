@@ -13,12 +13,12 @@
 main() {
 	+++LogVersion+++
 	+++StartScript+++
-
+	
 	while (True) {
 		yield;
-
+		
 		+++Loop+++
 	}
-
+	
 	+++EndScript+++
 }

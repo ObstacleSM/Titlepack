@@ -1,7 +1,7 @@
 #Extends "Modes/ShootMania/Base/ModeShootMania.Script.txt"
 
-#Const CompatibleMapTypes "ObstacleArena,ObstacleTitleArena,ObstacleTitleArenaOld,TimeAttackArena,ObstacleBetaArena"
-#Const  Version           "0.8.2"
+#Const CompatibleMapTypes "ObstacleArena,ObstacleTitleArena,ObstacleTitleArenaOld,TimeAttackArena,ObstacleBetaArena,Randomizer"
+#Const  Version           "0.8.4"
 #Const  ScriptName        "Modes/ShootMania/Sprint.Script.txt"
 
 // ---------------------------------- //
@@ -15,11 +15,12 @@
 #Include "Libs/Nadeo/ShootMania/Map.Script.txt" as Map
 
 #Include "Libs/smokegun/Tools.Script.txt" as Tools
+#Include "Libs/miltant/Randomizer.Script.txt" as RNG
 #Include "Libs/smokegun/Constants.Script.txt" as Constants
 #Include "Libs/smokegun/Player.Script.txt" as Player
 #Include "Libs/smokegun/ObstacleLib.Script.txt" as Obstacle
 
-#Include "Libs/smokegun/UI/Markers.Script.txt" as Markers
+#Include "Libs/miltant/UI/Markers.Script.txt" as Markers
 #Include "Libs/smokegun/UI/TimeDiff.Script.txt" as TimeDiff
 #Include "Libs/smokegun/UI/Chrono.Script.txt" as Chrono
 #Include "Libs/smokegun/UI/CpProgress.Script.txt" as CpProgress
@@ -38,9 +39,9 @@
 // ---------------------------------- //
 // Settings
 // ---------------------------------- //
-#Setting S_TimeLimit 10 as _("Time limit (minutes)")
+#Setting S_TimeLimit 20 as _("Time limit (minutes)")
 #Setting S_RoundLimit 5 as _("Round limit")
-#Setting S_MinPlayers 2  as _("Number of players needed to start a map")
+#Setting S_MinPlayer 2  as _("Number of players needed to start a map")
 #Setting S_PointDistribution False as _("Enable dynamic point distribution")
 #Setting S_PointLimit 10 as _("Point limit")
 #Setting S_PointsMax 3 as _("Points for the 1st player")
@@ -53,9 +54,10 @@
 #Setting S_MaxTimeLeft 120 as _("Maximum time left (seconds)")
 #Setting S_EnablePlayerHighlight False as "Highlight players"
 #Setting S_DuoSprint False as "Beta: DuoSprint"
-#Setting S_MinWaitTime 10 as "Beta: Minimum waiting time (seconds)"
+#Setting S_MinWaitTime 1 as "Beta: Minimum waiting time (seconds)"
+#Setting S_CheckpointMarkersCount 2 as "Count of different checkpoint markers"
 
-#Setting S_ScriptEnvironment "development"
+#Setting S_ScriptEnvironment "production"
 
 // ---------------------------------- //
 // Constants
@@ -79,6 +81,7 @@ Log::RegisterScript(ScriptName, Version);
 ***Match_Settings***
 ***
 MB_Settings_UseDefaultHud = False;
+MB_Settings_UseDefaultObjects = False;
 
 UsePvPCollisions = False;
 UseClans = False;
@@ -89,6 +92,15 @@ Settings::SetFullAmmoSpawn(True);
 Settings::SetFastRespawn(True);
 Settings::SetForceInvisibleSkin(True);
 
+// ServerModeName is "" when the mode is started from the map editor "Test mode with"
+if (ServerModeName == "") {
+    Settings::SetMinPlayers(1);
+    Settings::SetRoundCooldown(1);
+    Settings::SetTimeLimit(200);
+    Settings::SetWarmupRounds(0);
+    Settings::SetRoundLimit(1);
+}
+
 Env::Set(Env::Env_Development());
 ***
 
@@ -98,17 +110,17 @@ ModeInfo::SetName("Sprint");
 ModeInfo::SetType(ModeInfo::Type_FreeForAll());
 
 declare OpenSpecial1Text = "$<$00f";
-    declare OpenSpecial2Text = "$<$88f";
-    declare OpenSpecial3Text = "$<$0f0";
-    declare OpenSpecial4Text = "$<$f80";
-    declare OpenBoldText = "$<$o";
-    declare OpenSettingText = "$<$08f";
-    declare CloseText = "$>";
+declare OpenSpecial2Text = "$<$88f";
+declare OpenSpecial3Text = "$<$0f0";
+declare OpenSpecial4Text = "$<$f80";
+declare OpenBoldText = "$<$o";
+declare OpenSettingText = "$<$08f";
+declare CloseText = "$>";
 
-    declare ModeRules = """
+declare ModeRules = """
 Finish the {{{OpenSpecial2Text}}}Obstacle Course{{{CloseText}}} as fast as possible.
 To validate a race you must touch the {{{OpenSpecial2Text}}}Goal{{{CloseText}}} after going through all the {{{OpenSpecial2Text}}}Checkpoints{{{CloseText}}}.
-You can start over and improve your time as often as you want during {{{OpenSettingText^S_TimeLimit^CloseText}}} minutes.
+You can start over and improve your time as often as you want during {{{OpenSettingText^Settings::GetTimeLimit()^CloseText}}} minutes.
 The player with the best time wins the map.
 Press the {{{OpenBoldText}}}Respawn{{{CloseText}}} button (default: {{{OpenSpecial2Text}}}Backspace{{{CloseText}}}) or die to {{{OpenSpecial3Text}}}Respawn{{{CloseText}}} at the last reached checkpoint.
 Press the {{{OpenBoldText}}}Give Up{{{CloseText}}} button (default: {{{OpenSpecial2Text}}}Delete{{{CloseText}}}) to {{{OpenSpecial3Text}}}Restart{{{CloseText}}} from the beginning.
@@ -145,7 +157,7 @@ if (Hud != Null && Hud.ScoresTable != Null) {
     TabsLayer.Type = CUILayer::EUILayerType::AltMenu;
     UIManager.UIAll.UILayers.add(TabsLayer);
 
-    Hud.ScoresTable.SetFooterText("Time limit: "^Tools::TimeLimitToText(S_TimeLimit)^" | Round limit: "^S_RoundLimit^" | Point limit: "^S_PointLimit^" | Warmup round: "^S_WarmupRounds);
+    Hud.ScoresTable.SetFooterText("Time limit: "^Tools::TimeLimitToText(Settings::GetTimeLimit())^" | Round limit: "^Settings::GetRoundLimit()^" | Point limit: "^S_PointLimit^" | Warmup round: "^Settings::GetWarmupRounds());
 }
 ***
 
@@ -158,7 +170,7 @@ SpawnScreen::CreateScores("Score.Points");
 ***
 SpawnInvulnerabilityDuration = 0;
 ItemList_Begin();
-G_InvisibleSkinId = ItemList_Add("InvisibleBot.Item.Gbx");
+G_InvisibleSkinId = ItemList_AddWithSkin("DefaultPlayerModel", Constants::C_InvisibleSkin);
 Items::LoadItems();
 ItemList_End();
 ***
@@ -179,13 +191,13 @@ declare LastUpdate = -1;
 CreateUI();
 
 // map is invalid
-if (!Obstacle::PrepareMap()) {
+if (!Obstacle::PrepareMap(ModeInfo::GetName())) {
     MB_StopMap();
     break;
 }
 
 UIManager.UIAll.MarkersXML = Markers::GetXML();
-Layers::Update("Markers", Markers::GetLayer());
+Layers::Update("Markers", Markers::GetLayer(S_CheckpointMarkersCount));
 
 UpdateSettings();
 
@@ -197,7 +209,7 @@ foreach (Player in AllPlayers) {
 
 G_State = C_State_Waiting;
 
-Message::SendBigMessage("Waiting for "^S_MinPlayers^" players...", 2000, 0, CUIConfig::EUISound::Default, 1);
+Message::SendBigMessage("Waiting for "^Settings::GetMinPlayers()^" players...", 2000, 0, CUIConfig::EUISound::Default, 1);
 
 if (S_DuoSprint) {
     declare DuoMsg = "DuoSprint mode: Players need to make teams to start the match";
@@ -251,14 +263,15 @@ else {
 
     StartTime = Now;
 
-    if (S_TimeLimit > 0) {
-        EndTime = (StartTime + S_TimeLimit * 1000 * 60);
+    if (Settings::GetTimeLimit() > 0) {
+        EndTime = (StartTime + Settings::GetTimeLimit() * 1000 * 60);
     }
     else {
         EndTime = -1;
     }
 
     CurrentRound += 1;
+
 
     G_FirstPlayer = NullId;
     LastFinished = False;
@@ -295,13 +308,28 @@ else {
     }
 
     declare netwrite Net_IsWarmup for Teams[0] = False;
-    Net_IsWarmup = CurrentRound <= S_WarmupRounds;
+    Net_IsWarmup = CurrentRound <= Settings::GetWarmupRounds();
 
     if (Net_IsWarmup) {
         Message::SendBigMessage("Warmup round "^ CurrentRound ^"!", 2000, 0, CUIConfig::EUISound::StartRound, 1);
+
+        if (Obstacle::IsRandomizerMap()) {
+            RNG::ClearLandmarks();
+            Layers::Update("Markers", Markers::GetLayer(S_CheckpointMarkersCount));
+        }
     }
     else {
-        Message::SendBigMessage("Starting round "^ CurrentRound - S_WarmupRounds ^"!", 2000, 0, CUIConfig::EUISound::StartRound, 1);
+        Message::SendBigMessage("Starting round "^ CurrentRound - Settings::GetWarmupRounds() ^"!", 2000, 0, CUIConfig::EUISound::StartRound, 1);
+
+        if (Obstacle::IsRandomizerMap()) {
+            declare Text Seed = RNG::RandomizeLandmarks(
+                Obstacle::GetRNGLandmarks(), Obstacle::GetRNGTargetNumbers(),
+                Obstacle::GetSpawnLandmarks(), Obstacle::GetGoalLandmarks()
+            );
+            Layers::Update("Markers", Markers::GetLayer(S_CheckpointMarkersCount));
+
+            UIManager.UIAll.SendChat("""Map randomized with the seed $<$f80{{{Seed}}}$>""");
+        }
     }
 }
 LastPlayersCount = Players.count;
@@ -324,7 +352,7 @@ Obstacle::UpdatePlayersSkin(G_InvisibleSkinId);
 if (G_State == C_State_Waiting)
 {
 
-    declare CanPlay = Players.count >= S_MinPlayers;
+    declare CanPlay = Players.count >= Settings::GetMinPlayers();
 
     // First round has a different waiting time, S_MinWaitTime.
     // It can be used to wait for every player to connect when switching maps.
@@ -400,7 +428,6 @@ else {
                     }
                     CanSpawn = CanSpawn && HasMatched;
                 }
-
                 // Respawn only when the player hasn't finished
                 if (CanSpawn) {
                     // put back
@@ -434,6 +461,8 @@ else {
 
                         EndTime = Now + TimeLeft;
                         G_FirstPlayer = Event.Player.Score.Id;
+
+                        UIManager.UIAll.SendChat(MM_TL::Compose(_("$<%1$><$ff0 was first to the goal!"), (Event.Player as CPlayer).User.Name));
                     }
                     G_FinishedScores[Event.Player.Score.Id] = True;
 
@@ -455,7 +484,6 @@ else {
             default: {
                 Events::Valid(Event);
             }
-
         }
     }
 
@@ -583,13 +611,7 @@ else {
 if (G_State == C_State_Playing) {
     SM::UnspawnAllPlayers();
 
-    declare Message = _("|Match|Draw");
-    if (Scores.existskey(G_FirstPlayer)) {
-        Message = MM_TL::Compose(_("$<%1$> wins the round!"), Scores[G_FirstPlayer].User.Name);
-    }
-
-    if (CurrentRound > S_WarmupRounds) {
-
+    if (CurrentRound > Settings::GetWarmupRounds()) {
         declare Integer[Ident] FinishedScores = [];
         foreach (ScoreId => HasFinished in G_FinishedScores) {
             if (HasFinished) FinishedScores[ScoreId] = Player::getLastRunS(Scores[ScoreId]);
@@ -597,8 +619,8 @@ if (G_State == C_State_Playing) {
 
         FinishedScores = FinishedScores.sort();
 
-        if (FinishedScores.count > 0) {
-            if (S_DuoSprint)
+        if (S_DuoSprint) {
+            if (FinishedScores.count > 0)
             {
                 declare Text[][Text] DuoAssociatesByLogin for Teams[0] = [];
 
@@ -759,13 +781,25 @@ if (G_State == C_State_Playing) {
                     }
                 }
             }
-            else if (!S_PointDistribution) {
-                declare PointsToAdd = S_PointsMax;
+        } else {
+            if (S_PointDistribution) {
+                declare PointsToAdd = NumberOfPlayerRound;
                 declare PreviousRun = -1;
 
                 foreach (ScoreId => LastRun in FinishedScores) {
                     Scores::AddPlayerRoundPoints(Scores[ScoreId], PointsToAdd);
 
+                    if (LastRun != PreviousRun) {
+                        PointsToAdd -= 1;
+                    }
+                    PreviousRun = LastRun;
+                }
+            } else {
+                declare PointsToAdd = S_PointsMax;
+                declare PreviousRun = -1;
+
+                foreach (ScoreId => LastRun in FinishedScores) {
+                    Scores::AddPlayerRoundPoints(Scores[ScoreId], PointsToAdd);
 
                     if (LastRun != PreviousRun) {
                         if (PointsToAdd - S_PointsDeduced > S_PointsMin) {
@@ -777,22 +811,21 @@ if (G_State == C_State_Playing) {
                     }
                     PreviousRun = LastRun;
                 }
-            }
-            else {
-                declare PointsToAdd = NumberOfPlayerRound;
-                declare PreviousRun = -1;
-                foreach (ScoreId => LastRun in FinishedScores) {
-                    Scores::AddPlayerRoundPoints(Scores[ScoreId], PointsToAdd);
 
-                    if (LastRun != PreviousRun) {
-                        PointsToAdd -= 1;
+                foreach (Player in Players) {
+                    declare PlayerScore <=> Player.Score;
+                    if (PlayerScore != Null) {
+                        Scores::AddPlayerRoundPoints(Scores[PlayerScore.Id], Player::getCpProgress(Player));
                     }
-                    PreviousRun = LastRun;
                 }
             }
         }
     }
 
+    declare Message = _("|Match|Draw");
+    if (Scores.existskey(G_FirstPlayer)) {
+        Message = MM_TL::Compose(_("$<%1$> wins the round!"), Scores[G_FirstPlayer].User.Name);
+    }
 
     Message::SendBigMessage(Message, 2000, 0, CUIConfig::EUISound::EndRound, 0);
     MB_Sleep(3000);
@@ -813,7 +846,7 @@ if (G_State == C_State_Playing) {
         }
     }
 
-    if (BestPlayerScore == Null && (MostPointsScore.Points >= S_PointLimit || CurrentRound - S_WarmupRounds >= S_RoundLimit)) {
+    if (BestPlayerScore == Null && (MostPointsScore.Points >= S_PointLimit || CurrentRound - Settings::GetWarmupRounds() >= Settings::GetRoundLimit())) {
         declare MaxWinner = 1;
         if (S_DuoSprint) {
             MaxWinner = 2;
@@ -826,14 +859,14 @@ if (G_State == C_State_Playing) {
         }
     }
 
-    if (BestPlayerScore != Null && (BestPlayerScore.Points >= S_PointLimit || CurrentRound - S_WarmupRounds >= S_RoundLimit)) {
+    if (BestPlayerScore != Null && (BestPlayerScore.Points >= S_PointLimit || CurrentRound - Settings::GetWarmupRounds() >= Settings::GetRoundLimit())) {
         MB_StopMap();
     }
     else {
         G_State = C_State_Waiting;
 
-        if (S_RoundCooldown > 0) {
-            EndTime = Now + S_RoundCooldown * 1000;
+        if (Settings::GetRoundCooldown() > 0) {
+            EndTime = Now + Settings::GetRoundCooldown() * 1000;
         }
     }
 }
@@ -947,7 +980,7 @@ Void UpdateSettings() {
         Settings::SetTimeLimit(S_TimeLimit);
 
         if (Hud != Null && Hud.ScoresTable != Null) {
-            Hud.ScoresTable.SetFooterText("Time limit: "^Tools::TimeLimitToText(S_TimeLimit)^" | Round limit: "^S_RoundLimit^" | Point limit: "^S_PointLimit^" | Warmup round: "^S_WarmupRounds);
+            Hud.ScoresTable.SetFooterText("Time limit: "^Tools::TimeLimitToText(Settings::GetTimeLimit())^" | Round limit: "^Settings::GetRoundLimit()^" | Point limit: "^Settings::GetPointLimit()^" | Warmup round: "^Settings::GetWarmupRounds());
         }
 
         if (S_TimeLimit > 0) {
@@ -961,12 +994,12 @@ Void UpdateSettings() {
         Settings::SetRoundLimit(S_RoundLimit);
 
         if (Hud != Null && Hud.ScoresTable != Null) {
-            Hud.ScoresTable.SetFooterText("Time limit: "^Tools::TimeLimitToText(S_TimeLimit)^" | Round limit: "^S_RoundLimit^" | Point limit: "^S_PointLimit^" | Warmup round: "^S_WarmupRounds);
+            Hud.ScoresTable.SetFooterText("Time limit: "^Tools::TimeLimitToText(Settings::GetTimeLimit())^" | Round limit: "^Settings::GetRoundLimit()^" | Point limit: "^Settings::GetPointLimit()^" | Warmup round: "^Settings::GetWarmupRounds());
         }
     }
 
-    if (S_MinPlayers != Settings::GetMinPlayers()) {
-        Settings::SetMinPlayers(S_MinPlayers);
+    if (S_MinPlayer != Settings::GetMinPlayers()) {
+        Settings::SetMinPlayers(Settings::GetMinPlayers());
     }
 
     if (S_PointDistribution != Settings::GetPointDistribution()) {
@@ -977,7 +1010,7 @@ Void UpdateSettings() {
         Settings::SetPointLimit(S_PointLimit);
 
         if (Hud != Null && Hud.ScoresTable != Null) {
-            Hud.ScoresTable.SetFooterText("Time limit: "^Tools::TimeLimitToText(S_TimeLimit)^" | Round limit: "^S_RoundLimit^" | Point limit: "^S_PointLimit^" | Warmup round: "^S_WarmupRounds);
+            Hud.ScoresTable.SetFooterText("Time limit: "^Tools::TimeLimitToText(Settings::GetTimeLimit())^" | Round limit: "^Settings::GetRoundLimit()^" | Point limit: "^Settings::GetPointLimit()^" | Warmup round: "^Settings::GetWarmupRounds());
         }
     }
 
@@ -1007,7 +1040,7 @@ Void UpdateSettings() {
         Settings::SetWarmupRounds(S_WarmupRounds);
 
         if (Hud != Null && Hud.ScoresTable != Null) {
-            Hud.ScoresTable.SetFooterText("Time limit: "^Tools::TimeLimitToText(S_TimeLimit)^" | Round limit: "^S_RoundLimit^" | Point limit: "^S_PointLimit^" | Warmup round: "^S_WarmupRounds);
+            Hud.ScoresTable.SetFooterText("Time limit: "^Tools::TimeLimitToText(Settings::GetTimeLimit())^" | Round limit: "^Settings::GetRoundLimit()^" | Point limit: "^Settings::GetPointLimit()^" | Warmup round: "^Settings::GetWarmupRounds());
         }
     }
 
@@ -1017,6 +1050,11 @@ Void UpdateSettings() {
 
     if (S_MaxTimeLeft != Settings::GetMaxTimeLeft()) {
         Settings::SetMaxTimeLeft(S_MaxTimeLeft);
+    }
+
+    if (S_CheckpointMarkersCount != Settings::GetCheckpointMarkersCount()) {
+        Settings::SetCheckpointMarkersCount(S_CheckpointMarkersCount);
+        Layers::Update("Markers", Markers::GetLayer(S_CheckpointMarkersCount));
     }
 
     if (S_EnablePlayerHighlight != Settings::GetEnablePlayerHighlight()) {

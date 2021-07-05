@@ -1,10 +1,10 @@
 <maniaplanet_title version="4">
 	<id>obstacle@smokegun</id>
-	<name>obstacle</name>
-	<desc></desc>
+	<name>obstacle@smokegun</name>
+	<desc>Made in maker 'Storm Maker'</desc>
 	<url>ObstacleMP4</url>
 	<download_url></download_url>
-	<title_version>1.7.2</title_version>
+	<title_version>1.9.1</title_version>
 	<allowed_client_title_version></allowed_client_title_version>
 	<maker>SMStormMaker@nadeo</maker>
 	<base>SMStorm</base>
@@ -14,7 +14,7 @@
 	<use_hmd>false</use_hmd>
 	<unlock_features>0</unlock_features>
 	<packaging>
-		<image name="Media\Images\Logos\Background.jpg"/>
+		<image name="Media\Images\Logos\PackImage.webm"/>
 		<logos name="Media\Images\Logos\Logos.png"/>
 		<collection></collection>
 		<sortindex>100</sortindex>
@@ -26,8 +26,8 @@
 		<background_img name="Media\Images\Logos\PackImage.webm"/>
 		<background_replay name=""/>
 		<header name=""/>
-		<music name=""/>
-		<manialink url="Media/Apps/MainMenuLagoon.Script.txt"/>
+		<music name="Media\Musics\Storm\Race\!Night\DAY_01_Track_03.ogg"/>
+		<manialink url="Media/Apps/MainMenuObstacle.Script.txt"/>
 	</menu>
 	<menu_style name=""/>
 	<solo>
@@ -68,7 +68,7 @@
 		</score_context>
 	</solo>
 	<network>
-		<mode name=""/>
+		<mode name="Modes\ShootMania\Obstacle.Script.txt"/>
 		<playlist name=""/>
 	</network>
 	<splitscreen>
@@ -84,15 +84,6 @@
 	<mod name=""/>
 	<hud3dfont name=""/>
 	<files/>
-	<folders>
-		<folder name="Blocks" public="true" internal="false"/>
-		<folder name="Items" public="true" internal="false"/>
-		<folder name="Maps" public="true" internal="false"/>
-		<folder name="Materials" public="true" internal="false"/>
-		<folder name="Media" public="false" internal="false"/>
-		<folder name="Modules" public="false" internal="false"/>
-		<folder name="Scripts" public="false" internal="false"/>
-		<folder name="Skins" public="false" internal="false"/>
-	</folders>
+	<folders/>
 	<hud_default_module name=""/>
 </maniaplanet_title>

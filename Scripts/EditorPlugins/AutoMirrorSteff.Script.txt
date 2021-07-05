@@ -19,17 +19,17 @@ Text GetManialink() {
 	return """<script><!--
 		#Const	C_MirrorModes	[0 => "None",	1 => "Horizontal",	2 => "Vertical",	3 => "Diagonal"]
 		#Const	C_IconModes		[0 => "LvlRed",	1 => "ShowRight",	2 => "ShowUp",		3 => "Close"]
-
+		
 		main() {
 			declare Quad_Mode	<=> (Page.GetFirstChild("Quad_Mode") as CMlQuad);
 			declare Label_Mode	<=> (Page.GetFirstChild("Label_Mode") as CMlLabel);
-
+			
 			declare Integer MirrorMode for Page;
 			MirrorMode = 0;
-
+			
 			while (True) {
 				yield;
-
+				
 				// Handle events
 				foreach (Event in PendingEvents) {
 					switch (Event.Type) {
@@ -42,12 +42,12 @@ Text GetManialink() {
 						}
 					}
 				}
-
+				
 				// Reset mirror mode to start
 				if (MirrorMode >= C_MirrorModes.count) {
 					MirrorMode = 0;
 				}
-
+				
 				// UI
 				Quad_Mode.Substyle	= C_IconModes[MirrorMode];
 				Label_Mode.Value	= C_MirrorModes[MirrorMode];
@@ -124,16 +124,16 @@ Boolean IsBaseGround(CBlock _Block) {
 // MAIN
 main() {
 	log(Now^"> Script: "^ScriptName^" | Version: "^Version);
-
+	
 	// Init variables
 	This.CustomSelectionRGB = <1., 0.2, 0.2>;
 	This.ManialinkText = GetManialink();
 	declare MirrorMode for ManialinkPage = 0;
-
+	
 	// Edit loop
 	while (True) {
 		yield;
-
+		
 		switch (This.PlaceMode) {
 			case CEditorPlugin::PlaceMode::Block: {
 				switch (This.EditMode) {
@@ -172,7 +172,7 @@ main() {
 						}
 						declare MirrorCoords = MirrorCoords(This.CursorCoord, MirrorMode);
 						HighlightCoords([MirrorCoords]);
-
+						
 						foreach (Event in PendingEvents) {
 							switch (Event.Type) {
 								case CEditorPluginEvent::Type::MapModified: {
@@ -180,7 +180,7 @@ main() {
 									declare CBlock Block;
 									declare Int3 Coords;
 									declare PossibleCoords = CoordsAround(This.CursorCoord);
-
+									
 									foreach (PossCoords in PossibleCoords) {
 										declare PossBlock = This.GetBlock(PossCoords);
 										if (PossBlock == Null || PossBlock.BlockModel != This.CursorBlockModel) continue;
@@ -188,9 +188,9 @@ main() {
 										Coords = PossCoords;
 										break;
 									}
-
+									
 									if (Block == Null) continue;
-
+									
 									// New block - Mirror it!
 									declare Direction = MirrorDir(This.CursorDir, MirrorMode);
 									foreach (Coords in This.CustomSelectionCoords) {
