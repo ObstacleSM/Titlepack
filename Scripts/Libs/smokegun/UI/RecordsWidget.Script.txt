@@ -1,13 +1,13 @@
 #Include "MathLib" as ML
-#Include "Libs/Nadeo/Log.Script.txt" as Log
-#Include "Libs/Nadeo/Layers2.Script.txt" as Layers
-#Include "Libs/Nadeo/CustomUI.Script.txt" as CustomUI
+#Include "Libs/miltant/Nadeo_Fork/Log.Script.txt" as Log
+#Include "Libs/miltant/Nadeo_Fork/Layers2.Script.txt" as Layers
+#Include "Libs/miltant/Nadeo_Fork/CustomUI.Script.txt" as CustomUI
 #Include "Libs/smokegun/Constants.Script.txt" as Constants
 
 /*********************************************
     CONSTANTS
 *********************************************/
-#Const  Version     "2018-10-01"
+#Const  Version     "2021-07-11"
 #Const  ScriptName  "RecordsWidget.Script.txt"
 
 Text Private_GetSmallRecords() {

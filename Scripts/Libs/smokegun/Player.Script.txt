@@ -8,7 +8,7 @@
 #Include "TextLib" as TextLib
 #Include "MathLib" as MathLib
 
-#Include "Libs/Nadeo/Json2.Script.txt" as Json
+#Include "Libs/miltant/Nadeo_Fork/Json2.Script.txt" as Json
 
 #Include "Libs/smokegun/Constants.Script.txt" as Constants
 #Include "Libs/miltant/Randomizer.Script.txt" as RNG
@@ -17,7 +17,7 @@
   CONSTANTS
  *********************************************/
 
-#Const  Version     "2021-03-31"
+#Const  Version     "2021-07-11"
 #Const  ScriptName  "Player.Script.txt"
 
 /*********************************************
@@ -62,6 +62,76 @@ Boolean usedJump(CSmPlayer _Player) {
 Void setUsedJump(CSmPlayer _Player, Boolean _Value) {
     declare netwrite Boolean Net_UsedJump for _Player = False;
     Net_UsedJump = _Value;
+}
+
+Boolean allowRSBug(CSmPlayer _Player) {
+    declare UI <=> UIManager.GetUI(_Player);
+    if (UI == Null)
+        return False;
+
+    declare netread Net_RespawnBehavior for UI = Constants::C_RespawnBehavior_Normal;
+
+    return Net_RespawnBehavior == Constants::C_RespawnBehavior_AllowRSBug;
+}
+
+Boolean usedRSBug(CSmPlayer _Player) {
+    declare netwrite Boolean Net_UsedRSBug for _Player = False;
+    return Net_UsedRSBug;
+}
+
+Void setUsedRSBug(CSmPlayer _Player, Boolean _Value) {
+    declare netwrite Boolean Net_UsedRSBug for _Player = False;
+    Net_UsedRSBug = _Value;
+}
+
+Boolean usedAltGlitch(CSmPlayer _Player) {
+    declare netwrite Boolean Net_UsedAltGlitch for _Player = False;
+    return Net_UsedAltGlitch;
+}
+
+Void setUsedAltGlitch(CSmPlayer _Player, Boolean _Value) {
+    declare netwrite Boolean Net_UsedAltGlitch for _Player = False;
+    Net_UsedAltGlitch = _Value;
+}
+
+Boolean usedPvPWeapons(CSmPlayer _Player) {
+    declare netwrite Boolean Net_UsedPvPWeapons for _Player = False;
+    return Net_UsedPvPWeapons;
+}
+
+Void setUsedPvPWeapons(CSmPlayer _Player, Boolean _Value) {
+    declare netwrite Boolean Net_UsedPvPWeapons for _Player = False;
+    Net_UsedPvPWeapons = _Value;
+}
+
+Boolean usedPvPCollisions(CSmPlayer _Player) {
+    declare netwrite Boolean Net_UsedPvPCollisions for _Player = False;
+    return Net_UsedPvPCollisions;
+}
+
+Void setUsedPvPCollisions(CSmPlayer _Player, Boolean _Value) {
+    declare netwrite Boolean Net_UsedPvPCollisions for _Player = False;
+    Net_UsedPvPCollisions = _Value;
+}
+
+Ident getV2PortalCache(CSmPlayer _Player) {
+    declare Ident Net_V2PortalCache for _Player = NullId;
+    return Net_V2PortalCache;
+}
+
+Void setV2PortalCache(CSmPlayer _Player, Ident _Value) {
+    declare Ident Net_V2PortalCache for _Player = NullId;
+    Net_V2PortalCache = _Value;
+}
+
+Ident getLastSpawn(CSmPlayer _Player) {
+    declare Ident Net_LastSpawn for _Player = NullId;
+    return Net_LastSpawn;
+}
+
+Void setLastSpawn(CSmPlayer _Player, Ident _Value) {
+    declare Ident Net_LastSpawn for _Player = NullId;
+    Net_LastSpawn = _Value;
 }
 
 Ident getLastCheckpoint(CSmPlayer _Player) {
@@ -219,9 +289,14 @@ Void InitPlayer(CSmPlayer _Player) {
     setInitialized(_Player, True);
     setStartTime(_Player, 0);
     setCpProgress(_Player, 0);
-    setUsedJump(_Player, False);
     setLastCheckpoint(_Player, NullId);
     clearBuffTimes(_Player);
+
+    setUsedJump(_Player, False);
+    setUsedRSBug(_Player, False);
+    setUsedAltGlitch(_Player, False);
+    setUsedPvPWeapons(_Player, UsePvPWeapons);
+    setUsedPvPCollisions(_Player, UsePvPCollisions);
 
     setBestRun(_Player, -1);
     setLastRun(_Player, -1);
@@ -250,6 +325,9 @@ Integer getTime(CSmPlayer _Player) {
     return Now - getStartTime(_Player);
 }
 
+
+
+
 Text Private_CPTimesToJSON(Integer[Ident] _Times) {
     declare res = "{";
     declare i = 0;
@@ -276,10 +354,14 @@ Text ToJSON(CSmPlayer _Player) {
                 "LastRun" : {{{Json::GetInteger(getLastRun(_Player))}}},
                 "BestRun" : {{{Json::GetInteger(getBestRun(_Player))}}},
                 "LastCheckpoinId" : {{{Json::GetIdent(getLastCheckpoint(_Player))}}},
-                "UsedJump" : {{{Json::GetBoolean(usedJump(_Player))}}},
                 "CpProgess" : {{{Json::GetInteger(getCpProgress(_Player))}}},
                 "LastCPTimes" : {{{Private_CPTimesToJSON(getLastCPTimes(_Player))}}},
-                "BestCPTimes" : {{{Private_CPTimesToJSON(getBestCPTimes(_Player))}}}
+                "BestCPTimes" : {{{Private_CPTimesToJSON(getBestCPTimes(_Player))}}},
+                "UsedJump" : {{{Json::GetBoolean(usedJump(_Player))}}},
+                "UsedRSBug" : {{{Json::GetBoolean(usedRSBug(_Player))}}},
+                "UsedAltGlitch" : {{{Json::GetBoolean(usedAltGlitch(_Player))}}},
+                "UsedPvPWeapons" : {{{Json::GetBoolean(usedPvPWeapons(_Player))}}},
+                "UsedPvPCollisions" : {{{Json::GetBoolean(usedPvPCollisions(_Player))}}}
             }
     }""";
 }

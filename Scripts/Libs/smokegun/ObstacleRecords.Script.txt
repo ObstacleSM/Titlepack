@@ -8,16 +8,18 @@
 #Include "TextLib" as TL
 #Include "MathLib" as ML
 
-#Include "Libs/Nadeo/Log.Script.txt" as Log
-#Include "Libs/Nadeo/Json2.Script.txt" as Json
-#Include "Libs/Nadeo/ShootMania/SM3.Script.txt" as SM
+#Include "Libs/miltant/Nadeo_Fork/Log.Script.txt" as Log
+#Include "Libs/miltant/Nadeo_Fork/Json2.Script.txt" as Json
+#Include "Libs/miltant/Nadeo_Fork/ShootMania/SM3.Script.txt" as SM
 
 #Include "Libs/smokegun/Constants.Script.txt" as Constants
+#Include "Libs/smokegun/Player.Script.txt" as Player
+#Include "Libs/miltant/RunFlags.Script.txt" as RunFlags
 
 /*********************************************
  CONSTANTS
 *********************************************/
-#Const Version "2018-10-01"
+#Const Version "2021-07-13"
 #Const ScriptName "ObstacleRecords.Script.txt"
 
 #Struct SRequestData {
@@ -119,12 +121,19 @@ Void ReplaceOrCreatePlayer(CSmPlayer _Player) {
 Void PlayerFinished(CSmPlayer _Player) {
     declare LastRun for _Player.Score = -1;
     declare RespawnCount for _Player.Score = 0;
+
     declare payload = """
     {
     "time": {{{LastRun}}},
     "respawnCount": {{{Json::GetInteger(RespawnCount)}}},
     "playerId": {{{Json::GetText(_Player.User.Login)}}},
-    "mapId": {{{Json::GetText(""^Map.Id)}}}
+    "mapId": {{{Json::GetText(""^Map.Id)}}},
+    "flags": {{{Json::GetInteger(RunFlags::GetFlagsSum(
+        Player::usedRSBug(_Player),
+        Player::usedAltGlitch(_Player),
+        Player::usedPvPWeapons(_Player),
+        Player::usedPvPCollisions(_Player)
+    ))}}}
     }""";
 
     SendPost("Records/player-finished", payload, Constants::C_Request_PlayerFinished);

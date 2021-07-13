@@ -7,7 +7,7 @@
 
 #Include "TextLib" as TextLib
 #Include "MathLib" as MathLib
-#Include "Libs/Nadeo/ShootMania/Map.Script.txt" as Map
+#Include "Libs/miltant/Nadeo_Fork/ShootMania/Map.Script.txt" as Map
 #Include "Libs/smokegun/Player.Script.txt" as Player
 #Include "Libs/miltant/Randomizer.Script.txt" as RNG
 
@@ -15,7 +15,7 @@
     CONSTANTS
 ***************************************/
 
-#Const  Version     "2021-03-30"
+#Const  Version     "2021-07-11"
 #Const  ScriptName  "Tools.Script.txt"
 
 
@@ -32,8 +32,9 @@ Text GetPos(Vec2 _Pos) {
 }
 
 Boolean Private_IsEnabled(CSmMapLandmark _Landmark) {
-    if (Map::GetMapTypeVersion() <= 2)
+    if (Map::GetMapTypeVersion() <= 2) {
         return _Landmark.Tag != "No-Function";
+    }
 
     declare metadata Meta_Enabled for _Landmark = True;
     return Meta_Enabled;

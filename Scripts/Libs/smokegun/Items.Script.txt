@@ -7,7 +7,7 @@
 
 #Include "TextLib" as TL
 #Include "MathLib" as ML
-#Include "Libs/Nadeo/ShootMania/SM3.Script.txt" as SM
+#Include "Libs/miltant/Nadeo_Fork/ShootMania/SM3.Script.txt" as SM
 #Include "Libs/smokegun/Player.Script.txt" as Player
 #Include "Libs/smokegun/Constants.Script.txt" as Constants
 
@@ -15,7 +15,7 @@
     CONSTANTS
 ***************************************/
 
-#Const Version  "2021-05-07"
+#Const Version  "2021-07-11"
 #Const ScriptName "Items.Script.txt"
 
 
@@ -237,8 +237,14 @@ Text CreateLayerItems() {
 	                            Ratio = 1.;
 	                        }
 	                        Gauge_Item.Ratio = Ratio;
+                            declare TimeDiffText = 0.;
+                            if (TimeDiff > 1000)
+                               TimeDiffText = ML::NearestInteger(TimeDiff / 100.) / 10.;
+                            else if (TimeDiff > 100)
+                               TimeDiffText = ML::NearestInteger(TimeDiff / 10.) / 100.;
+                            else
+                               TimeDiffText = TimeDiff / 1000.;
 
-	                        declare TimeDiffText = ML::NearestInteger(TimeDiff / 100.) / 10.;
 	                        Label_Time.Value = TimeDiffText^"s";
                         }
 

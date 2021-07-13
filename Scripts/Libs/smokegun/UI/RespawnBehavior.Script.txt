@@ -1,9 +1,9 @@
 #Include "MathLib" as ML
-#Include "Libs/Nadeo/Message.Script.txt" as Message
+#Include "Libs/miltant/Nadeo_Fork/Message.Script.txt" as Message
 #Include "Libs/smokegun/Constants.Script.txt" as Constants
 
 
-#Const Version "2019-01-08"
+#Const Version "2021-07-11"
 #Const ScriptName "RespawnBehavior.Script.txt"
 
 Void Yield() {}
@@ -15,12 +15,14 @@ Text GetLayer() {
 <manialink version="3" name="Obstacle:RespawnBehavior">
     <frame pos="-78.5 90"id="RespawnBehavior">
         <label id="Label_RespawnBehavior" pos="3 -2" size="25 4" textsize="1" halign="left" valign="center2" textfont="OswaldMono"/>
-				<quad id="Quad_Indicator" pos="1 -2" size="2 2" halign="center" valign="center2" bgcolor="FFFA" image="file://Media/Images/Common/MarkerArrowDown.png"/>
-				<quad id="Quad_Toggler" pos="13.5 -2" size="30 5" style="BgRaceScore2" substyle="BgCardPlayer" halign="center" valign="center" scriptevents="1"/>
-				<frame id="Frame_Infos" pos="12.5 -4.5">
-					<label size="45 6" textsize="1" halign="center" textfont="OswaldMono" text="Press F4 to always restart from the beginning. Press F5 to disable restart from the beginning. " valign="top" pos="0 -1" autonewline="1"/>
-					<quad  size="50 8" style="BgRaceScore2" substyle="BgCardPlayer" pos="0 0" halign="center" valign="top"/>
-				</frame>
+		<quad id="Quad_Indicator" pos="1 -2" size="2 2" halign="center" valign="center2" bgcolor="FFFA" image="file://Media/Images/Common/MarkerArrowDown.png"/>
+		<quad id="Quad_Toggler" pos="13.5 -2" size="30 5" style="BgRaceScore2" substyle="BgCardPlayer" halign="center" valign="center" scriptevents="1"/>
+		<frame id="Frame_Infos" pos="12.5 -4.5">
+            <label id="Label_F4" size="45 3" pos="-24 -1" textsize="1" halign="left" valign="top" textfont="OswaldMono" text="☐ Always restart from the beginning (F4)" scriptevents="1"/>
+            <label id="Label_F5" size="45 3" pos="-24 -5" textsize="1" halign="left" valign="top" textfont="OswaldMono" text="☐ Disable restart from the beginning (F5)" scriptevents="1"/>
+            <label id="Label_RSBugs" size="45 3" pos="-24 -9" textsize="1" halign="left" valign="top" textfont="OswaldMono" text="☐ Advanced: Allow respawn bugs" scriptevents="1"/>
+			<quad  size="50 13" style="BgRaceScore2" substyle="BgCardPlayer" pos="0 0" halign="center" valign="top"/>
+		</frame>
     </frame>
 
 <script><!--
@@ -33,9 +35,10 @@ Text GetLayer() {
     Text GetRespawnText(Integer _RespawnBehavior) {
         declare Result = "Respawn: ERROR";
         switch (_RespawnBehavior) {
-            case {{{Constants::C_RespawnBehavior_Normal}}}: Result = "Respawn: NORMAL";
-            case {{{Constants::C_RespawnBehavior_FullRestart}}}: Result = "Respawn: $f00RESTART$z";
-            case {{{Constants::C_RespawnBehavior_FullLocked}}}: Result = "Respawn: $f00CANNOT RESTART$z";
+            case {{{Constants::C_RespawnBehavior_Normal}}}: Result = "ReSpawn: NORMAL";
+            case {{{Constants::C_RespawnBehavior_FullRestart}}}: Result = "ReSpawn: $f00RESTART$z";
+            case {{{Constants::C_RespawnBehavior_FullLocked}}}: Result = "ReSpawn: $f00CANNOT RESTART$z";
+            case {{{Constants::C_RespawnBehavior_AllowRSBug}}}: Result = "ReSpawn: $0bfAllow RS Bug$z";
             default: {}
         }
         return Result;
@@ -55,6 +58,44 @@ Text GetLayer() {
         Quad_Indicator.RelativeRotation = 180.;
     }
 
+    Void CheckLabel(CMlLabel _Label) {
+        _Label.Value = TL::Replace(_Label.Value, "☐", "☑");
+    }
+
+    Void UnCheckLabel(CMlLabel _Label) {
+        _Label.Value = TL::Replace(_Label.Value, "☑", "☐");
+    }
+
+    Void ToggleF4() {
+        declare netwrite Net_RespawnBehavior for UI = {{{Constants::C_RespawnBehavior_Normal}}};
+        
+        if (Net_RespawnBehavior == {{{Constants::C_RespawnBehavior_FullRestart}}}) {
+            Net_RespawnBehavior = {{{Constants::C_RespawnBehavior_Normal}}};
+        } else {
+            Net_RespawnBehavior = {{{Constants::C_RespawnBehavior_FullRestart}}};
+        }
+    }
+
+    Void ToggleF5() {
+        declare netwrite Net_RespawnBehavior for UI = {{{Constants::C_RespawnBehavior_Normal}}};
+        
+        if (Net_RespawnBehavior == {{{Constants::C_RespawnBehavior_FullLocked}}}) {
+            Net_RespawnBehavior = {{{Constants::C_RespawnBehavior_Normal}}};
+        } else {
+            Net_RespawnBehavior = {{{Constants::C_RespawnBehavior_FullLocked}}};
+        }
+    }
+
+    Void ToggleRSBugs() {
+        declare netwrite Net_RespawnBehavior for UI = {{{Constants::C_RespawnBehavior_Normal}}};
+        
+        if (Net_RespawnBehavior == {{{Constants::C_RespawnBehavior_AllowRSBug}}}) {
+            Net_RespawnBehavior = {{{Constants::C_RespawnBehavior_Normal}}};
+        } else {
+            Net_RespawnBehavior = {{{Constants::C_RespawnBehavior_AllowRSBug}}};
+        }
+    }
+
     main() {
         wait(InputPlayer != Null && Page != Null);
         
@@ -63,6 +104,10 @@ Text GetLayer() {
         Quad_Toggler <=> (Page.GetFirstChild("Quad_Toggler") as CMlQuad);
         Quad_Indicator <=> (Page.GetFirstChild("Quad_Indicator") as CMlQuad);
         Frame_Infos <=> (Page.GetFirstChild("Frame_Infos") as CMlFrame);
+
+        declare Label_F4 <=> (Page.GetFirstChild("Label_F4") as CMlLabel);
+        declare Label_F5 <=> (Page.GetFirstChild("Label_F5") as CMlLabel);
+        declare Label_RSBugs <=> (Page.GetFirstChild("Label_RSBugs") as CMlLabel);
 
         HideInfos();
 
@@ -77,33 +122,51 @@ Text GetLayer() {
                 switch (Event.Type) {
                     case CMlScriptEvent::Type::KeyPress: {
                         switch (Event.CharPressed) {
-                            // F4 - Change respawn behavior
-                            case "2686976": {
-                                if (Net_RespawnBehavior == {{{Constants::C_RespawnBehavior_FullRestart}}})
-                                    Net_RespawnBehavior = {{{Constants::C_RespawnBehavior_Normal}}};
-                                else
-                                    Net_RespawnBehavior = {{{Constants::C_RespawnBehavior_FullRestart}}};
-                            }
+                            case "2686976":
+                                ToggleF4();
 
-                            // F5 - Change respawn lock
-                            case "2752512": {
-                                if (Net_RespawnBehavior == {{{Constants::C_RespawnBehavior_FullLocked}}})
-                                    Net_RespawnBehavior = {{{Constants::C_RespawnBehavior_Normal}}};
-                                else
-                                    Net_RespawnBehavior = {{{Constants::C_RespawnBehavior_FullLocked}}};
-                            }
+                            case "2752512":
+                                ToggleF5();
                         }
                     }
                     case CMlScriptEvent::Type::MouseClick: {
-                        if (Frame_Infos.Visible)
-                            HideInfos();
-                        else
-                            ShowInfos();
+                        switch (Event.ControlId) {
+                            case "Quad_Toggler": {
+                                if (Frame_Infos.Visible)
+                                    HideInfos();
+                                else
+                                    ShowInfos();
+                            }
+                            case "Label_F4":
+                                ToggleF4();
+
+                            case "Label_F5":
+                                ToggleF5();
+                                
+                            case "Label_RSBugs":
+                                ToggleRSBugs();
+                        }
                     }
                 }
             }
 
             if (LastRespawnBehavior != Net_RespawnBehavior) {
+                UnCheckLabel(Label_F4);
+                UnCheckLabel(Label_F5);
+                UnCheckLabel(Label_RSBugs);
+
+                switch (Net_RespawnBehavior) {
+                    case {{{Constants::C_RespawnBehavior_FullRestart}}}: {
+                        CheckLabel(Label_F4);
+                    }
+                    case {{{Constants::C_RespawnBehavior_FullLocked}}}: {
+                        CheckLabel(Label_F5);
+                    }
+                    case {{{Constants::C_RespawnBehavior_AllowRSBug}}}: {
+                        CheckLabel(Label_RSBugs);
+                    }
+                }
+
                 Label_RespawnBehavior.Value = GetRespawnText(Net_RespawnBehavior);
                 LastRespawnBehavior = Net_RespawnBehavior;
             }

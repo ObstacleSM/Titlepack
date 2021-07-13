@@ -1,7 +1,7 @@
 #Include "MathLib" as ML
-#Include "Libs/Nadeo/Message.Script.txt" as Message
+#Include "Libs/miltant/Nadeo_Fork/Message.Script.txt" as Message
 
-#Const  Version     "2019-01-08"
+#Const  Version     "2021-07-11"
 #Const  ScriptName  "NextMapVote.Script.txt"
 
 Void Yield(Real _NextMapVotingRatio) {

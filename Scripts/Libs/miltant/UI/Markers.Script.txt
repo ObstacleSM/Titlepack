@@ -90,8 +90,10 @@ Text GetLayer(Integer MarkerCount) {
 // Kinda From Tools.Script.txt
 
 Boolean IsEnabled(CSmMapLandmark _Landmark) {
-	if (_Landmark.Tag == "No-Function")
-		return False;
+	declare metadata LibMapType_MapTypeVersion for Map = 0;
+    if (LibMapType_MapTypeVersion <= 2) {
+        return _Landmark.Tag != "No-Function";
+    }
 
 	declare metadata Meta_Enabled for _Landmark = True;
 	declare metadata Meta_Randomize for _Landmark = False;

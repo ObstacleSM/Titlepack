@@ -1,0 +1,70 @@
+#Include "Libs/smokegun/Tools.Script.txt" as Tools
+
+#Const  Version     "2021-07-11"
+#Const  ScriptName  "Glitches.Script.txt"
+
+
+Void UpdateLayer(CSmPlayer _Player) { }
+
+Text GetLayer() {
+    return """
+<manialink version="3" name="Obstacle:Glitches">
+    <frame id="Frame_Glitches" pos="0 -77" halign="center">
+        <label id="Label_RSBug" pos="11 -0.5" halign="center" valign="center2" text="RS" textfont="OswaldMono" textsize="1" hidden="1"/>
+        <label id="Label_ALTGlitch" pos="16 -0.5" halign="center" valign="center2" text="ALT" textfont="OswaldMono" textsize="1" hidden="1"/>
+        <label id="Label_PvPWeapons" pos="-11 -0.5" halign="center" valign="center2" text="BMP" textfont="OswaldMono" textsize="1" hidden="1"/>
+        <label id="Label_PvPCollisions" pos="-16 -0.5" halign="center" valign="center2" text="BST" textfont="OswaldMono" textsize="1" hidden="1"/>
+    </frame>
+<script><!--
+    #Include "TextLib" as TL
+
+    Integer GetTime(CPlayer _Player) {
+        if (_Player == Null)
+            return 0;
+        declare netread Net_StartTime for _Player = 0;
+        return GameTime - Net_StartTime;
+    }
+
+    main() {
+        wait(InputPlayer != Null && Page != Null);
+
+        declare Frame_Glitches      <=> (Page.GetFirstChild("Frame_Glitches") as CMlFrame);
+        declare Label_RSBug         <=> (Frame_Glitches.GetFirstChild("Label_RSBug") as CMlLabel);
+        declare Label_ALTGlitch     <=> (Frame_Glitches.GetFirstChild("Label_ALTGlitch") as CMlLabel);
+        declare Label_PvPWeapons    <=> (Frame_Glitches.GetFirstChild("Label_PvPWeapons") as CMlLabel);
+        declare Label_PvPCollisions <=> (Frame_Glitches.GetFirstChild("Label_PvPCollisions") as CMlLabel);
+
+        while (True) {
+            yield;
+
+            if (!PageIsVisible)
+                continue;
+
+            declare LocalPlayer <=> InputPlayer;
+            if (GUIPlayer != Null) LocalPlayer <=> GUIPlayer;
+            if (LocalPlayer == Null) continue;
+
+            declare netread Net_UsedRSBug for LocalPlayer = False;
+            if (Label_RSBug.Visible != Net_UsedRSBug) {
+                Label_RSBug.Visible = Net_UsedRSBug;
+            }
+
+            declare netread Net_UsedAltGlitch for LocalPlayer = False;
+            if (Label_ALTGlitch.Visible != Net_UsedAltGlitch) {
+                Label_ALTGlitch.Visible = Net_UsedAltGlitch;
+            }
+
+            declare netread Net_UsedPvPWeapons for LocalPlayer = False;
+            if (Label_PvPWeapons.Visible != Net_UsedPvPWeapons) {
+                Label_PvPWeapons.Visible = Net_UsedPvPWeapons;
+            }
+
+            declare netread Net_UsedPvPCollisions for LocalPlayer = False;
+            if (Label_PvPCollisions.Visible != Net_UsedPvPCollisions) {
+                Label_PvPCollisions.Visible = Net_UsedPvPCollisions;
+            }
+        }
+    }
+--></script>
+</manialink>""";
+}

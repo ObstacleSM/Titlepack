@@ -5,6 +5,7 @@
 #Const C_RespawnBehavior_Normal 0
 #Const C_RespawnBehavior_FullRestart 1
 #Const C_RespawnBehavior_FullLocked 2
+#Const C_RespawnBehavior_AllowRSBug 3
 
 // Items
 #Const C_ItemOffzone "Obstacle\\OffzoneShield.Item.gbx"
@@ -25,6 +26,7 @@
 #Const C_Weapon_Rocket 1
 #Const C_Weapon_Nucleus 2
 #Const C_Weapon_Arrow 3
+#Const C_Weapon_Missile 4
 
 // Modes
 #Const C_Mode_Obstacle 0

@@ -5,8 +5,8 @@
 *   Weapons related functions.                  *
 ************************************************/
 
-#Include "Libs/Nadeo/Message.Script.txt" as Message
-#Include "Libs/Nadeo/ShootMania/Attributes.Script.txt" as Attributes
+#Include "Libs/miltant/Nadeo_Fork/Message.Script.txt" as Message
+#Include "Libs/miltant/Nadeo_Fork/ShootMania/Attributes.Script.txt" as Attributes
 
 #Include "Libs/smokegun/Player.Script.txt" as Player
 #Include "Libs/smokegun/Constants.Script.txt" as Constants
@@ -15,7 +15,7 @@
     CONSTANTS
 ***************************************/
 
-#Const  Version     "2021-07-4"
+#Const  Version     "2021-07-11"
 #Const  ScriptName  "Weapons.Script.txt"
 
 
@@ -28,6 +28,7 @@ Void ResetWeapon(CSmPlayer _Player) {
     SetPlayerAmmoMax(_Player, CSmMode::EWeapon::Rocket, 4);
     SetPlayerAmmoMax(_Player, CSmMode::EWeapon::Nucleus, 2);
     SetPlayerAmmoMax(_Player, CSmMode::EWeapon::Arrow, 3);
+    SetPlayerAmmoMax(_Player, CSmMode::EWeapon::Missile, 4);
     SetPlayerWeapon(_Player, CSmMode::EWeapon::Rocket, False);
 }
 
@@ -44,6 +45,9 @@ Void SetWeapon(CSmPlayer _Player, Integer _WeaponType, Real _Gain, Integer _Coun
         }
         case Constants::C_Weapon_Arrow: {
             Weapon = CSmMode::EWeapon::Arrow;
+        }
+        case Constants::C_Weapon_Missile: {
+            Weapon = CSmMode::EWeapon::Missile;
         }
     }
 
@@ -71,6 +75,7 @@ Void FillUpPlayerAmmo(CSmPlayer _Player) {
         SetPlayerAmmo(_Player, CSmMode::EWeapon::Laser, 21);
         SetPlayerAmmo(_Player, CSmMode::EWeapon::Nucleus, 16);
         SetPlayerAmmo(_Player, CSmMode::EWeapon::Arrow, 21);
+        SetPlayerAmmo(_Player, CSmMode::EWeapon::Missile, 18);
     }
 }
 
@@ -83,6 +88,7 @@ Void EmptyPlayerAmmo(CSmPlayer _Player) {
         SetPlayerAmmo(_Player, CSmMode::EWeapon::Laser, 0);
         SetPlayerAmmo(_Player, CSmMode::EWeapon::Nucleus, 0);
         SetPlayerAmmo(_Player, CSmMode::EWeapon::Arrow, 0);
+        SetPlayerAmmo(_Player, CSmMode::EWeapon::Missile, 0);
     }
 }
 

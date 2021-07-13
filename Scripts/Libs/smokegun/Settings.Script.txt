@@ -15,7 +15,6 @@ declare Integer G_MinTimeLeft;
 declare Integer G_MaxTimeLeft;
 declare Integer G_CheckpointMarkersCount;
 
-declare Boolean G_PvPWeapons;
 declare Boolean G_FastRespawn;
 declare Boolean G_AllowJump;
 declare Boolean G_EnableRecords;
@@ -136,14 +135,6 @@ Void SetCheckpointMarkersCount(Integer _Value) {
 	G_CheckpointMarkersCount = _Value;
 }
 
-
-Boolean GetPvPWeapons() {
-	return G_PvPWeapons;
-}
-
-Void SetPvPWeapons(Boolean _Value) {
-	G_PvPWeapons = _Value;
-}
 
 Boolean GetFastRespawn() {
 	return G_FastRespawn;

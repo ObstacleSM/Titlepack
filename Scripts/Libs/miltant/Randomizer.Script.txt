@@ -7,13 +7,13 @@
 
 #Include "TextLib" as TL
 #Include "MathLib" as ML
-#Include "Libs/Nadeo/ShootMania/Map.Script.txt" as Map
+#Include "Libs/miltant/Nadeo_Fork/ShootMania/Map.Script.txt" as Map
 
 /***************************************
     CONSTANTS
 ***************************************/
 
-#Const  Version     "2021-06-26"
+#Const  Version     "2021-11-07"
 #Const  ScriptName  "Randomizer.Script.txt"
 
 /*********************************************

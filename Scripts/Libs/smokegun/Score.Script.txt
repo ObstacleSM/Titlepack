@@ -18,14 +18,14 @@ voir pour le rendre compatible au sprint
 */
 
 #Include "TextLib" as TL
-#Include "Libs/Nadeo/ShootMania/Scores.Script.txt" as Scores
+#Include "Libs/miltant/Nadeo_Fork/ShootMania/Scores.Script.txt" as Scores
 #Include "Libs/smokegun/Constants.Script.txt" as Constants
 #Include "Libs/smokegun/Player.Script.txt" as Player
 #Include "Libs/smokegun/Settings.Script.txt" as Settings
 #Include "Libs/smokegun/UI/SurvivalRanking.Script.txt" as SurvivalRanking
 #Include "Libs/smokegun/Structs.Script.txt" as Structs
 
-#Const  Version     "2020-02-19"
+#Const  Version     "2021-07-11"
 #Const  ScriptName  "Score.Script.txt"
 
 #Const C_DefaultMaxLives 100
