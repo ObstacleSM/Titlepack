@@ -254,7 +254,7 @@ Text Private_LoadXml(Text _Path) {
 	}
 	if (!Success) 	Logger::Warn("[MenuController] Private_LoadXml(): Failed to load: "^_Path);
 	else 		 	Logger::Log("[MenuController] Private_LoadXml(): XML successfully loaded: "^_Path);
-
+	
 	Http.Destroy(Req);
 	
 	return XmlFile;

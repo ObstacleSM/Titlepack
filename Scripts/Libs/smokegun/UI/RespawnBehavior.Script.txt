@@ -1,9 +1,9 @@
 #Include "MathLib" as ML
 #Include "Libs/miltant/Nadeo_Fork/Message.Script.txt" as Message
+#Include "Libs/miltant/Nadeo_Fork/CustomUI.Script.txt" as CustomUI
 #Include "Libs/smokegun/Constants.Script.txt" as Constants
 
-
-#Const Version "2021-07-11"
+#Const  Version     "2022-25-11"
 #Const ScriptName "RespawnBehavior.Script.txt"
 
 Void Yield() {}
@@ -11,18 +11,21 @@ Void Yield() {}
 Void UpdateLayer() {}
 
 Text GetLayer() {
+    CustomUI::Add("RespawnBehavior", <-78.5, 90.>, <30., 5.>);
     return """
 <manialink version="3" name="Obstacle:RespawnBehavior">
-    <frame pos="-78.5 90"id="RespawnBehavior">
-        <label id="Label_RespawnBehavior" pos="3 -2" size="25 4" textsize="1" halign="left" valign="center2" textfont="OswaldMono"/>
-		<quad id="Quad_Indicator" pos="1 -2" size="2 2" halign="center" valign="center2" bgcolor="FFFA" image="file://Media/Images/Common/MarkerArrowDown.png"/>
-		<quad id="Quad_Toggler" pos="13.5 -2" size="30 5" style="BgRaceScore2" substyle="BgCardPlayer" halign="center" valign="center" scriptevents="1"/>
-		<frame id="Frame_Infos" pos="12.5 -4.5">
-            <label id="Label_F4" size="45 3" pos="-24 -1" textsize="1" halign="left" valign="top" textfont="OswaldMono" text="☐ Always restart from the beginning (F4)" scriptevents="1"/>
-            <label id="Label_F5" size="45 3" pos="-24 -5" textsize="1" halign="left" valign="top" textfont="OswaldMono" text="☐ Disable restart from the beginning (F5)" scriptevents="1"/>
-            <label id="Label_RSBugs" size="45 3" pos="-24 -9" textsize="1" halign="left" valign="top" textfont="OswaldMono" text="☐ Advanced: Allow respawn bugs" scriptevents="1"/>
-			<quad  size="50 13" style="BgRaceScore2" substyle="BgCardPlayer" pos="0 0" halign="center" valign="top"/>
-		</frame>
+    <frame id="RespawnBehavior" class="LibCustomUI_Module">
+        <frame pos="-78.5 90">
+            <label id="Label_RespawnBehavior" pos="3 -2" size="25 4" textsize="1" halign="left" valign="center2" textfont="OswaldMono"/>
+            <quad id="Quad_Indicator" pos="1 -2" size="2 2" halign="center" valign="center2" bgcolor="FFFA" image="file://Media/Images/Common/MarkerArrowDown.png"/>
+            <quad id="Quad_Toggler" pos="13.5 -2" size="30 5" style="BgRaceScore2" substyle="BgCardPlayer" halign="center" valign="center" scriptevents="1"/>
+            <frame id="Frame_Infos" pos="12.5 -4.5" hidden="1">
+                <label id="Label_F4" size="45 3" pos="-24 -1" textsize="1" halign="left" valign="top" textfont="OswaldMono" text="☐ Always restart from the beginning (F4)" scriptevents="1"/>
+                <label id="Label_F5" size="45 3" pos="-24 -5" textsize="1" halign="left" valign="top" textfont="OswaldMono" text="☐ Disable restart from the beginning (F5)" scriptevents="1"/>
+                <label id="Label_RSBugs" size="45 3" pos="-24 -9" textsize="1" halign="left" valign="top" textfont="OswaldMono" text="☐ Advanced: Allow respawn bugs" scriptevents="1"/>
+                <quad  size="50 13" style="BgRaceScore2" substyle="BgCardPlayer" pos="0 0" halign="center" valign="top"/>
+            </frame>
+        </frame>
     </frame>
 
 <script><!--
@@ -35,10 +38,10 @@ Text GetLayer() {
     Text GetRespawnText(Integer _RespawnBehavior) {
         declare Result = "Respawn: ERROR";
         switch (_RespawnBehavior) {
-            case {{{Constants::C_RespawnBehavior_Normal}}}: Result = "ReSpawn: NORMAL";
-            case {{{Constants::C_RespawnBehavior_FullRestart}}}: Result = "ReSpawn: $f00RESTART$z";
-            case {{{Constants::C_RespawnBehavior_FullLocked}}}: Result = "ReSpawn: $f00CANNOT RESTART$z";
-            case {{{Constants::C_RespawnBehavior_AllowRSBug}}}: Result = "ReSpawn: $0bfAllow RS Bug$z";
+            case {{{Constants::C_RespawnBehavior_Normal}}}: Result = "Respawn: NORMAL";
+            case {{{Constants::C_RespawnBehavior_FullRestart}}}: Result = "Respawn: $f00RESTART$z";
+            case {{{Constants::C_RespawnBehavior_FullLocked}}}: Result = "Respawn: $f00CANNOT RESTART$z";
+            case {{{Constants::C_RespawnBehavior_AllowRSBug}}}: Result = "Respawn: $0bfAllow RS Bug$z";
             default: {}
         }
         return Result;
@@ -97,6 +100,7 @@ Text GetLayer() {
     }
 
     main() {
+        {{{CustomUI::InjectMLInit()}}}
         wait(InputPlayer != Null && Page != Null);
         
         declare Label_RespawnBehavior <=> (Page.GetFirstChild("Label_RespawnBehavior") as CMlLabel);
@@ -170,6 +174,7 @@ Text GetLayer() {
                 Label_RespawnBehavior.Value = GetRespawnText(Net_RespawnBehavior);
                 LastRespawnBehavior = Net_RespawnBehavior;
             }
+            {{{CustomUI::InjectMLLoop()}}}
         }
      }
     

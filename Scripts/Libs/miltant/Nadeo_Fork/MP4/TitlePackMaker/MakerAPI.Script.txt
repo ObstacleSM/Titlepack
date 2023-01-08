@@ -4,6 +4,7 @@
 #Include "Libs/miltant/Nadeo_Fork/MP4/TitlePackMaker/Components/Component_Campaign/CampaignAPI.Script.txt"	as CampaignAPI
 #Include "Libs/miltant/Nadeo_Fork/MP4/TitlePackMaker/XMLController.Script.txt"								as XMLController
 #Include "Libs/miltant/Nadeo_Fork/MP4/Common/Components/TrackBrowser/TrackBrowserAPI.Script.txt"				as TrackBrowserAPI
+#Include "TextLib"				as TL
 
 #Const C_CampaignMaps	"Campaigns\\"
 #Const C_MovedMaps		"CampaignBin\\"
@@ -289,25 +290,31 @@ Void GeneratePack(CPackCreator _PackCreator,
 		_PackCreator.Build_AddFolder(PackIdent, "Materials/", False, True, False, False);
 		_PackCreator.Build_AddFolder(PackIdent, "Media/", False, True, False, False);
 		_PackCreator.Build_AddFolder(PackIdent, "Modules/", False, True, False, False);
+		_PackCreator.Build_AddFolder(PackIdent, "Openplanet/", True, False, False, False);
 		_PackCreator.Build_AddFolder(PackIdent, "Replays/", False, True, False, False);
 		_PackCreator.Build_AddFolder(PackIdent, "Scripts/", False, True, False, False);
 		_PackCreator.Build_AddFolder(PackIdent, "Skins/", False, True, False, False);
 	} else {
-		// log("add specific ResourcesFolders :");
+		log("add specific ResourcesFolders :");
+		declare AddedOpenplanet = False;
+
 		foreach(FolderName in ResourcesFolders) {
 			declare Boolean FolderIsPublic = XMLController::FolderIsPublic(FolderName);
 			declare Boolean FolderIsInternal = XMLController::FolderIsInternal(FolderName);
-			// log("     "^FolderName^FolderIsPublic^FolderIsInternal);
-			_PackCreator.Build_AddFolder(PackIdent, FolderName, FolderIsPublic, FolderIsInternal, False, False);
-		}
-	}
-	
-	// TODO : nettoyer ça dans le cas du maker SMStorm.
 
-	_PackCreator.Build_AddFile(PackIdent, "Scripts/MapTypes/TrackMania/Race.Script.txt", False, True, False); // TODO : Comprendre comment on peut se débarasser de cette ligne
-	_PackCreator.Build_AddFile(PackIdent, "Scripts/Modes/TrackMania/HotSeat.Script.txt", False, True, False); // TODO : Comprendre comment on peut se débarasser de cette ligne
-	_PackCreator.Build_AddFile(PackIdent, "Scripts/Modes/TrackMania/SingleMap.Script.txt", False, True, False); // TODO : Comprendre comment on peut se débarasser de cette ligne
-	_PackCreator.Build_AddFile(PackIdent, "Scripts/Modes/TrackMania/VersusReplay.Script.txt", False, True, False); // TODO : Comprendre comment on peut se débarasser de cette ligne
+			_PackCreator.Build_AddFolder(PackIdent, FolderName, FolderIsPublic, FolderIsInternal, False, False);
+			if (FolderName == "Openplanet")
+				AddedOpenplanet  = True;
+		}
+		if (!AddedOpenplanet)
+			_PackCreator.Build_AddFolder(PackIdent, "Openplanet/", True, False, False, False);
+	}
+
+	// _PackCreator.Build_AddFile(PackIdent, "Openplanet/JoinbugWorkaround.as.Script.txt", False, True, False);
+	// _PackCreator.Build_AddFile(PackIdent, "Openplanet/JoinbugWorkaround.as", False, True, False);
+	// _PackCreator.Build_AddFile(PackIdent, "Openplanet/JoinbugWorkaround.as.sig", False, True, False);
+
+
 	_PackCreator.Build_Generate(PackIdent, False);
 	wait(_PackCreator.Build_IsGenerated(PackIdent));
 

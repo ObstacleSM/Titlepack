@@ -1,6 +1,8 @@
 Blocks/
 Items/
 Materials/
+Skins/
+.vscode/
 Media/Manialinks/Keyboard
 *.Map.Gbx
 __pycache__
@@ -10,3 +12,4 @@ MEDIABROWSER_HiddenResources
 Station
 Font
 Apps
+Maps/

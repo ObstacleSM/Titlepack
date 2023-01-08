@@ -1,10 +1,12 @@
 <folders>
+	<folder name="Actions" public="false" internal="true"/>
 	<folder name="Blocks" public="false" internal="true"/>
 	<folder name="Items" public="false" internal="true"/>
 	<folder name="Maps" public="false" internal="true"/>
 	<folder name="Materials" public="false" internal="true"/>
 	<folder name="Media" public="false" internal="false"/>
 	<folder name="Modules" public="false" internal="true"/>
+	<folder name="Openplanet" public="false" internal="false"/>
 	<folder name="Scripts" public="false" internal="true"/>
-	<folder name="Skins" public="false" internal="false"/>
+	<folder name="Skins" public="true" internal="true"/>
 </folders>

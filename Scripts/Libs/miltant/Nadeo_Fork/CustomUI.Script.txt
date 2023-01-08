@@ -93,11 +93,6 @@ Text Private_GetMLCustomUI() {
 			<quad sizen="15 15" halign="center" valign="center" bgcolor="5009" hidden="1" id="Quad_NotVisible" />
 			<label posn="0 0 2" halign="center" valign="center2" textsize="1" textcolor="ddd" textemboss="1" text="Crosshair" />
 		</frame>
-		<frame posn="0 -90" hidden="1" class="BasicHelper" id="Gauges">
-			<quad sizen="150 23" halign="center" valign="bottom" bgcolor="0509" id="Quad_Visible" />
-			<quad sizen="150 23" halign="center" valign="bottom" bgcolor="5009" hidden="1" id="Quad_NotVisible" />
-			<label posn="0 0 2" halign="center" valign="bottom" textsize="1" textcolor="ddd" textemboss="1" text="Gauges" />
-		</frame>
 	</frame>
 	<frame posn="-160 85 9" id="Frame_Buttons">
 		<quad posn="0 0" sizen="8 8" style="Icons128x32_1" substyle="Settings" scriptevents="1" id="Button_Menu" />
@@ -106,14 +101,13 @@ Text Private_GetMLCustomUI() {
 		<quad posn="1 -24" sizen="6 7" style="Icons128x32_1" substyle="Close" scriptevents="1" id="Button_Close" />
 	</frame>
 	<frame posn="-154 86 10" hidden="1" id="Frame_Menu">
-		<quad sizen="56 38" style="Bgs1InRace" substyle="BgTitle2" scriptevents="1" />
+		<quad sizen="56 32" style="Bgs1InRace" substyle="BgTitle2" scriptevents="1" />
 		<quad posn="53 0" sizen="8 8" style="Icons64x64_1" substyle="Close" scriptevents="1" id="Button_CloseMenu"/>
 		<frame posn="4 -4 1" id="Frame_BasicButtons">
 			<label posn="0 0" style="CardButtonSmallL" scriptevents="1" class="BasicButton" id="Notices" />
 			<label posn="0 -6" style="CardButtonSmallL" scriptevents="1" class="BasicButton" id="MapInfo" />
 			<label posn="0 -12" style="CardButtonSmallL" scriptevents="1" class="BasicButton" id="Chat" />
 			<label posn="0 -18" style="CardButtonSmallL" scriptevents="1" class="BasicButton" id="Crosshair" />
-			<label posn="0 -24" style="CardButtonSmallL" scriptevents="1" class="BasicButton" id="Gauges" />
 		</frame>
 	</frame>
 	<frame posn="-154 78 10" hidden="1" id="Frame_Reset">		

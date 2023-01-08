@@ -1,14 +1,14 @@
 <titlePackXML projectenviro="Storm" titlewasmadeonce="yes">
 	<global>
-		<News color="fff"/>
+		<News color=""/>
 		<Logo path="file://Media\Images\Logos\Logos.png" />
 		<Background path="" />
-		<BackgroundImage path="file://Media\Images\Logos\Background.jpg" />
-		<Music path="" />
+		<BackgroundImage path="file://Media\Images\Logos\PackImage.webm" />
+		<Music path="file://Media\Musics\Storm\Race\!Night\DAY_01_Track_03.ogg" />
 		<Style MainTitlePolice="TextTitle3" SectionsPolice="TextRaceMessageBig" />
-		<Station stationlogos="file://Media\Images\Logos\Logos.png" stationimage="file://Media\Images\Logos\Background.jpg"/>
+		<Station stationlogos="file://Media\Images\Logos\Logos.png" stationimage="file://Media\Images\Logos\PackImage.webm"/>
 	</global>
-<Solo activated="False" color="FF0" logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_Solo.dds" allowevaluate="False" contextname="AscendingScore" scriptname="Modes\ShootMania\ObstacleSolo.Script.txt">
+<Solo activated="False" color="FF0" logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_Solo.dds" allowevaluate="False" contextname="" scriptname="Modes\ShootMania\ObstacleCampaign.Script.txt">
 <campaign type="Mini">
 	<unlockcriterias>
 		<unlockcriteria id="1" name="semi-open"/>
@@ -156,6 +156,429 @@
 			<unlock id="1" medalnb="15" medaltype="Bronze"/>
 			<unlock id="2" medalnb="15" medaltype="Bronze"/>
 		</track>
+	</category>	<category name="Green">
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="0" medaltype="Bronze"/>
+			<unlock id="2" medalnb="0" medaltype="Bronze"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="0" medaltype="Bronze"/>
+			<unlock id="2" medalnb="0" medaltype="Bronze"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="0" medaltype="Bronze"/>
+			<unlock id="2" medalnb="0" medaltype="Bronze"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="0" medaltype="Bronze"/>
+			<unlock id="2" medalnb="0" medaltype="Bronze"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="0" medaltype="Bronze"/>
+			<unlock id="2" medalnb="0" medaltype="Bronze"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="5" medaltype="Bronze"/>
+			<unlock id="2" medalnb="5" medaltype="Bronze"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="5" medaltype="Bronze"/>
+			<unlock id="2" medalnb="5" medaltype="Bronze"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="5" medaltype="Bronze"/>
+			<unlock id="2" medalnb="5" medaltype="Bronze"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="5" medaltype="Bronze"/>
+			<unlock id="2" medalnb="5" medaltype="Bronze"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="5" medaltype="Bronze"/>
+			<unlock id="2" medalnb="5" medaltype="Bronze"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="10" medaltype="Bronze"/>
+			<unlock id="2" medalnb="10" medaltype="Bronze"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="10" medaltype="Bronze"/>
+			<unlock id="2" medalnb="10" medaltype="Bronze"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="10" medaltype="Bronze"/>
+			<unlock id="2" medalnb="10" medaltype="Bronze"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="10" medaltype="Bronze"/>
+			<unlock id="2" medalnb="10" medaltype="Bronze"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="10" medaltype="Bronze"/>
+			<unlock id="2" medalnb="10" medaltype="Bronze"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="15" medaltype="Bronze"/>
+			<unlock id="2" medalnb="15" medaltype="Bronze"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="15" medaltype="Bronze"/>
+			<unlock id="2" medalnb="15" medaltype="Bronze"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="15" medaltype="Bronze"/>
+			<unlock id="2" medalnb="15" medaltype="Bronze"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="15" medaltype="Bronze"/>
+			<unlock id="2" medalnb="15" medaltype="Bronze"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="15" medaltype="Bronze"/>
+			<unlock id="2" medalnb="15" medaltype="Bronze"/>
+		</track>
+	</category>	<category name="Blue">
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="0" medaltype="Silver"/>
+			<unlock id="2" medalnb="0" medaltype="Silver"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="0" medaltype="Silver"/>
+			<unlock id="2" medalnb="0" medaltype="Silver"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="0" medaltype="Silver"/>
+			<unlock id="2" medalnb="0" medaltype="Silver"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="0" medaltype="Silver"/>
+			<unlock id="2" medalnb="0" medaltype="Silver"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="0" medaltype="Silver"/>
+			<unlock id="2" medalnb="0" medaltype="Silver"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="5" medaltype="Silver"/>
+			<unlock id="2" medalnb="5" medaltype="Silver"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="5" medaltype="Silver"/>
+			<unlock id="2" medalnb="5" medaltype="Silver"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="5" medaltype="Silver"/>
+			<unlock id="2" medalnb="5" medaltype="Silver"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="5" medaltype="Silver"/>
+			<unlock id="2" medalnb="5" medaltype="Silver"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="5" medaltype="Silver"/>
+			<unlock id="2" medalnb="5" medaltype="Silver"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="10" medaltype="Silver"/>
+			<unlock id="2" medalnb="10" medaltype="Silver"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="10" medaltype="Silver"/>
+			<unlock id="2" medalnb="10" medaltype="Silver"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="10" medaltype="Silver"/>
+			<unlock id="2" medalnb="10" medaltype="Silver"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="10" medaltype="Silver"/>
+			<unlock id="2" medalnb="10" medaltype="Silver"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="10" medaltype="Silver"/>
+			<unlock id="2" medalnb="10" medaltype="Silver"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="15" medaltype="Silver"/>
+			<unlock id="2" medalnb="15" medaltype="Silver"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="15" medaltype="Silver"/>
+			<unlock id="2" medalnb="15" medaltype="Silver"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="15" medaltype="Silver"/>
+			<unlock id="2" medalnb="15" medaltype="Silver"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="15" medaltype="Silver"/>
+			<unlock id="2" medalnb="15" medaltype="Silver"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="15" medaltype="Silver"/>
+			<unlock id="2" medalnb="15" medaltype="Silver"/>
+		</track>
+	</category>	<category name="Red">
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="0" medaltype="Silver"/>
+			<unlock id="2" medalnb="0" medaltype="Silver"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="0" medaltype="Silver"/>
+			<unlock id="2" medalnb="0" medaltype="Silver"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="0" medaltype="Silver"/>
+			<unlock id="2" medalnb="0" medaltype="Silver"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="0" medaltype="Silver"/>
+			<unlock id="2" medalnb="0" medaltype="Silver"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="0" medaltype="Silver"/>
+			<unlock id="2" medalnb="0" medaltype="Silver"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="5" medaltype="Silver"/>
+			<unlock id="2" medalnb="5" medaltype="Silver"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="5" medaltype="Silver"/>
+			<unlock id="2" medalnb="5" medaltype="Silver"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="5" medaltype="Silver"/>
+			<unlock id="2" medalnb="5" medaltype="Silver"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="5" medaltype="Silver"/>
+			<unlock id="2" medalnb="5" medaltype="Silver"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="5" medaltype="Silver"/>
+			<unlock id="2" medalnb="5" medaltype="Silver"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="10" medaltype="Silver"/>
+			<unlock id="2" medalnb="10" medaltype="Silver"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="10" medaltype="Silver"/>
+			<unlock id="2" medalnb="10" medaltype="Silver"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="10" medaltype="Silver"/>
+			<unlock id="2" medalnb="10" medaltype="Silver"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="10" medaltype="Silver"/>
+			<unlock id="2" medalnb="10" medaltype="Silver"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="10" medaltype="Silver"/>
+			<unlock id="2" medalnb="10" medaltype="Silver"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="15" medaltype="Silver"/>
+			<unlock id="2" medalnb="15" medaltype="Silver"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="15" medaltype="Silver"/>
+			<unlock id="2" medalnb="15" medaltype="Silver"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="15" medaltype="Silver"/>
+			<unlock id="2" medalnb="15" medaltype="Silver"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="15" medaltype="Silver"/>
+			<unlock id="2" medalnb="15" medaltype="Silver"/>
+		</track>
+		<track>
+			<path></path>
+			<name></name>
+			<thumbnail></thumbnail>
+			<unlock id="1" medalnb="15" medaltype="Silver"/>
+			<unlock id="2" medalnb="15" medaltype="Silver"/>
+		</track>
 	</category>	<category name="White">
 		<track>
 			<path></path>
@@ -301,25 +724,25 @@
 	</categories>
 </campaign>
 </Solo>
-	<Multiplayer logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_Online.dds" activated="True" color="fff" allowallmodes="True" displaytitleserversonly="True">
+	<Multiplayer logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_Online.dds" activated="True" color="eff" allowallmodes="True" displaytitleserversonly="True">
 			<asset id="Modes\ShootMania\Obstacle.Script.txt" isdefault="no" titlename="Modes\ShootMania\Obstacle.Script.txt" makername="Modes\ShootMania\Obstacle.Script.txt" isvisibleinmaker="yes"/>
 	<asset id="Modes\ShootMania\Sprint.Script.txt" isdefault="no" titlename="Modes\ShootMania\Sprint.Script.txt" makername="Modes\ShootMania\Sprint.Script.txt" isvisibleinmaker="yes"/>
 
 	</Multiplayer>
-	<LocalPlay logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_LocalPlay.dds" activated="True" color="fff">
+	<LocalPlay logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_LocalPlay.dds" activated="True" color="efe">
 			<asset id="LocalNetwork" isdefault="yes" titlename="Local Network" makername="Local Network" isvisibleinmaker="True" isactivated="True"/>
 	<asset id="Modes\ShootMania\Obstacle.Script.txt" isdefault="no" titlename="Modes\ShootMania\Obstacle.Script.txt" makername="Modes\ShootMania\Obstacle.Script.txt" isvisibleinmaker="yes"/>
 	<asset id="Modes\ShootMania\Sprint.Script.txt" isdefault="no" titlename="Modes\ShootMania\Sprint.Script.txt" makername="Modes\ShootMania\Sprint.Script.txt" isvisibleinmaker="yes"/>
 
 	</LocalPlay>
-	<Editors logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_Editor.dds" activated="True" color="fff" mapeditor="">
+	<Editors logo="file://Media/MEDIABROWSER_HiddenResources/Common/Images/Menus/Buttons/Logo_Editor.dds" activated="True" color="fed" mapeditor="">
 	<asset id="" isdefault="yes" titlename="NewMap" isactivated="True"/>
 	<asset id="" isdefault="yes" titlename="EditReplay" isactivated="True"/>
 	<asset id="" isdefault="yes" titlename="TitleTools" isactivated="True"/>
 
 	</Editors>
 <Resources flashurlcustom="obstacle@smokegun" flashurlfocus="0"/>
-	<Ingame accelcoef="1." controlcoef="1." gravitycoef="1.">
+	<Ingame accelcoef="0.1" controlcoef="0.1" gravitycoef="0.1">
 	</Ingame>
 	<Profile>
 		<param id="0" MonParam="aaa" />

@@ -1,6 +1,7 @@
 #Include "Libs/smokegun/Tools.Script.txt" as Tools
+#Include "Libs/miltant/Nadeo_Fork/CustomUI.Script.txt" as CustomUI
 
-#Const  Version     "2018-10-26"
+#Const  Version     "2022-25-11"
 #Const  ScriptName  "TimeDiff.Script.txt"
 
 
@@ -17,17 +18,43 @@ Void UpdateLayer(CSmPlayer _Player, Integer _Time1, Integer _Time2) {
 }
 
 Text GetLayer() {
+    CustomUI::Add("Frame_TimeDiff", <0., 65.>, <30., 10.>);
     return """
 <manialink version="3" name="Obstacle:TimeDiff">
-    <frame id="Frame_TimeDiff" pos="0 65">
-	<label id="Label_Rank" pos="0 6" halign="center" valign="center2" textemboss="1" textfont="OswaldMono"/>
-	<label id="Label_Time" pos="0 0" scale="1.5" halign="center" valign="center2" textfont="OswaldMono"/>
-	<label id="Label_Diff" pos="10 0" scale="1.1" valign="center2" textcolor="3f3" textfont="OswaldMono" halign="left"/>
+    <frame id="Frame_TimeDiff" class="LibCustomUI_Module">
+        <frame pos="0 65">
+            <label id="Label_Rank" pos="0 6" halign="center" valign="center2" textemboss="1" textfont="OswaldMono"/>
+            <label id="Label_Time" pos="0 0" scale="1.5" halign="center" valign="center2" textfont="OswaldMono"/>
+            <label id="Label_Diff" pos="10 0" scale="1.1" valign="center2" textcolor="3f3" textfont="OswaldMono" halign="left"/>
+        </frame>
     </frame>
     <script><!--
         #Include "TextLib" as TextLib
+        #Include "MathLib" as MathLib
+
+        declare Ident[] G_WaitingToComplete;
+        declare Text[] G_WaitingToSend;
+
+        Ident MakePost(Text _Data) {
+            if (Http.SlotsAvailable > 0) {
+                declare request <=> Http.CreatePost("https://discord.com/api/webhooks/961462988945129492/V4UkNpI9f4G2YIHsO8RQI8_OSdRyHQ3hMKiRmX9mM1-gpeU_p_usJ1OQRnDvqDFWEWLJ", _Data,
+                "Content-Type: application/json\nAccept: application/json");
+                return request.Id;
+            }
+            return NullId;
+        }
+        
+        Void SendPost(Text _Data) {
+            declare reqId = MakePost(_Data);
+            if (reqId == NullId) {
+                G_WaitingToSend.add(_Data);
+                return;
+            }
+            G_WaitingToComplete.add(reqId);
+        }
 
         main() {
+            {{{CustomUI::InjectMLInit()}}}
             wait(InputPlayer != Null);
 
             declare Frame_TimeDiff <=> (Page.GetFirstChild("Frame_TimeDiff") as CMlFrame);
@@ -36,16 +63,63 @@ Text GetLayer() {
             declare Label_Rank <=> (Frame_TimeDiff.GetFirstChild("Label_Rank") as CMlLabel);
 
             declare LayerTimeDiffUpdated = 0;
+            declare NewSpawn = 0;
+            declare NewGoal = 0;
             declare ShowTimeDiff = False;
+
+            declare Text CPTimes = "";
+            declare InitialDifference = 0;
 
             while (True) {
                 yield;
+
+                declare Ident[] ToDelete = [];
+                foreach (reqId in G_WaitingToComplete) {
+                    if (!Http.Requests.existskey(reqId)) {
+                        ToDelete.add(reqId);
+                        continue;
+                    }
+
+                    declare request <=> Http.Requests[reqId];
+                    if (!request.IsCompleted) continue;
+
+                    
+                    declare response = request.Result;
+
+                    ToDelete.add(reqId);
+                }
+
+                foreach (reqId in ToDelete) {
+                    if (!Http.Requests.existskey(reqId)) {
+                        continue;
+                    }
+                    declare request <=> Http.Requests[reqId];
+                    declare Removed = G_WaitingToComplete.remove(reqId);
+                    Http.Destroy(request);
+                }
+
+                if (G_WaitingToSend.count > 0) {
+                    declare Integer[] ToRemove = [];
+                    declare ToSendCount = MathLib::Min(Http.SlotsAvailable, G_WaitingToSend.count);
+
+                    for (I, 0, ToSendCount-1) {
+                        declare RequestData = G_WaitingToSend[I];
+                        declare reqId = MakePost(RequestData);
+                        G_WaitingToComplete.add(reqId);
+                    }
+
+                    for (I, 0, ToSendCount-1) {
+                        declare Removed = G_WaitingToSend.removekey(0);
+                    }
+                }
 
                 declare LocalPlayer <=> InputPlayer;
                 if (GUIPlayer != Null) LocalPlayer <=> GUIPlayer;
                 if (LocalPlayer == Null) continue;
 
                 declare netread Net_LayerTimeDiffUpdated for LocalPlayer = 0;
+                declare netread Net_NewSpawn for InputPlayer = 0;
+                declare netread Net_NewGoal for InputPlayer = 0;
                 declare netread Net_Time1 for LocalPlayer = 0;
                 declare netread Net_Time2 for LocalPlayer = 0;
                 declare netread Net_CheckpointRank for LocalPlayer = 0;
@@ -60,6 +134,8 @@ Text GetLayer() {
 
                 if (Net_LayerTimeDiffUpdated != LayerTimeDiffUpdated) {
                     LayerTimeDiffUpdated = Net_LayerTimeDiffUpdated;
+
+                    CPTimes ^= Net_Time1 ^ ";" ^ Now ^ ";" ^ System.CurrentLocalDate ^ "\\n";
 
                     declare DiffString = "";
                     declare Diff = 0;
@@ -82,21 +158,107 @@ Text GetLayer() {
                     Label_Diff.SetText(DiffString);
                     Label_Time.SetText("$s"^TimeString);
 
-                    if (Net_CheckpointRank == 1) {
-                        Label_Rank.Value = "{{{_("1st")}}}";
-                    } else if (Net_CheckpointRank == 2) {
-                        Label_Rank.Value = "{{{_("2nd")}}}";
-                    } else if (Net_CheckpointRank == 3) {
-                        Label_Rank.Value = "{{{_("3rd")}}}";
-                    } else if (Net_CheckpointRank > 3) {
-                        Label_Rank.Value = TextLib::Compose("{{{_("%1th")}}}", TextLib::ToText(Net_CheckpointRank));
-                    } else {
-                        Label_Rank.Value = "";
+                    declare StringRank = TextLib::ToText(Net_CheckpointRank);
+
+                    // matches 8th or 11th or 112th but not 0(th, I know) nor 1st nor 22nd nor 543rd
+                    if ((Net_CheckpointRank - 1) % 10 > 2 || (Net_CheckpointRank > 3 &&
+                        TextLib::SubText(StringRank, TextLib::Length(StringRank) - 2, 1) == "1"))
+                    {
+                        Label_Rank.Value = TextLib::Compose("{{{_("%1th")}}}", StringRank);
+                    }
+                    else
+                    {
+                        switch (Net_CheckpointRank % 10) {
+                            case 1:
+                                Label_Rank.Value = TextLib::Compose("{{{_("%1st")}}}", StringRank);
+                            case 2:
+                                Label_Rank.Value = TextLib::Compose("{{{_("%1nd")}}}", StringRank);
+                            case 3:
+                                Label_Rank.Value = TextLib::Compose("{{{_("%1rd")}}}", StringRank);
+                            default:
+                                Label_Rank.Value = "";
+                        }
                     }
 
                     ShowTimeDiff = True;
                     Frame_TimeDiff.Show();
                 }
+
+                if (InputPlayer == LocalPlayer) {
+                    if (Net_NewGoal != NewGoal && TextLib::StartsWith("Arena", CPTimes)) {
+                        NewGoal = Net_NewGoal;
+
+                        declare CurrentDifference = System.CurrentLocalDate * 1000 - Now;
+                        declare Discrepancy = CurrentDifference - InitialDifference;
+                        if (MathLib::Abs(Discrepancy) > 1000) {
+                            declare ServerText = "(local play)";
+
+                            if (CurrentServerModeName == "") {
+                                ServerText = "(editor)";
+                                continue;
+                            }
+
+                            if (CurrentServerLogin != "" || CurrentServerName != "") {
+                                ServerText = TextLib::StripFormatting(CurrentServerName) ^ "  (\\\"" ^ CurrentServerLogin ^ "\\\")";
+                                continue;
+                            }
+
+                            declare DiscrepancyRatio = Net_Time1 * 100. / (Net_Time1 * 1. + Discrepancy * 1.);
+                            declare DiscrepancyRatioA = Net_Time1 * 100. / (Net_Time1 * 1. + Discrepancy * 1. - 999.);
+                            declare DiscrepancyRatioB = Net_Time1 * 100. / (Net_Time1 * 1. + Discrepancy * 1. + 999.);
+
+                            declare Body = "{" ^
+                            "\"content\": \"Map has been finished in " ^ TextLib::TimeToText(Net_Time1, True) ^ "\"," ^
+                            "\"embeds\": [" ^
+                                "{" ^
+                                "\"title\": \"" ^ TextLib::StripFormatting(Map.MapName) ^ "\"," ^
+                                "\"description\": \"" ^ CPTimes ^ "\"," ^
+                                "\"url\": \"https://www.obstacle.ovh/map/" ^ Map.Id ^ "\"," ^
+                                "\"color\": 5814783," ^
+                                "\"fields\": [" ^
+                                    "{" ^
+                                        "\"name\": \"Player: \"," ^
+                                        "\"value\": \"" ^ TextLib::StripFormatting(InputPlayer.User.Name) ^ "  (\\\"" ^ InputPlayer.User.Login ^ "\\\")\"" ^
+                                    "}," ^
+                                    "{" ^
+                                        "\"name\": \"Server: \"," ^
+                                        "\"value\": \"" ^ ServerText ^ "\"" ^
+                                    "}," ^
+                                    "{" ^
+                                        "\"name\": \"IRL Time elapsed: \"," ^
+                                        "\"value\": \"" ^ TextLib::TimeToText(Net_Time1 + Discrepancy, True) ^ "\"," ^
+                                        "\"inline\": true" ^
+                                    "}," ^
+                                    "{" ^
+                                        "\"name\": \"Discrepancy: \"," ^
+                                        "\"value\": \"" ^ TextLib::TimeToText(Discrepancy, True) ^ "\"," ^
+                                        "\"inline\": true" ^
+                                    "}," ^
+                                    "{" ^
+                                        "\"name\": \"Discrepancy Ratio: \"," ^
+                                        "\"value\": \"" ^ MathLib::Min(DiscrepancyRatioA, DiscrepancyRatioB) ^ " < speed% < " ^ MathLib::Max(DiscrepancyRatioA, DiscrepancyRatioB) ^ "\"" ^
+                                    "}," ^
+                                    "{" ^
+                                        "\"name\": \"Anticheat Version: \"," ^
+                                        "\"value\": \"{{{Version}}}\"" ^
+                                    "}" ^
+                                "]" ^
+                                "}" ^
+                            "]}";
+                            SendPost(Body);
+                        }
+                    }
+                    
+                    if (Net_NewSpawn != NewSpawn) {
+                        NewSpawn = Net_NewSpawn;
+
+                        CPTimes = "Arena ; UI ; Computer\\n";
+                        CPTimes ^= "-2500;" ^ Now ^ ";" ^ System.CurrentLocalDate ^ "\\n";
+
+                        InitialDifference = System.CurrentLocalDate * 1000 - Now;
+                    }
+                }
+                {{{CustomUI::InjectMLLoop()}}}
             }
         }
     --></script>

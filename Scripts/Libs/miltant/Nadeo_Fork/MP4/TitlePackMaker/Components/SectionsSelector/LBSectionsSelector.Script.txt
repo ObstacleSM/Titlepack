@@ -152,7 +152,7 @@ Text Build() {
 					case "Campaign" : {
 						LabelText = "{{{
 							//L16N Name for the main menu button, designates the one-player campaign
-							_("Solo")}}}";
+							_("Campaign")}}}";
 						LogoUrl = "{{{GameLogoSolo}}}";
 					}
 					case "Online" : {

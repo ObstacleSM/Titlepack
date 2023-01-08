@@ -61,7 +61,7 @@
 #Const C_NotFixedLogoSections	["Solo", "Multiplayer"]
 #Const C_SectionLocalizedNames	["Solo" =>
 							//L16N Name for the main menu button, designates the one-player campaign
-							_("Solo"),
+							_("Campaign"),
 							"Multiplayer" =>
 							//L16N Name for the main menu button, is related to the multiplayer servers online
 							_("Online play"),

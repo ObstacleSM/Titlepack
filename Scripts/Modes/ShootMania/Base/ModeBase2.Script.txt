@@ -5,21 +5,21 @@
 
 #RequireContext CSmMode
 
-#Const MB_SM_Version			"2017-06-05"
+#Const MB_SM_Version			"2021-07-11"
 #Const MB_SM_ScriptName	"Modes/ShootMania/ModeBase2.Script.txt"
 
 // ---------------------------------- //
 // Libraries
 // ---------------------------------- //
-#Include "Libs/Nadeo/ShootMania/UI2.Script.txt" as UI
-#Include "Libs/Nadeo/ShootMania/SM3.Script.txt" as SM
-#Include "Libs/Nadeo/ShootMania/Objects.Script.txt" as Objects
-#Include "Libs/Nadeo/ShootMania/Dispenser.Script.txt" as Dispenser
-#Include "Libs/Nadeo/ShootMania/Events.Script.txt" as Events
-#Include "Libs/Nadeo/ShootMania/Scores.Script.txt" as Scores
-#Include "Libs/Nadeo/ShootMania/SpawnScreen.Script.txt" as SpawnScreen
-#Include "Libs/Nadeo/ShootMania/Attributes.Script.txt" as Attributes
-#Include "Libs/Nadeo/ShootMania/AFK2.Script.txt" as AFK
+#Include "Libs/miltant/Nadeo_Fork/ShootMania/UI2.Script.txt" as UI
+#Include "Libs/miltant/Nadeo_Fork/ShootMania/SM3.Script.txt" as SM
+#Include "Libs/miltant/Nadeo_Fork/ShootMania/Objects.Script.txt" as Objects
+#Include "Libs/miltant/Nadeo_Fork/ShootMania/Dispenser.Script.txt" as Dispenser
+#Include "Libs/miltant/Nadeo_Fork/ShootMania/Events.Script.txt" as Events
+#Include "Libs/miltant/Nadeo_Fork/ShootMania/Scores.Script.txt" as Scores
+#Include "Libs/miltant/Nadeo_Fork/ShootMania/SpawnScreen.Script.txt" as SpawnScreen
+#Include "Libs/miltant/Nadeo_Fork/ShootMania/Attributes.Script.txt" as Attributes
+#Include "Libs/miltant/Nadeo_Fork/ShootMania/AFK2.Script.txt" as AFK
 
 // ---------------------------------- //
 // Settings

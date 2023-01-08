@@ -1,4 +1,6 @@
-#Const  Version     "2019-01-08"
+#Include "Libs/miltant/Nadeo_Fork/CustomUI.Script.txt" as CustomUI
+
+#Const  Version     "2022-25-11"
 #Const  ScriptName  "SpectatorCount.Script.txt"
 
 
@@ -33,16 +35,20 @@ Void Yield() {
 }
 
 Text GetLayer() {
+    CustomUI::Add("Frame_SpectateCount", <150., -63.>, <17., 8.>);
     return """
 <manialink version="3" name="Obstacle:SpectatorCount">
-    <frame id="Frame_SpectateCount" pos="159 -63">
-        <quad size="8 8" style="BgRaceScore2" substyle="Tv" halign="right" valign="center2"/>
-        <label id="Label_SpectateCount" pos="-9 0" size="15 8" style="TextTitle1" textsize="3" text="0" halign="right" valign="center2" textfont="OswaldMono"/>
+    <frame id="Frame_SpectateCount" pos="" class="LibCustomUI_Module">
+        <frame pos="159 -63">
+            <quad size="8 8" style="BgRaceScore2" substyle="Tv" halign="right" valign="center2"/>
+            <label id="Label_SpectateCount" pos="-9 0" size="15 8" style="TextTitle1" textsize="3" text="0" halign="right" valign="center2" textfont="OswaldMono"/>
+        </frame>
     </frame>
 <script><!--
     #Include "TextLib" as TL
 
     main() {
+        {{{CustomUI::InjectMLInit()}}}
         wait(InputPlayer != Null && Page != Null);
 
         declare Frame_SpectateCount <=> (Page.GetFirstChild("Frame_SpectateCount") as CMlFrame);
@@ -75,6 +81,8 @@ Text GetLayer() {
 
             if (Frame_SpectateCount.Visible != (LastNbSpectating != 0))
                 Frame_SpectateCount.Visible = (LastNbSpectating != 0);
+
+            {{{CustomUI::InjectMLLoop()}}}
         }
 
     }

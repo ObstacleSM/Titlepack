@@ -1,14 +1,10 @@
 #RequireContext CSmMapType
 
 #Include "MathLib" as ML
-#Include "TextLib" as TL
-#Include "Libs/Nadeo/Anchor.Script.txt" as Anchor
 #Include "Libs/Nadeo/MapType.Script.txt" as MapType
 
 declare Ident G_LastAnchorId;
 declare Ident[] G_AnchorCache;
-declare Ident G_TestSpawnAnchorId;
-declare Boolean G_ComesFromPlaceMode_Test;
 
 declare Text G_CurrentWindow;
 
@@ -124,6 +120,23 @@ Text Select4(Text _Position, Text _Option1, Text _Option2, Text _Option3, Text _
     """;
 }
 
+Text Select5(Text _Position, Text _Option1, Text _Option2, Text _Option3, Text _Option4, Text _Option5, Text _Selector)
+{
+    return """
+        <frame pos="{{{_Position}}}}">
+            <frame clip="True" clipposn="0 -2.5" clipsizen="80 5" halign="center">
+                <label id="{{{_Option1}}}"  pos="-32 -2"  size="16 6" text="{{{_Option1}}}" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
+                <label id="{{{_Option2}}}"  pos="-16 -2"  size="16 6" text="{{{_Option2}}}" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
+                <label id="{{{_Option3}}}"  pos="0 -2"   size="16 6" text="{{{_Option3}}}" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
+                <label id="{{{_Option4}}}"  pos="16 -2" size="16 6" text="{{{_Option4}}}" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
+                <label id="{{{_Option5}}}"  pos="32 -2" size="16 6" text="{{{_Option5}}}" halign="center" valign="center" textsize="2" class="text" scriptevents="1"/>
+                <quad  id="{{{_Selector}}}" pos="-40 1"   size="16 7" bgcolor="4777C1FF"/>
+            </frame>
+            <quad pos="0 0.5" size="81 6.1" bgcolor="797979AA" halign="center"/>
+        </frame>
+    """;
+}
+
 Text Entry(Text _Position, Text _Entry)
 {
     return """
@@ -186,8 +199,29 @@ Text MakeWindow(Text _Title, Text _Content)
         <label pos="41.5 41.5" size="7 7" valign="center" halign="center" scriptevents="1" scriptaction="Close"
                    text="❌" focusareacolor2="FF0000FF" textsize="2" focusareacolor1="0000" />
         {{{Select2("0 32.6", "Enable", "Disable", "Enabled_Selector")}}}
-        {{{LittleButton("-40 40.2", "", "Label_Paste")}}}
-        {{{LittleButton("-40 32.6", "", "Label_Copy")}}}
+        {{{LittleButton("-40 40.2", "", "Label_Copy")}}}
+        {{{LittleButton("-40 32.6", "", "Label_Paste")}}}
+        {{{LittleButton("-40 25", "", "Label_Test")}}}
+    </frame>
+    <frame id="properties" pos="0 10">
+        {{{_Content}}}
+    </frame>
+    <quad pos="-45 45" size="90 115" bgcolor="000000AA" scriptevents="1" id="Window_Background"/>
+</frame>
+    """;
+}
+
+Text MakeWindowNoTest(Text _Title, Text _Content)
+{
+    return """
+<frame pos="125 20" scale="0.75" z-index="-1">
+    <frame>
+        <label pos="0 40" size="75 10" class="text" text="{{{_Title}}}" textsize="5" halign="center" valign="center2"/>
+        <label pos="41.5 41.5" size="7 7" valign="center" halign="center" scriptevents="1" scriptaction="Close"
+                   text="❌" focusareacolor2="FF0000FF" textsize="2" focusareacolor1="0000" />
+        {{{Select2("0 32.6", "Enable", "Disable", "Enabled_Selector")}}}
+        {{{LittleButton("-40 40.2", "", "Label_Copy")}}}
+        {{{LittleButton("-40 32.6", "", "Label_Paste")}}}
     </frame>
     <frame id="properties" pos="0 10">
         {{{_Content}}}
@@ -264,7 +298,7 @@ Text Private_WeaponUpdate()
     declare Entry_Stamina_Gain <=> (Frame_Properties.GetFirstChild("Entry_Stamina_Gain") as CMlEntry);
     declare Entry_Stamina_Amount <=> (Frame_Properties.GetFirstChild("Entry_Stamina_Amount") as CMlEntry);
 
-    Quad_Weapon_Selector.RelativePosition_V3.X = -40. + Weapon*20.;
+    Quad_Weapon_Selector.RelativePosition_V3.X = -40. + Weapon*16.;
     Quad_Stamina_Selector.RelativePosition_V3.X = -20 + (Stamina-1)*20.;
 
     Entry_Weapon_Gain.SetText(TL::ToText(Weapon_Gain*100), False);
@@ -374,6 +408,122 @@ Void SaveWeaponPageVariables(CAnchorData _Anchor)
 }
 
 
+Void EditMap()
+{
+    G_LastAnchorId = NullId;
+
+    declare metadata Boolean Meta_PvP_Weapons for Map = False;
+    declare metadata Boolean Meta_PvP_Collisions for Map = False;
+    declare metadata Boolean Meta_SameWallJump for Map = True;
+    declare PvP_Weapons for ManialinkPage = Meta_PvP_Weapons;
+    declare PvP_Collisions for ManialinkPage = Meta_PvP_Collisions;
+    declare SameWallJump for ManialinkPage = Meta_SameWallJump;
+
+    /// --- Manialink
+    declare Properties = """
+        <frame id="Map" pos="0 15">
+            {{{BigProperty("0 5", "Settings to enable", "")}}}
+            {{{Property("-20 -2.5", "PvP Weapons", Checkbox("13 0", "Checkbox_PvP_Weapons"))}}}
+            {{{Property("12.5 -2.5", "PvP Collisions", Checkbox("13 0", "Checkbox_PvP_Collisions"))}}}
+            {{{Property("-20 -10", "Same-Wall WJ", Checkbox("13 0", "Checkbox_SameWallJump"))}}}
+        </frame>
+    """;
+
+    SetWindow(MakeWindowWithoutEnabled("Edit Map", Properties));
+    ManialinkText = """
+    <manialink version="3" name="Obstacle:EditMap">
+    {{{GetML()}}}
+    <script><!--
+    #Include "TextLib" as TL
+
+    Void UpdateView() {
+        declare Boolean PvP_Weapons for Page;
+        declare Boolean PvP_Collisions for Page;
+        declare Boolean SameWallJump for Page;
+
+        declare Label_PvP_Weapons <=> (Page.GetFirstChild("Checkbox_PvP_Weapons") as CMlLabel);
+        declare Label_PvP_Collisions <=> (Page.GetFirstChild("Checkbox_PvP_Collisions") as CMlLabel);
+        declare Label_SameWallJump <=> (Page.GetFirstChild("Checkbox_SameWallJump") as CMlLabel);
+
+        if (!PvP_Weapons && Label_PvP_Weapons.Value != "") {
+            Label_PvP_Weapons.SetText("");
+        }
+        if (PvP_Weapons && Label_PvP_Weapons.Value != "✖") {
+            Label_PvP_Weapons.SetText("✖");
+        }
+
+        if (!PvP_Collisions && Label_PvP_Collisions.Value != "") {
+            Label_PvP_Collisions.SetText("");
+        }
+        if (PvP_Collisions && Label_PvP_Collisions.Value != "✖") {
+            Label_PvP_Collisions.SetText("✖");
+        }
+
+        if (!SameWallJump && Label_SameWallJump.Value != "") {
+            Label_SameWallJump.SetText("");
+        }
+        if (SameWallJump && Label_SameWallJump.Value != "✖") {
+            Label_SameWallJump.SetText("✖");
+        }
+
+        SendCustomEvent("Event_Save_Map", Text[]);
+    }
+
+    main() {
+        declare Boolean PvP_Weapons for Page = False;
+        declare Boolean PvP_Collisions for Page = False;
+        declare Boolean SameWallJump for Page = False;
+        declare NeedUpdate = False;
+        UpdateView();
+
+        while (True) {
+            yield;
+
+            if (NeedUpdate) {
+                UpdateView();
+                NeedUpdate = False;
+            }
+
+            foreach (Event in PendingEvents) {
+                if (Event.Type == CMlEvent::Type::MouseClick) {
+                    switch (Event.ControlId) {
+                        case "Checkbox_PvP_Weapons":
+                            PvP_Weapons = !PvP_Weapons;
+
+                        case "Checkbox_PvP_Collisions":
+                            PvP_Collisions = !PvP_Collisions;
+
+                        case "Checkbox_SameWallJump":
+                            SameWallJump = !SameWallJump;
+                    }
+
+                    NeedUpdate = True;
+                }
+            }
+        }
+    }
+    --></script>
+    </manialink>
+    """;
+}
+
+
+Void SaveMapSettings()
+{
+    declare metadata Boolean Meta_PvP_Weapons for Map;
+    declare metadata Boolean Meta_PvP_Collisions for Map;
+    declare metadata Boolean Meta_SameWallJump for Map;
+
+    declare Boolean PvP_Weapons for ManialinkPage;
+    declare Boolean PvP_Collisions for ManialinkPage;
+    declare Boolean SameWallJump for ManialinkPage;
+
+    Meta_PvP_Weapons = PvP_Weapons;
+    Meta_PvP_Collisions = PvP_Collisions;
+    Meta_SameWallJump = SameWallJump;
+}
+
+
 Void EditGoal(CAnchorData _Goal)
 {
     InitBasePageVariables(_Goal);
@@ -387,7 +537,6 @@ Void EditGoal(CAnchorData _Goal)
 
     Void UpdateView() {
         declare Boolean Enabled for Page;
-        declare Boolean Saved for Page;
 
         declare Quad_Enabled_Selector <=> (Page.GetFirstChild("Enabled_Selector") as CMlQuad);
         if (Enabled) {
@@ -490,7 +639,7 @@ Void EditCheckpoint(CAnchorData _Checkpoint)
         </frame>
 
         <frame id="Weapon" pos="0 -34">
-            {{{BigProperty("0 18", "Weapon", Select4("0 -3.5", "Laser", "Rocket", "Nucleus", "Arrow", "Weapon_Selector"))}}}
+            {{{BigProperty("0 18", "Weapon", Select5("0 -3.5", "Laser", "Rocket", "Nucleus", "Arrow", "Missile", "Weapon_Selector"))}}}
             {{{Property("-12 5.5", "Gain (0-1000%)", Entry("0 -5.5", "Entry_Weapon_Gain"))}}}
             {{{Property("12 5.5", "Amount (0-10)", Entry("0 -5.5", "Entry_Weapon_Amount"))}}} <!-- 21 18 16 21 -->
 
@@ -625,6 +774,8 @@ Void EditCheckpoint(CAnchorData _Checkpoint)
                                 SendCustomEvent("Event_Copy_Checkpoint", Text[]);
                             case "Label_Paste":
                                 SendCustomEvent("Event_Paste_Checkpoint", Text[]);
+                            case "Label_Test":
+                                SendCustomEvent("Event_Test_Checkpoint", Text[]);
                             
                             case "OrderPrevious":
                                 SendCustomEvent("Event_Edit_Checkpoint", ["" ^ (Order - 1)]);
@@ -640,6 +791,7 @@ Void EditCheckpoint(CAnchorData _Checkpoint)
                             case "Rocket"  : Weapon = 1;
                             case "Nucleus" : Weapon = 2;
                             case "Arrow"   : Weapon = 3;
+                            case "Missile" : Weapon = 4;
                             case "Limited" : Stamina = 1;
                             case "Unlimited" : Stamina = 2;
 
@@ -752,7 +904,7 @@ Void EditSpawn(CAnchorData _Spawn)
             {{{PropertyOrder("0 -15.5")}}}
         </frame>
         <frame id="Weapon" pos="0 -34">
-            {{{BigProperty("0 18", "Weapon", Select4("0 -3.5", "Laser", "Rocket", "Nucleus", "Arrow", "Weapon_Selector"))}}}
+            {{{BigProperty("0 18", "Weapon", Select5("0 -3.5", "Laser", "Rocket", "Nucleus", "Arrow", "Missile", "Weapon_Selector"))}}}
             {{{Property("-12 5.5", "Gain (0-1000%)", Entry("0 -5.5", "Entry_Weapon_Gain"))}}}
             {{{Property("12 5.5", "Amount (0-10)", Entry("0 -5.5", "Entry_Weapon_Amount"))}}}
         </frame>
@@ -763,7 +915,7 @@ Void EditSpawn(CAnchorData _Spawn)
         </frame>
     """;
 
-    SetWindow(MakeWindow("Edit Spawn", Properties));
+    SetWindow(MakeWindowNoTest("Edit Spawn", Properties));
 
     ManialinkText = """
     <manialink version="3" name="Obstacle:EditSpawn">
@@ -838,21 +990,24 @@ Void EditSpawn(CAnchorData _Spawn)
                                 SendCustomEvent("Event_Copy_Spawn", Text[]);
                             case "Label_Paste":
                                 SendCustomEvent("Event_Paste_Spawn", Text[]);
+                            case "Label_Test":
+                                SendCustomEvent("Event_Test_Spawn", Text[]);
 
                             case "OrderPrevious":
                                 SendCustomEvent("Event_Edit_Spawn", ["" ^ (Order - 1)]);
                             case "OrderNext":
                                 SendCustomEvent("Event_Edit_Spawn", ["" ^ (Order + 1)]);
 
-                            case "Enable" : Enabled = True;
-                            case "Disable" : Enabled = False;
-                            case "Spawn" : IsCpSpawn = False;
-                            case "CPSpawn" : IsCpSpawn = True;
-                            case "Laser" : Weapon = 0;
-                            case "Rocket" : Weapon = 1;
-                            case "Nucleus" : Weapon = 2;
-                            case "Arrow" : Weapon = 3;
-                            case "Limited" : Stamina = 1;
+                            case "Enable"    : Enabled = True;
+                            case "Disable"   : Enabled = False;
+                            case "Spawn"     : IsCpSpawn = False;
+                            case "CPSpawn"   : IsCpSpawn = True;
+                            case "Laser"     : Weapon = 0;
+                            case "Rocket"    : Weapon = 1;
+                            case "Nucleus"   : Weapon = 2;
+                            case "Arrow"     : Weapon = 3;
+                            case "Missile"   : Weapon = 4;
+                            case "Limited"   : Stamina = 1;
                             case "Unlimited" : Stamina = 2;
                         }
 
@@ -951,7 +1106,6 @@ Void EditAmmoItem(CAnchorData _Item)
     Void UpdateView() {
         declare Real Duration for Page;
         declare Integer Cooldown for Page;
-        declare Boolean Saved for Page;
         declare Real Amount for Page;
 
         declare Entry_Duration <=> (Page.GetFirstChild("Entry_Duration") as CMlEntry);
@@ -1079,7 +1233,6 @@ Void EditOffzoneShieldItem(CAnchorData _Item)
 
     main() {
         declare Real Duration for Page;
-        declare Real Amount for Page;
         declare NeedUpdate = False;
         UpdateView();
 
@@ -1094,7 +1247,7 @@ Void EditOffzoneShieldItem(CAnchorData _Item)
             foreach (Event in PendingEvents) {
                 switch (Event.Type){
                     case CMlScriptEvent::Type::MouseClick:
-                        switch(Entry.ControlId) {
+                        switch(Event.ControlId) {
                             case "Window_Background":
                                 SendCustomEvent("Event_Property_Window_Clicked", Text[]);
                         }
@@ -1136,10 +1289,12 @@ Void SaveOffzoneShieldItemSettings()
 Int3 HighlightAnchor(CAnchorData _Anchor, Vec3 _Color)
 {
     declare Coords = <
-        ML::NearestInteger(_Anchor.Position.X/8 - 1),
+        ML::NearestInteger((_Anchor.Position.X+2)/8 - 1),
         ML::Clamp(ML::NearestInteger(_Anchor.Position.Y/2) + 8, 1, 38),  
-        ML::NearestInteger(_Anchor.Position.Z/8 - 1)
+        ML::NearestInteger((_Anchor.Position.Z+2)/8 - 1)
     >;
+
+    log(_Anchor.Position.Z);
 
     if (_Anchor.Block != Null) {
         CustomSelectionRGB = _Color;
@@ -1328,6 +1483,34 @@ Void UpdateValidability()
     }
 }
 
+Void TestWaypoint(Boolean IsCP)
+{
+    if (!AnchorData.existskey(G_LastAnchorId))
+        return;
+    
+
+    declare Editor_WayPointSpawn_Flag for Mode = 0;
+    declare Editor_WayPointSpawn_isCheckpoint for Mode = False;
+    declare rng = ML::Rand(-2147483647, 2147483647);
+    
+    Editor_WayPointSpawn_Flag = rng;
+    Editor_WayPointSpawn_isCheckpoint = IsCP;
+
+    declare metadata Editor_WayPointSpawn_Stamp for AnchorData[G_LastAnchorId] = 0;
+    Editor_WayPointSpawn_Stamp = rng;
+
+    yield;
+
+    ValidationStatus = CSmMapType::ValidationStatus::Validated;
+    Validate();
+    TestMapWithMode("Obstacle.Script.txt");
+
+    yield;
+    UpdateValidability();
+    Editor_WayPointSpawn_Flag = 0;
+    Editor_WayPointSpawn_isCheckpoint = False;
+}
+
 
 Void Loop()
 {
@@ -1343,12 +1526,13 @@ Void Loop()
                 if (G_AnchorCache.count != AnchorData.count)
                 {
                     declare Ident[] NewAnchorCache;
+                    declare FoundTheNewSpawn = False;
 
                     foreach (Anchor in AnchorData)
                     {
                         NewAnchorCache.add(Anchor.Id);
 
-                        if (EditMode == CMapEditorPlugin::EditMode::Place)
+                        if (EditMode == CMapEditorPlugin::EditMode::Place && !FoundTheNewSpawn)
                         {
                             if (Anchor.Order == 0 && !G_AnchorCache.exists(Anchor.Id))
                             {
@@ -1357,19 +1541,19 @@ Void Loop()
                                 {
                                     if (Anchor.DefaultTag == "Checkpoint") {
                                         G_LastAnchorId = Anchor.Id;
-                                        EditCheckpoint(Anchor);
                                         PasteCheckpoint(CopiedCheckpointId);
+                                        EditCheckpoint(Anchor);
                                     } else {
                                         G_LastAnchorId = Anchor.Id;
-                                        EditSpawn(Anchor);
                                         PasteSpawn(CopiedSpawnId);
+                                        EditSpawn(Anchor);
                                     }
                                 }
                                 else if ("Spawn" == Anchor.DefaultTag)
                                 {
                                     declare AnySpawn = False;
                                     foreach (MaybeSpawn in AnchorData) {
-                                        if ("Spawn" == MaybeSpawn.DefaultTag) {
+                                        if (MaybeSpawn.DefaultTag == "Spawn" && MaybeSpawn != Anchor) {
                                             declare metadata Meta_IsCpSpawn for MaybeSpawn = False;
                                             if (!Meta_IsCpSpawn) {
                                                 AnySpawn = True;
@@ -1377,12 +1561,14 @@ Void Loop()
                                             }
                                         }
                                     }
+                                    
                                     if (AnySpawn) {
                                         declare metadata Meta_IsCpSpawn for Anchor = False;
                                         Meta_IsCpSpawn = True;
                                     }
                                 }
-                                break;
+                                
+                                FoundTheNewSpawn = True;
                             }
                         }
                     }
@@ -1430,70 +1616,6 @@ Void Loop()
                 TestMapWithMode("Obstacle.Script.txt");
             }
 
-            case CMapEditorPluginEvent::Type::CursorChange:
-            {
-                if (PlaceMode != CMapEditorPlugin::PlaceMode::Test) {
-                    if (G_ComesFromPlaceMode_Test) {
-                        CustomSelectionCoords.clear();
-                        G_ComesFromPlaceMode_Test = False;
-                    }
-
-                    continue;
-                }
-
-                declare AnchorFound = False;
-                foreach (Anchor in AnchorData) {
-                    if (Anchor.Block == Null || !(IsCheckpoint(Anchor) || IsPortal(Anchor))) continue;
-
-                    declare Vec3Coord = GetVec3FromCoord(Cursor.Coord);
-                    if (Anchor.Position[0] < Vec3Coord[0] + 1 && Anchor.Position[0] > Vec3Coord[0] - 1)
-                    if (Anchor.Position[1] < Vec3Coord[1] + 3 && Anchor.Position[1] > Vec3Coord[1] - 3)
-                    if (Anchor.Position[2] < Vec3Coord[2] + 1 && Anchor.Position[2] > Vec3Coord[2] - 1) {
-                        AnchorFound = True;
-                        G_TestSpawnAnchorId = Anchor.Id;
-
-                        break;
-                    }
-                }
-
-                CustomSelectionCoords.clear();
-
-                if (AnchorFound) {
-                    EnableMapTypeStartTest = True;
-                    CustomSelectionRGB = <.2, 1., .2>;
-                    CustomSelectionCoords.add(AnchorData[G_TestSpawnAnchorId].Block.Coord + <0, 1, 0>);
-                } else {
-                    EnableMapTypeStartTest = False;
-
-                    G_TestSpawnAnchorId = NullId;
-                }
-
-                G_ComesFromPlaceMode_Test = True;
-            }
-
-            case CMapEditorPluginEvent::Type::StartTest:
-            {
-                if (G_TestSpawnAnchorId != NullId) {
-                    declare Editor_WayPointSpawn_Tag for Mode = "";
-                    declare Editor_WayPointSpawn_Order for Mode = 0;
-                    declare Vec3 Editor_WayPointSpawn_Position for Mode = <0., 0., 0.>;
-                    
-                    Editor_WayPointSpawn_Tag = AnchorData[G_TestSpawnAnchorId].Tag;
-                    Editor_WayPointSpawn_Order = AnchorData[G_TestSpawnAnchorId].Order;
-                    Editor_WayPointSpawn_Position = AnchorData[G_TestSpawnAnchorId].Position;
-
-                    ValidationStatus = CSmMapType::ValidationStatus::Validated;
-                    yield;
-
-                    Validate();
-                    TestMapWithMode("Obstacle.Script.txt");
-
-                    yield;
-                    UpdateValidability();
-                    Editor_WayPointSpawn_Tag = "";
-                }
-            }
-
             case CMapEditorPluginEvent::Type::EditObjectives:
             {
                 DisplayDefaultSetObjectivesDialog();
@@ -1531,6 +1653,13 @@ Void Loop()
                                 }
                     }
 
+                    case "Event_Test_Checkpoint": {
+                        TestWaypoint(True);
+                    }
+                    case "Event_Test_Spawn": {
+                        TestWaypoint(False);
+                    }
+
                     case "Event_Paste_Checkpoint": {
                         if (CopiedCheckpointId != NullId && CopiedCheckpointId != G_LastAnchorId) {
                             PasteCheckpoint(CopiedCheckpointId);
@@ -1549,6 +1678,8 @@ Void Loop()
                         CopiedSpawnId = G_LastAnchorId;
                     }
 
+                    case "Event_Save_Map":
+                        SaveMapSettings();
                     case "Event_Save_Goal":
                         SaveGoalSettings();
                     case "Event_Save_Checkpoint":
@@ -1588,8 +1719,16 @@ main()
         if (PlaceModeCache != PlaceMode) {
             PlaceModeCache = PlaceMode;
 
-            if (PlaceMode != CMapEditorPlugin::PlaceMode::BlockProperty)
+            if (PlaceMode == CMapEditorPlugin::PlaceMode::BlockProperty) {
+                if (ManialinkText != "" && G_LastAnchorId != NullId) {
+                    HighlightAnchor(AnchorData[G_LastAnchorId]);
+                } else {
+                    EditMap();
+                }
+            } else {
                 CustomSelectionCoords.clear();
+                ManialinkText = "";
+            }
         }
 
         if (P_EnableAirMapping != EnableAirMapping || P_EnableMixMapping != EnableMixMapping) {

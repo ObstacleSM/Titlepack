@@ -232,7 +232,7 @@ Text Build() {
 								SendCustomEvent("BrowseInExplorer", [""]);
 							}
 							if (Event.ControlId == "BrowseAdvancedConfigInExplorer") {
-								SendCustomEvent("BrowseInExplorer", ["Media\\XML\\User\\"]);
+								SendCustomEvent("BrowseInExplorer", ["WorkTitles\\"^G_ProjectId^"\\Media\\XML\\User\\"]);
 							}
 							if (Event.ControlId == "OpenLinkInInternet") {
 								SendCustomEvent("OpenLink", [G_TitleManagerPage]);

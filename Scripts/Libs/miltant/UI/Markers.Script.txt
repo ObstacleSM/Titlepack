@@ -73,7 +73,7 @@ Text GetLayer(Integer MarkerCount) {
 		ML ^= """
 		</frame>
 	</framemodel>
-	<frame id="Checkpoints">
+	<frame id="Checkpoints" hidden="1">
 		""";
 
 	foreach (Landmark in MapLandmarks) {
@@ -122,6 +122,8 @@ main() {
 	declare CMlFrame[Ident] NextLandmarksGaugeCache = [];
 	declare CSmMapLandmark[Ident][Integer] LandmarksCache = [];
 
+	Frame_Checkpoints.Visible = True;
+
 	foreach (CP_Marker_Frame in Frame_Checkpoints.Controls) {
 		declare CP_Frame = (CP_Marker_Frame as CMlFrame);
 		declare CP_Marker = (CP_Frame.Controls[0] as CMlFrame);
@@ -134,6 +136,8 @@ main() {
 
 			declare Text[] Parts = TL::Split(" ", Description);
 			declare CP_Order = TL::ToInteger(Parts[Parts.count - 1]);
+			if (Parts.count == 1)
+				CP_Order = 0;
 
 			if (Parts[0] == "PORTAL") {
 				declare CP_Background_Gray = CP_Frame.GetFirstChild("Background_Gray");
@@ -206,13 +210,15 @@ main() {
 				if (!CP_Marker.DataAttributeExists("txt"))
 					continue;
 				declare Text[] Parts = TL::Split(" ", CP_Marker.DataAttributeGet("txt"));
-				declare Order = TL::ToInteger(Parts[Parts.count - 1]);
 				declare CP_Type = Parts[0];
+
+				declare Order = TL::ToInteger(Parts[Parts.count - 1]);
+				if (Parts.count == 1)
+					Order = 0;
 
 				if (!LandmarksCache[Order].existskey(CP_Frame.Id))
 					continue;
 				declare CSmMapLandmark CP_Landmark <=> LandmarksCache[Order][CP_Frame.Id];
-
 
 				if (CP_Type == "GOAL")
 				{

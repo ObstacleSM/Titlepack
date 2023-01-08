@@ -156,26 +156,45 @@ Ident Private_GetClosestSpawn(Ident _CheckPointId, Ident[] _SpawnIds) {
     return ClosestSpawn;
 }
 
-Ident GetClosestSpawn(Ident _CheckPointId) {
+Ident GetClosestSpawn(Ident _CheckPointId, Integer _PlayerCPProgress) {
     declare Checkpoint <=> MapLandmarks[_CheckPointId];
     declare Ident[] SpawnIds = [];
 
-    foreach (Spawn in MapLandmarks_PlayerSpawn) {
-        if (IsCpSpawn(Spawn) && (Checkpoint.Order == Spawn.Order))
-            SpawnIds.add(Spawn.Id);
-    }
+    if (RNG::GetOrder(Checkpoint) > 0) {
+        foreach (Spawn in MapLandmarks_PlayerSpawn) {
+            if (IsCpSpawn(Spawn) && (RNG::GetOrder(Checkpoint) == RNG::GetOrder(Spawn)))
+                SpawnIds.add(Spawn.Id);
+        }
 
-    if (SpawnIds.count > 0)
-        return Private_GetClosestSpawn(_CheckPointId, SpawnIds);
+        if (SpawnIds.count > 0)
+            return Private_GetClosestSpawn(_CheckPointId, SpawnIds);
+    }
 
     // If there is no spawn for the current checkpoint
     // Search for previous spawns
+    declare Ident[][Integer] SpawnIdsByOrder;
+    declare ActualCPProgress = MathLib::Max(_PlayerCPProgress, 0);
+
     foreach (Spawn in MapLandmarks_PlayerSpawn) {
-        if (IsCpSpawn(Spawn) && RNG::GetOrder(Checkpoint) >= RNG::GetOrder(Spawn))
-            SpawnIds.add(Spawn.Id);
+        declare Order = RNG::GetOrder(Spawn);
+        if (IsCpSpawn(Spawn) && ActualCPProgress >= Order) {
+            if (SpawnIdsByOrder.existskey(Order))
+                SpawnIdsByOrder[Order].add(Spawn.Id);
+            else
+                SpawnIdsByOrder[Order] = [Spawn.Id];
+        }
     }
 
-    return Private_GetClosestSpawn(_CheckPointId, SpawnIds);
+    declare Max = -1;
+    foreach (Order => _S in SpawnIdsByOrder) {
+        if (Order > Max)
+            Max = Order;
+    }
+
+    if (Max == -1)
+        return NullId;
+    
+    return Private_GetClosestSpawn(_CheckPointId, SpawnIdsByOrder[Max]);
 }
 
 Integer GetPlayerRank(CSmPlayer _Player) {

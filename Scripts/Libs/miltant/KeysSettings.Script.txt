@@ -1,0 +1,267 @@
+#Include "MathLib" as MathLib
+
+/*************************
+    CONSTANTS
+*************************/
+
+#Const  Version     "2021-07-11"
+#Const  ScriptName  "KeysSettings.Script.txt"
+
+
+#Const  C_ColumnsWidth 110
+#Const  C_ColumnsMargin 6
+
+#Const KC_SPACE 119
+#Const KC_W 132
+#Const KC_S 114
+#Const KC_A 11
+#Const KC_D 28
+#Const KC_LCLICK 145
+#Const KC_RCLICK 146
+
+#Const KC_Z 144
+#Const KC_Q 105
+
+#Const KC_UP 128
+#Const KC_DOWN 32
+#Const KC_RIGHT 110
+#Const KC_LEFT 66
+
+#Const KC_LCTRL 65
+#Const KC_RCTRL 108
+#Const KC_ALTS 67
+
+
+/*************************
+    GLOBALES
+*************************/
+
+declare Text[Integer] G_KeysName;
+
+
+/*************************
+    METHODS
+*************************/
+
+Text Private_GetWidget() {
+    declare Manialink = """
+<frame id="Frame_KeysSettings">
+    <frame id="Frame_Heading">
+        <label pos="0 39" size="100 10" text="Keyboard Settings" textcolor="FFFFFFFF" maxline="1" halign="center" valign="bottom" textfont="Oswald" textsize="9" style="TextTitle3" textemboss="1"
+        tooltip="The obstacle mode needs to know your bindings to display correctly your keys for spectators"/>
+        <quad pos="0 40" z-index="-1" size="220 0.5" bgcolor="000000AA" halign="center"/>
+    </frame>
+    
+    <frame pos="0 35" id="Frame_Bindings">
+    """;
+    declare Integer Index = 0;
+
+    foreach (Input => _n in G_KeysName) {
+        declare ColumnBaseX = -110 + C_ColumnsMargin + (C_ColumnsWidth + C_ColumnsMargin) * (Index / 11);
+        declare ColumnBaseY = 1 - 8 * (Index % 11);
+        Manialink ^= """
+        <label id="Label_Bind_{{{Input}}}" posn="{{{ColumnBaseX}}} {{{ColumnBaseY}}}" scale="1" data-txt="{{{G_KeysName[Input]}}}"/>
+        <label id="Label_BindChoose_{{{Input}}}" posn="{{{ColumnBaseX + 44}}} {{{ColumnBaseY}}}" scale="1" style="CardButtonSmall" scriptevents="1"/>
+        """;
+
+        Index += 1;
+        if (Index > 11) {
+            break;
+        }
+    }
+
+    Manialink ^= """
+    </frame>
+    
+    <frame id="Frame_Background">
+        <quad z-index="-1" size="220 100" bgcolor="000000FF" halign="center" valign="center" opacity="0.5" pos="0 0"/>
+        <quad pos="0 40" z-index="-1" size="220 90" bgcolor="000000AA" halign="center" valign="top"/>
+    </frame>
+</frame>
+
+<frame pos="-160 90" id="Frame_ModalKeysSettings" z-index="1000" hidden="1">
+	<label pos="111 -84" size="99 5"
+        textcolor="FFFFFFFF" halign="left" valign="center2"
+        text="&quot;Move forward&quot; Action"/>
+	<label pos="113 -92" size="94 9"
+        textcolor="B9B9B9FF" textsize="2" halign="left" valign="center"
+        style="Manialink_Body" autonewline="1" maxline="2"
+        text="Press a key or a mouse button to (un)bind: W, Z, UP arrow"/>
+    
+	<label id="Label_BindMouse" scriptevents="1" posn="123 -96" size="20 5"
+        scale="1" style="CardButtonSmallWide"
+        text="ok"/>
+	<label id="Label_BindKeyboard" scriptevents="1" posn="123 -101" size="20 5"
+        scale="1" style="CardButtonSmallWide"
+        text="cancel"/>
+
+	<quad pos="160 -94" size="110 31" bgcolor="FFFF" style="Bgs1" substyle="BgSlider" halign="center" valign="center" opacity="0.5"/>
+	<quad pos="0 0" size="320 180" bgcolor="FFFA" style="Bgs1InRace" substyle="BgCardList"/>
+</frame>""";
+    return Manialink;
+}
+
+Text GetLayer() {
+    G_KeysName = [
+        0 => "Forward",
+        1 => "Backward",
+        2 => "Straffe Left",
+        3 => "Straffe Right",
+    
+        4 => "Jump/Action",
+        5 => "Full Jump",
+        6 => "Fire",
+    
+        7 => "Free mouse (alt)",
+        8 => "FreeLook",
+        9 => "Horn",
+    
+        10 => "Respawn",
+        11 => "Give Up"
+    ];
+
+    return """
+<manialink version="3" name="Obstacle:KeysSettings">
+    <frame>
+        {{{Private_GetWidget()}}}
+    </frame>
+    <script><!--
+        #Include "TextLib" as TextLib
+
+        #Const  C_IgnoredKeys ["Tab", "Goto"]
+
+        declare Text[Integer][Integer] Obs_Bindings;
+
+        declare CMlFrame MainFrame;
+        declare CMlFrame Frame_Bindings;
+        declare CMlFrame Frame_ModalKeysSettings;
+
+        Text[] Unravel (Text[Integer] _Array) {
+            declare Text[] NewArray;
+            foreach (Item in _Array) {
+                NewArray.add(Item);
+            }
+            return NewArray;
+        }
+
+        Integer InputNum (Text _Label) {
+            declare Text[] Parts = TextLib::Split("_", _Label);
+            return TextLib::ToInteger(Parts[2]);
+        }
+
+        Void RefreshBindingLabel (CMlLabel _Label, Integer _Num) {
+            _Label.SetText("" ^ TextLib::Join(", ", Unravel(Obs_Bindings[_Num])));
+        }
+
+        Void SaveBindings() {
+            declare persistent Text[Integer][Integer] P_Obs_Bindings for LocalUser;
+            P_Obs_Bindings = Obs_Bindings;
+        }
+
+        Void LoadBindings() {
+            declare persistent Text[Integer][Integer] P_Obs_Bindings for LocalUser =  [
+                0 => [{{{KC_W}}} => "W", {{{KC_Z}}} => "Z", {{{KC_UP}}} => "UP ARROW"],
+                1 => [{{{KC_S}}} => "S", {{{KC_DOWN}}} => "DOWN ARROW"],
+                2 => [{{{KC_A}}} => "A", {{{KC_Q}}} => "Q", {{{KC_LEFT}}} => "LEFT ARROW"],
+                3 => [{{{KC_D}}} => "D", {{{KC_RIGHT}}} => "RIGHT ARROW"],
+            
+                4 => [{{{KC_SPACE}}} => "SPACE BAR", {{{KC_RCLICK}}} => "RIGHT CLICK"],
+                5 => [],
+                6 => [{{{KC_LCLICK}}} => "LEFT CLICK"],
+            
+                7 => [{{{KC_LCTRL}}} => "LEFT CTRL", {{{KC_RCTRL}}} => "RIGHT CTRL", {{{KC_ALTS}}} => "ALT KEYS"],
+                8 => [],
+                9 => [],
+            
+                // TODO FIND THESE KEY CODES
+                10 => [0 => "BACKSPACE"],
+                11 => [0 => "DELETE"]
+            ];
+            Obs_Bindings = P_Obs_Bindings;
+
+            foreach (Control_Bind in Frame_Bindings.Controls) {
+                declare Label_Bind <=> (Control_Bind as CMlLabel);
+                declare AttrTxt = Label_Bind.DataAttributeGet("txt");
+                
+                if (AttrTxt == "") {
+                    declare BindNum = InputNum(Label_Bind.ControlId);
+                    if (P_Obs_Bindings.existskey(BindNum)) {
+                        RefreshBindingLabel(Label_Bind, BindNum);
+                    } else {
+                        Obs_Bindings[BindNum] = [];
+                    }
+                } else {
+                    Label_Bind.SetText(AttrTxt);
+                }
+            }
+
+            SaveBindings();
+        }
+
+        main() {
+            wait(InputPlayer != Null && UI != Null && Page != Null);
+
+            MainFrame <=> (Page.GetFirstChild("Frame_KeysSettings") as CMlFrame);
+            Frame_Bindings <=> (MainFrame.GetFirstChild("Frame_Bindings") as CMlFrame);
+            Frame_ModalKeysSettings <=> (Page.GetFirstChild("Frame_ModalKeysSettings") as CMlFrame);
+            
+            declare LocalPlayer <=> InputPlayer;
+
+            declare Boolean _TabsLib_AltLayerIsVisible      for UI;
+            declare Text    _TabsLib_CurrentTab             for UI;
+
+            declare Ident LabelPendingChoosing = NullId;
+
+            LoadBindings();
+            
+            while (True) {
+                yield;
+
+                declare netread Text _TabsLib_ScoresTableTab    for UI;
+                if ((_TabsLib_AltLayerIsVisible || LabelPendingChoosing != NullId) && (_TabsLib_CurrentTab == "KeysSettings")) {
+                    MainFrame.Show();
+                } else {
+                    MainFrame.Hide();
+                    LabelPendingChoosing = NullId;
+                }
+
+                foreach (Event in PendingEvents) {
+                    switch (Event.Type) {
+                        case CMlScriptEvent::Type::KeyPress: {
+                            if (LabelPendingChoosing != NullId) {
+                                if (!C_IgnoredKeys.exists(Event.KeyName)) {
+                                    declare BindNum = InputNum(Frame_Bindings.Controls[LabelPendingChoosing].ControlId);
+
+                                    if (Obs_Bindings[BindNum].existskey(Event.KeyCode)) {
+                                        Obs_Bindings[BindNum].removekey(Event.KeyCode);
+                                    } else {
+                                        Obs_Bindings[BindNum][Event.KeyCode] = Event.KeyName;
+                                    }
+
+                                    SaveBindings();
+                                    RefreshBindingLabel((Frame_Bindings.Controls[LabelPendingChoosing] as CMlLabel), BindNum);
+                                }
+                                LabelPendingChoosing = NullId;
+                            }
+                        }
+                        case CMlScriptEvent::Type::MouseClick: {
+                            if (TextLib::StartsWith("Label_BindChoose_", Event.ControlId)) {
+                                declare BindNum = InputNum(Event.ControlId);
+
+                                if (LabelPendingChoosing != NullId) {
+                                    RefreshBindingLabel((Frame_Bindings.Controls[LabelPendingChoosing] as CMlLabel), BindNum);
+                                    LabelPendingChoosing = NullId;
+                                }
+
+                                (Event.Control as CMlLabel).SetText(_("Press your Key..."));
+                                LabelPendingChoosing = Event.Control.Id;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    --></script>
+</manialink>
+    """;
+}

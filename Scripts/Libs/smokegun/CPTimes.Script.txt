@@ -1,8 +1,5 @@
-#Include "TextLib" as TextLib
 #Include "Libs/miltant/Nadeo_Fork/Log.Script.txt" as Log
-#Include "Libs/miltant/Nadeo_Fork/Layers2.Script.txt" as Layers
 #Include "Libs/smokegun/Player.Script.txt" as Player
-#Include "Libs/smokegun/Tools.Script.txt" as Tools
 
 /*************************
     CONSTANTS

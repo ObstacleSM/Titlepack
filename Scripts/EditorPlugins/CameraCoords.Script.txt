@@ -6,9 +6,9 @@ Text CreateManialink()
 	"""
 		<script><!--
 			Void UpdateValues() {
-				declare CursorX for Page = 0;
-				declare CursorY for Page = 0;
-				declare CursorZ for Page = 0;
+				declare CursorX for Page = 0.;
+				declare CursorY for Page = 0.;
+				declare CursorZ for Page = 0.;
 				declare CursorDirectionText for Page = "";
 				declare LblCursorXValue <=> (Page.GetFirstChild("CursorXValue") as CMlLabel);
 				declare LblCursorYValue <=> (Page.GetFirstChild("CursorYValue") as CMlLabel);

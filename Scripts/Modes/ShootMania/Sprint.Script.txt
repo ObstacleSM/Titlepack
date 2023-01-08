@@ -1,7 +1,7 @@
 #Extends "Modes/ShootMania/Base/ModeShootMania.Script.txt"
 
 #Const CompatibleMapTypes "ObstacleArena,ObstacleTitleArena,ObstacleTitleArenaOld,TimeAttackArena,ObstacleBetaArena,Randomizer"
-#Const  Version           "0.8.4"
+#Const  Version           "0.9"
 #Const  ScriptName        "Modes/ShootMania/Sprint.Script.txt"
 
 // ---------------------------------- //
@@ -47,17 +47,20 @@
 #Setting S_PointsMax 3 as _("Points for the 1st player")
 #Setting S_PointsMin 1 as _("Points for the lasts players")
 #Setting S_PointsDeduced 1 as _("Points deduced for each place")
-#Setting S_PvPWeapons False as _("Enable PvP Weapons")
 #Setting S_RoundCooldown 10 as _("Waiting time between rounds (seconds)")
 #Setting S_WarmupRounds 1 as _("Number of warmup rounds")
+#Setting S_WarmupRoundsTime 120 as _("Duration of warmup rounds (seconds)")
 #Setting S_MinTimeLeft 20 as _("Minimum time left (seconds)")
 #Setting S_MaxTimeLeft 120 as _("Maximum time left (seconds)")
-#Setting S_EnablePlayerHighlight False as "Highlight players"
 #Setting S_DuoSprint False as "Beta: DuoSprint"
 #Setting S_MinWaitTime 1 as "Beta: Minimum waiting time (seconds)"
 #Setting S_CheckpointMarkersCount 2 as "Count of different checkpoint markers"
 
 #Setting S_ScriptEnvironment "production"
+
+
+#Command Command_TogglePvPWeapons (Boolean) as _("Set PvP Weapons (on/off)")
+#Command Command_TogglePvPCollisions (Boolean) as _("Set PvP Collisions (on/off)")
 
 // ---------------------------------- //
 // Constants
@@ -73,6 +76,9 @@ declare Integer         G_State;
 declare Boolean[Ident]  G_FinishedScores;
 declare Ident           G_InvisibleSkinId;
 
+declare Boolean G_LastUsePvPWeapons;
+declare Boolean G_LastUsePvPCollisions;
+
 ***Match_LogVersions***
 ***
 Log::RegisterScript(ScriptName, Version);
@@ -83,16 +89,19 @@ Log::RegisterScript(ScriptName, Version);
 MB_Settings_UseDefaultHud = False;
 MB_Settings_UseDefaultObjects = False;
 
-UsePvPCollisions = False;
 UseClans = False;
 UseSameWallJump = True;
-UsePvPWeapons = S_PvPWeapons;
+UsePvPWeapons = False;
+UsePvPCollisions = False;
+G_LastUsePvPWeapons = False;
+G_LastUsePvPCollisions = False;
 
 Settings::SetFullAmmoSpawn(True);
 Settings::SetFastRespawn(True);
 Settings::SetForceInvisibleSkin(True);
+Settings::SetEnablePlayerHighlight(False);
 
-// ServerModeName is "" when the mode is started from the map editor "Test mode with"
+// ServerModeName is "" in the editor
 if (ServerModeName == "") {
     Settings::SetMinPlayers(1);
     Settings::SetRoundCooldown(1);
@@ -157,7 +166,7 @@ if (Hud != Null && Hud.ScoresTable != Null) {
     TabsLayer.Type = CUILayer::EUILayerType::AltMenu;
     UIManager.UIAll.UILayers.add(TabsLayer);
 
-    Hud.ScoresTable.SetFooterText("Time limit: "^Tools::TimeLimitToText(Settings::GetTimeLimit())^" | Round limit: "^Settings::GetRoundLimit()^" | Point limit: "^S_PointLimit^" | Warmup round: "^Settings::GetWarmupRounds());
+    Hud.ScoresTable.SetFooterText("Time limit: "^Tools::TimeLimitToText(Settings::GetTimeLimit())^" | Round limit: "^Settings::GetRoundLimit()^" | Point limit: "^Settings::GetPointLimit()^" | Warmup round: "^Settings::GetWarmupRounds()^"("^S_WarmupRoundsTime^"s)");
 }
 ***
 
@@ -194,6 +203,18 @@ CreateUI();
 if (!Obstacle::PrepareMap(ModeInfo::GetName())) {
     MB_StopMap();
     break;
+}
+
+if (Obstacle::IsPvPWeaponsMap()) {
+    UsePvPWeapons = True;
+}
+if (Obstacle::IsPvPCollisionsMap()) {
+    UsePvPCollisions = True;
+}
+if (Obstacle::IsSameWallJumpMap()) {
+    UseSameWallJump = True;
+} else {
+    UseSameWallJump = False;
 }
 
 UIManager.UIAll.MarkersXML = Markers::GetXML();
@@ -312,6 +333,13 @@ else {
 
     if (Net_IsWarmup) {
         Message::SendBigMessage("Warmup round "^ CurrentRound ^"!", 2000, 0, CUIConfig::EUISound::StartRound, 1);
+
+        if (Settings::GetWarmupRoundsTime() > 0) {
+            EndTime = (StartTime + Settings::GetWarmupRoundsTime() * 1000);
+        }
+        else {
+            EndTime = -1;
+        }
 
         if (Obstacle::IsRandomizerMap()) {
             RNG::ClearLandmarks();
@@ -447,6 +475,15 @@ else {
                 }
             }
 
+            case CSmModeEvent::EType::OnCommand: {
+                if (Event.CommandName == "Command_TogglePvPWeapons") {
+                    UsePvPWeapons = Event.CommandValueBoolean;
+                }
+                else if (Event.CommandName == "Command_TogglePvPCollisions") {
+                    UsePvPCollisions = Event.CommandValueBoolean;
+                }
+            }
+
             case CSmModeEvent::EType::OnPlayerTriggersSector: {
                 declare TookGoal = Obstacle::HandleCapture(Event.Player);
                 if (TookGoal) {
@@ -526,12 +563,21 @@ else {
             }
 
             case CSmPlayer::ESpawnStatus::Spawned: {
+                if (UsePvPWeapons != G_LastUsePvPWeapons){
+                    if (UsePvPWeapons)
+                        Player::setUsedPvPWeapons(Player, True);
+                }
+                if (UsePvPCollisions != G_LastUsePvPCollisions){
+                    if (UsePvPCollisions)
+                        Player::setUsedPvPCollisions(Player, True);
+                }
+
                 SpecKeys::UpdateLayer(Player);
 
                 // Unlimited stam
                 declare StaminaUnlimited for Player = False;
-                if (StaminaUnlimited && Player.Stamina < 7500) {
-                    Player.Stamina = 10800;
+                if (StaminaUnlimited && Player.Stamina != ML::TruncInteger(Player.StaminaMaxValue / 1.8)) {
+                    Player.Stamina = ML::TruncInteger(Player.StaminaMaxValue / 1.8);
                 }
 
                 // Effects on respawn
@@ -603,6 +649,10 @@ else {
         MB_StopRound();
     }
 }
+
+
+G_LastUsePvPCollisions = UsePvPCollisions;
+G_LastUsePvPWeapons = UsePvPWeapons;
 ***
 
 ***Match_EndRound***
@@ -836,7 +886,7 @@ if (G_State == C_State_Playing) {
     declare MostPointsScore <=> Scores[0];
     foreach (Score in Scores) {
         if (Score.Points > MostPointsScore.Points) {
-            MostPointsScore = Score;
+            MostPointsScore <=> Score;
         }
     }
     declare NbWinners = 0;
@@ -980,12 +1030,14 @@ Void UpdateSettings() {
         Settings::SetTimeLimit(S_TimeLimit);
 
         if (Hud != Null && Hud.ScoresTable != Null) {
-            Hud.ScoresTable.SetFooterText("Time limit: "^Tools::TimeLimitToText(Settings::GetTimeLimit())^" | Round limit: "^Settings::GetRoundLimit()^" | Point limit: "^Settings::GetPointLimit()^" | Warmup round: "^Settings::GetWarmupRounds());
+            Hud.ScoresTable.SetFooterText("Time limit: "^Tools::TimeLimitToText(Settings::GetTimeLimit())^" | Round limit: "^Settings::GetRoundLimit()^" | Point limit: "^Settings::GetPointLimit()^" | Warmup round: "^Settings::GetWarmupRounds()^"("^S_WarmupRoundsTime^"s)");
         }
 
-        if (S_TimeLimit > 0) {
+        declare netwrite Net_IsWarmup for Teams[0] = False;
+
+        if (!Net_IsWarmup && S_TimeLimit > 0) {
             EndTime = StartTime + (S_TimeLimit * 60 * 1000);
-        } else {
+        } else if (!Net_IsWarmup) {
             EndTime = -1;
         }
     }
@@ -994,7 +1046,7 @@ Void UpdateSettings() {
         Settings::SetRoundLimit(S_RoundLimit);
 
         if (Hud != Null && Hud.ScoresTable != Null) {
-            Hud.ScoresTable.SetFooterText("Time limit: "^Tools::TimeLimitToText(Settings::GetTimeLimit())^" | Round limit: "^Settings::GetRoundLimit()^" | Point limit: "^Settings::GetPointLimit()^" | Warmup round: "^Settings::GetWarmupRounds());
+            Hud.ScoresTable.SetFooterText("Time limit: "^Tools::TimeLimitToText(Settings::GetTimeLimit())^" | Round limit: "^Settings::GetRoundLimit()^" | Point limit: "^Settings::GetPointLimit()^" | Warmup round: "^Settings::GetWarmupRounds()^"("^S_WarmupRoundsTime^"s)");
         }
     }
 
@@ -1010,7 +1062,7 @@ Void UpdateSettings() {
         Settings::SetPointLimit(S_PointLimit);
 
         if (Hud != Null && Hud.ScoresTable != Null) {
-            Hud.ScoresTable.SetFooterText("Time limit: "^Tools::TimeLimitToText(Settings::GetTimeLimit())^" | Round limit: "^Settings::GetRoundLimit()^" | Point limit: "^Settings::GetPointLimit()^" | Warmup round: "^Settings::GetWarmupRounds());
+            Hud.ScoresTable.SetFooterText("Time limit: "^Tools::TimeLimitToText(Settings::GetTimeLimit())^" | Round limit: "^Settings::GetRoundLimit()^" | Point limit: "^Settings::GetPointLimit()^" | Warmup round: "^Settings::GetWarmupRounds()^"("^S_WarmupRoundsTime^"s)");
         }
     }
 
@@ -1026,21 +1078,31 @@ Void UpdateSettings() {
         Settings::SetPointsDeduced(S_PointsDeduced);
     }
 
-    if (S_PvPWeapons != Settings::GetPvPWeapons()) {
-        Settings::SetPvPWeapons(S_PvPWeapons);
-
-        UsePvPWeapons = S_PvPWeapons;
-    }
-
     if (S_RoundCooldown != Settings::GetRoundCooldown()) {
         Settings::SetRoundCooldown(S_RoundCooldown);
+    }
+
+    if (S_WarmupRoundsTime != Settings::GetWarmupRoundsTime()) {
+        Settings::SetWarmupRoundsTime(S_WarmupRoundsTime);
+
+        if (Hud != Null && Hud.ScoresTable != Null) {
+            Hud.ScoresTable.SetFooterText("Time limit: "^Tools::TimeLimitToText(Settings::GetTimeLimit())^" | Round limit: "^Settings::GetRoundLimit()^" | Point limit: "^Settings::GetPointLimit()^" | Warmup round: "^Settings::GetWarmupRounds()^"("^S_WarmupRoundsTime^"s)");
+        }
+
+        declare netwrite Net_IsWarmup for Teams[0] = False;
+
+        if (Net_IsWarmup && S_WarmupRoundsTime > 0) {
+            EndTime = StartTime + (S_WarmupRoundsTime * 1000);
+        } else if (Net_IsWarmup) {
+            EndTime = -1;
+        }
     }
 
     if (S_WarmupRounds != Settings::GetWarmupRounds()) {
         Settings::SetWarmupRounds(S_WarmupRounds);
 
         if (Hud != Null && Hud.ScoresTable != Null) {
-            Hud.ScoresTable.SetFooterText("Time limit: "^Tools::TimeLimitToText(Settings::GetTimeLimit())^" | Round limit: "^Settings::GetRoundLimit()^" | Point limit: "^Settings::GetPointLimit()^" | Warmup round: "^Settings::GetWarmupRounds());
+            Hud.ScoresTable.SetFooterText("Time limit: "^Tools::TimeLimitToText(Settings::GetTimeLimit())^" | Round limit: "^Settings::GetRoundLimit()^" | Point limit: "^Settings::GetPointLimit()^" | Warmup round: "^Settings::GetWarmupRounds()^"("^S_WarmupRoundsTime^"s)");
         }
     }
 
@@ -1055,9 +1117,5 @@ Void UpdateSettings() {
     if (S_CheckpointMarkersCount != Settings::GetCheckpointMarkersCount()) {
         Settings::SetCheckpointMarkersCount(S_CheckpointMarkersCount);
         Layers::Update("Markers", Markers::GetLayer(S_CheckpointMarkersCount));
-    }
-
-    if (S_EnablePlayerHighlight != Settings::GetEnablePlayerHighlight()) {
-        Settings::SetEnablePlayerHighlight(S_EnablePlayerHighlight);
     }
 }

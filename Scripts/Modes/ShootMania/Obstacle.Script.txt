@@ -1,8 +1,9 @@
 #Extends "Modes/ShootMania/Base/ModeShootMania.Script.txt"
 
 #Const CompatibleMapTypes "ObstacleArena,ObstacleTitleArena,ObstacleTitleArenaOld,TimeAttackArena,ObstacleBetaArena,Randomizer"
-#Const Version           "1.9"
+#Const Version           "1.2"
 #Const ScriptName        "Modes/ShootMania/Obstacle.Script.txt"
+
 
 // ---------------------------------- //
 // Libraries
@@ -10,16 +11,18 @@
 #Include "TextLib" as TL
 #Include "MathLib" as ML
 
-#Include "Libs/Nadeo/TabsServer.Script.txt" as Tabs
+#Include "Libs/miltant/Nadeo_Fork/TabsServer.Script.txt" as Tabs
 
 #Include "Libs/smokegun/Player.Script.txt" as Player
 #Include "Libs/smokegun/ObstacleLib.Script.txt" as Obstacle
 #Include "Libs/smokegun/Constants.Script.txt" as Constants
 
+#Include "Libs/miltant/Nadeo_Fork/CustomUI.Script.txt" as CustomUI
 #Include "Libs/miltant/UI/Markers.Script.txt" as Markers
 #Include "Libs/smokegun/UI/RecordsWidget.Script.txt" as RecordsWidget
 #Include "Libs/smokegun/UI/TimeDiff.Script.txt" as TimeDiff
 #Include "Libs/smokegun/UI/Chrono.Script.txt" as Chrono
+#Include "Libs/miltant/UI/Glitches.Script.txt" as Glitches
 #Include "Libs/smokegun/UI/CpProgress.Script.txt" as CpProgress
 #Include "Libs/smokegun/UI/SpectatorCount.Script.txt" as SpectatorCount
 #Include "Libs/smokegun/UI/NextMapVote.Script.txt" as NextMapVote
@@ -28,6 +31,7 @@
 #Include "Libs/smokegun/UI/SurvivalRanking.Script.txt" as SurvivalRanking
 
 #Include "Libs/smokegun/CPTimes.Script.txt" as CPTimes
+//#Include "Libs/miltant/KeysSettings.Script.txt" as KeysSettings
 
 #Include "Libs/smokegun/Items.Script.txt" as Items
 #Include "Libs/smokegun/ObstacleRecords.Script.txt" as API
@@ -42,11 +46,10 @@
 // Settings
 // ---------------------------------- //
 #Setting S_TimeLimit -1 as _("Time limit")
-#Setting S_PvPWeapons False as _("Enable PvP Weapons")
 #Setting S_FastRespawn True as _("Fast respawn on the checkpoint")
 #Setting S_AllowJump True as _("Enable checkpoint jumping")
 #Setting S_EnableRecords True as "Enable records"
-#Setting S_ForceInvisibleSkin False as "Force invisible skin"
+#Setting S_ForceInvisibleSkin True as "Force invisible skin"
 #Setting S_EnablePlayerHighlight False as "Highlight players"
 
 #Setting S_NextMapVotingRatio 0.7 as "<hidden>"
@@ -58,10 +61,12 @@
 
 #Setting S_ForceRNGSeed "" as "Seed to use for randomizer maps (Integer)"
 
-#Setting S_ScriptEnvironment "production"
+#Setting S_ScriptEnvironment "development"
 
 #Command Command_BeginSurvival (Integer) as _("Begin survival cup (max lives)")
 #Command Command_EndSurvival (Integer) as _("End survival cup")
+#Command Command_TogglePvPWeapons (Boolean) as _("Set PvP Weapons (on/off)")
+#Command Command_TogglePvPCollisions (Boolean) as _("Set PvP Collisions (on/off)")
 
 // ---------------------------------- //
 // Constants
@@ -72,9 +77,15 @@
 
 declare Ident   G_InvisibleSkinId;
 declare Ident   G_ObstacleModelId;
-declare Ident   G_DashActionId;
+declare Boolean G_ForceInvisibleSkin;
 declare Boolean G_EnableRecords;
 declare Ident   G_WayPointSpawn;
+declare Boolean[Ident] G_PendingRS;
+
+declare Boolean G_LastUsePvPWeapons;
+declare Boolean G_LastUsePvPCollisions;
+
+declare Boolean G_IsCampaign;
 
 ***Match_LogVersions***
 ***
@@ -87,10 +98,13 @@ MB_Settings_UseDefaultHud = False;
 MB_Settings_UseDefaultTimer = False;
 MB_Settings_UseDefaultObjects = False;
 
-UsePvPCollisions = False;
 UseClans = False;
 UseSameWallJump = True;
-UsePvPWeapons = S_PvPWeapons;
+UsePvPWeapons = False;
+UsePvPCollisions = False;
+G_LastUsePvPWeapons = False;
+G_LastUsePvPCollisions = False;
+G_IsCampaign = False;
 
 UIManager.UIAll.OverlayHide321Go = False;
 ***
@@ -101,14 +115,14 @@ ModeInfo::SetName("Obstacle");
 ModeInfo::SetType(ModeInfo::Type_FreeForAll());
 
 declare OpenSpecial1Text = "$<$00f";
-    declare OpenSpecial2Text = "$<$88f";
-    declare OpenSpecial3Text = "$<$0f0";
-    declare OpenSpecial4Text = "$<$f80";
-    declare OpenBoldText = "$<$o";
-    declare OpenSettingText = "$<$08f";
-    declare CloseText = "$>";
+declare OpenSpecial2Text = "$<$88f";
+declare OpenSpecial3Text = "$<$0f0";
+declare OpenSpecial4Text = "$<$f80";
+declare OpenBoldText = "$<$o";
+declare OpenSettingText = "$<$08f";
+declare CloseText = "$>";
 
-    declare ModeRules = """
+declare ModeRules = """
 Finish the {{{OpenSpecial2Text}}}Obstacle Course{{{CloseText}}} as fast as possible.
 To validate a race you must touch the {{{OpenSpecial2Text}}}Goal{{{CloseText}}} after going through all the {{{OpenSpecial2Text}}}Checkpoints{{{CloseText}}}.
 You can start over and improve your time as often as you want during {{{OpenSettingText^S_TimeLimit^CloseText}}} minutes.
@@ -144,6 +158,7 @@ if (Hud != Null && Hud.ScoresTable != Null) {
     declare TabsLayer <=> Tabs::CreateTabPaneLayer(
         [ "ScoresTab" => "Rankings"
         , "CPTimes" => "Race"]
+       // , "KeysSettings" => "Inputs"]
         , 15, 7, False);
     TabsLayer.Type = CUILayer::EUILayerType::AltMenu;
     UIManager.UIAll.UILayers.add(TabsLayer);
@@ -160,14 +175,17 @@ SpawnScreen::CreateScores("Score.Points");
 ItemList_Begin();
 G_InvisibleSkinId = ItemList_AddWithSkin("DefaultPlayerModel", Constants::C_InvisibleSkin);
 //G_ObstacleModelId = ItemList_AddWithSkin(Constants::C_ObstacleModel, "Profile");
+//G_ObstacleModelId = ItemList_AddWithSkin("DefaultPlayerModel", Constants::C_ObstacleModel);
 Items::LoadItems();
 ItemList_End();
 ***
 
 ***Match_StartServer***
 ***
-// ServerModeName is "" when the mode is started from the map editor "Test mode with"
+// ServerModeName is "" in the editor
 G_EnableRecords = ServerModeName != "";
+// ServerLogin is "" in local play
+G_ForceInvisibleSkin = !(ServerModeName == "" || ServerLogin == "");
 UpdateSettings();
 
 SM::SetupDefaultVisibility();
@@ -183,7 +201,6 @@ Obstacle::LoadActions();
 ***Match_InitMap***
 ***
 declare PrevTimeLimit = -1;
-declare PrevPvPWeapons = S_PvPWeapons;
 declare LastUpdate = -1;
 declare NextLowTimeMessage = 0;
 ***
@@ -194,16 +211,13 @@ declare NextLowTimeMessage = 0;
 UpdateSettings();
 
 
-declare Editor_WayPointSpawn_Tag for This = "";
+declare Editor_WayPointSpawn_Flag for This = 0;
 
-if (Editor_WayPointSpawn_Tag != "") {
-    declare Editor_WayPointSpawn_Order for This = 0;
-    declare Vec3 Editor_WayPointSpawn_Position for This = <0., 0., 0.>;
-    
+if (Editor_WayPointSpawn_Flag != 0) {
     foreach (Landmark in MapLandmarks) {
-        if (Landmark.Tag == Editor_WayPointSpawn_Tag &&
-            Landmark.Order == Editor_WayPointSpawn_Order &&
-            Landmark.Position == Editor_WayPointSpawn_Position) {
+        declare metadata Editor_WayPointSpawn_Stamp for Landmark = 0;
+        
+        if (Editor_WayPointSpawn_Stamp == Editor_WayPointSpawn_Flag) {
 
             G_WayPointSpawn = Landmark.Id;
             break;
@@ -211,9 +225,21 @@ if (Editor_WayPointSpawn_Tag != "") {
     }
 }
 // map is invalid
-if (!Obstacle::PrepareMap(ModeInfo::GetName()) && Editor_WayPointSpawn_Tag == "")
+if (!Obstacle::PrepareMap(ModeInfo::GetName()) && Editor_WayPointSpawn_Flag == 0)
 {
     MB_Private_StopMap();
+}
+
+if (Obstacle::IsPvPWeaponsMap()) {
+    UsePvPWeapons = True;
+}
+if (Obstacle::IsPvPCollisionsMap()) {
+    UsePvPCollisions = True;
+}
+if (Obstacle::IsSameWallJumpMap()) {
+    UseSameWallJump = True;
+} else {
+    UseSameWallJump = False;
 }
 
 if (Obstacle::IsRandomizerMap()) {
@@ -242,8 +268,7 @@ if (Obstacle::IsRandomizerMap()) {
 
     G_EnableRecords = False;
     Layers::Detach("Records");
-} else if (G_EnableRecords) {
-    G_EnableRecords = True;
+} else if (Settings::GetEnableRecords() && G_EnableRecords) {
     Layers::Create("Records", RecordsWidget::GetLayer());
     Layers::Attach("Records");
 }
@@ -257,6 +282,8 @@ foreach (Player in AllPlayers) {
     Player::setInitialized(Player, False);
     Obstacle::NewPlayer(Player);
 }
+
+---Ladder_OpenMatch_All---
 
 StartTime = Now;
 if (S_TimeLimit > 0) {
@@ -274,15 +301,24 @@ NextMapVote::Yield(S_NextMapVotingRatio);
 
 ***Match_PlayLoop***
 ***
+//Replay_SaveInterface();
+
 if (LastUpdate + C_SettingsUpdateInterval < Now) {
     LastUpdate = Now;
     UpdateSettings();
 }
 
-Obstacle::UpdatePlayersSkin(G_InvisibleSkinId);
+if (Settings::GetForceInvisibleSkin()) {
+    Obstacle::UpdatePlayersSkin(G_InvisibleSkinId);
+} else {
+    Obstacle::UpdatePlayersSkin(NullId);
+}
 
 if (Settings::GetEnableRecords()) {
+    Layers::Attach("Records");
     API::Loop(S_BestNewRecordMsg, S_WorseNewRecordMsg);
+} else if (G_EnableRecords) {
+    Layers::Detach("Records");
 }
 
 if (EndTime > 0 && Now > EndTime) {
@@ -306,6 +342,9 @@ foreach (Event in UIManager.PendingEvents) {
         }
     }
 }
+
+declare CSmModeEvent[] PendingRespawns;
+declare CSmModeEvent[] PendingCaptures;
 
 foreach (Event in PendingEvents) {
     switch (Event.Type) {
@@ -344,26 +383,13 @@ foreach (Event in PendingEvents) {
             // :'(
         }
 
-        case CSmModeEvent::EType::OnPlayerRequestRespawn: {
-            Obstacle::ObsRespawnPlayer(Event.Player, Event.GiveUp);
-            Events::Invalid(Event);
-        }
-
         case CSmModeEvent::EType::OnPlayerTouchesObject: {
             if (Event.Object != Null && Event.Player != Null && Items::PickupItems(Event)) {
-                 Events::Valid(Event);
+                Events::Valid(Event);
             }
             else {
-                 Events::Invalid(Event);
+                Events::Invalid(Event);
             }
-        }
-
-        case CSmModeEvent::EType::OnPlayerTriggersSector: {
-            declare TookGoal = Obstacle::HandleCapture(Event.Player);
-            if (TookGoal) {
-                Obstacle::ObsRespawnPlayer(Event.Player, True);
-            }
-            Events::Valid(Event);
         }
 
         case CSmModeEvent::EType::OnCommand: {
@@ -378,12 +404,130 @@ foreach (Event in PendingEvents) {
                     ObsScores::Survival_ForceEnd();
                 }
             }
+            else if (Event.CommandName == "Command_TogglePvPWeapons") {
+                UsePvPWeapons = Event.CommandValueBoolean;
+            }
+            else if (Event.CommandName == "Command_TogglePvPCollisions") {
+                UsePvPCollisions = Event.CommandValueBoolean;
+            }
+        }
+
+        case CSmModeEvent::EType::OnPlayerRequestRespawn: {
+            PendingRespawns.add(Event);
+        }
+
+        case CSmModeEvent::EType::OnPlayerTriggersSector: {
+            PendingCaptures.add(Event);
         }
 
         default: {
             Events::Valid(Event);
         }
 
+    }
+}
+
+foreach (Player => GiveUp in G_PendingRS) {
+    //todo: asserts exists
+    Obstacle::ObsRespawnPlayer(Players[Player], GiveUp);
+}
+
+G_PendingRS.clear();
+
+
+foreach (RS in PendingRespawns) {
+    declare CSmModeEvent CaptureToPerform = Null;
+
+    foreach (Cap in PendingCaptures) {
+        if (Cap.Player == RS.Player) {
+            CaptureToPerform <=> Cap;
+            PendingCaptures.remove(Cap);
+            break;
+        }
+    }
+
+    if (CaptureToPerform == Null) {
+        Obstacle::ObsRespawnPlayer(RS.Player, RS.GiveUp);
+        
+    } else if(Tools::IsGoal(RS.Player.CapturedLandmark)) {
+        declare TookGoal = Obstacle::HandleCapture(RS.Player);
+
+        if (TookGoal) {
+            if (!G_IsCampaign) {
+                Obstacle::ObsRespawnPlayer(RS.Player, RS.GiveUp);
+                Events::Valid(CaptureToPerform);
+            } else {
+                declare LastRun = Player::getLastRun(RS.Player);
+                RS.Player.Score.Points = LastRun;
+        
+                Solo_SetNewRecord (RS.Player.Score, CMode::EMedal::Finished);
+        
+                UnspawnPlayer(RS.Player);
+                
+                declare UI <=> UIManager.GetUI(RS.Player);
+                if (UI != Null) {
+                    UI.SendNotice(
+                        TL::Compose("%1: %2",_("Finish"), "$<$0f0"^TL::TimeToText(LastRun, True)^"$>"),
+                        CUIConfig::ENoticeLevel::PlayerInfo, RS.Player.User, CUIConfig::EAvatarVariant::Default,
+                        CUIConfig::EUISound::Finish, 1);
+                }
+                UIManager.UIAll.UISequence = CUIConfig::EUISequence::EndRound;
+                
+                // Submit result
+                while (!UIManager.UIAll.UISequenceIsCompleted) {
+                    MB_Yield();
+                }
+                
+                MB_Private_StopMap();
+            }
+        }
+    } else if (Player::allowRSBug(RS.Player)) {
+        Obstacle::ObsRespawnPlayer(RS.Player, RS.GiveUp);
+
+        Obstacle::HandleCapture(CaptureToPerform.Player);
+        Events::Valid(CaptureToPerform);
+        Player::setUsedRSBug(CaptureToPerform.Player, True);
+    } else {
+        G_PendingRS[RS.Player.Id] = RS.GiveUp; // to be performed next tick
+
+        Obstacle::HandleCapture(CaptureToPerform.Player);
+        Events::Valid(CaptureToPerform);
+    }
+
+    Events::Invalid(RS);
+}
+
+foreach (Cap in PendingCaptures) {
+    declare TookGoal = Obstacle::HandleCapture(Cap.Player);
+
+    if (TookGoal) {
+        log(G_IsCampaign);
+        if (!G_IsCampaign) {
+            Obstacle::ObsRespawnPlayer(Cap.Player, True);
+            Events::Valid(Cap);
+        } else {
+            declare LastRun = Player::getLastRun(Cap.Player);
+            Cap.Player.Score.Points = LastRun;
+    
+            Solo_SetNewRecord (Cap.Player.Score, CMode::EMedal::Finished);
+            UnspawnPlayer(Cap.Player);
+            
+            declare UI <=> UIManager.GetUI(Cap.Player);
+            if (UI != Null) {
+                UI.SendNotice(
+                    TL::Compose("%1: %2",_("Finish"), "$<$0f0"^TL::TimeToText(LastRun, True)^"$>"),
+                    CUIConfig::ENoticeLevel::PlayerInfo, Cap.Player.User, CUIConfig::EAvatarVariant::Default,
+                    CUIConfig::EUISound::Finish, 1);
+            }
+            UIManager.UIAll.UISequence = CUIConfig::EUISequence::EndRound;
+            
+            // Submit result
+            while (!UIManager.UIAll.UISequenceIsCompleted) {
+                MB_Yield();
+            }
+            
+            MB_Private_StopMap();
+        }
     }
 }
 
@@ -401,11 +545,43 @@ foreach (Player in Players) {
             }
         }
 
+        case CSmPlayer::ESpawnStatus::Spawning: {
+            if (Player.Position == <0., 0., 0.>) {
+                if (Player::getLastSpawnPosition(Player) != <0., 0., 0.>) {
+                    Player::setLastSpawnPosition(Player, <0., 0., 0.>);
+                }
+            } else if (Player.Post == CSmPlayer::EPost::Char && Player::getLastSpawnPosition(Player) != Player.Position) {
+                if (Player::getLastSpawnPosition(Player) == <0., 0., 0.>)
+                    Player::setLastSpawnPosition(Player, Player.Position);
+                else {
+                    declare UI <=> UIManager.GetUI(Player);
+                    declare netread Boolean _AltMenu_Visible for UI = False;
+
+                    log(_AltMenu_Visible);
+                    if  (_AltMenu_Visible){
+                        Player::setUsedAltGlitch(Player, True);
+                    }
+                }
+            }
+        }
+
         case CSmPlayer::ESpawnStatus::Spawned: {
+
+            if (UsePvPWeapons != G_LastUsePvPWeapons) {
+                if (UsePvPWeapons)
+                    Player::setUsedPvPWeapons(Player, True);
+            }
+            if (UsePvPCollisions != G_LastUsePvPCollisions) {
+                if (UsePvPCollisions)
+                    Player::setUsedPvPCollisions(Player, True);
+            }
+
             if (G_WayPointSpawn != NullId && Player::getLastCheckpoint(Player) == NullId) {
-                declare Editor_WayPointSpawn_Tag for This = "";
-                if (Editor_WayPointSpawn_Tag != "")
+                declare Editor_WayPointSpawn_isCheckpoint for This = False;
+                if (Editor_WayPointSpawn_isCheckpoint)
                     Obstacle::JumpToCheckpointIdent_ByPassSpawn(Player, G_WayPointSpawn);
+
+                G_WayPointSpawn = NullId;
             }
             
             SpecKeys::UpdateLayer(Player);
@@ -453,6 +629,9 @@ foreach (Player in Players) {
 
     }
 }
+
+G_LastUsePvPCollisions = UsePvPCollisions;
+G_LastUsePvPWeapons = UsePvPWeapons;
 ***
 
 
@@ -508,10 +687,14 @@ DestroyUI();
 Void DoNothing(){}
 
 Void CreateUI() {
+    CustomUI::Load();
+    
     Layers::Create("Chrono", Chrono::GetLayer());
+    Layers::Create("Glitches", Glitches::GetLayer());
     Layers::Create("TimeDiff", TimeDiff::GetLayer());
     Layers::Create("CpProgress", CpProgress::GetLayer());
     Layers::Create("CPTimes", CPTimes::GetLayer());
+    //Layers::Create("KeysSettings", KeysSettings::GetLayer());
     Layers::Create("SpectatorCount", SpectatorCount::GetLayer());
     Layers::Create("NextMapVote", NextMapVote::GetLayer(S_NextMapVotingRatio));
     Layers::Create("RespawnBehavior", RespawnBehavior::GetLayer());
@@ -529,9 +712,11 @@ Void CreateUI() {
     }
 
     Layers::Attach("Chrono");
+    Layers::Attach("Glitches");
     Layers::Attach("TimeDiff");
     Layers::Attach("CpProgress");
     Layers::Attach("CPTimes");
+    //Layers::Attach("KeysSettings");
     Layers::Attach("Items");
     Layers::Attach("Markers");
     Layers::Attach("SpectatorCount");
@@ -539,13 +724,19 @@ Void CreateUI() {
     Layers::Attach("RespawnBehavior");
     Layers::Attach("SpecKeys");
     Layers::Attach("SurvivalRanking");
+
+    //Layers::AttachReplay("SpecKeys");
+    CustomUI::Build();
+    CustomUI::Attach();
 }
 
 Void DestroyUI() {
     Layers::Detach("Chrono");
+    Layers::Detach("Glitches");
     Layers::Detach("TimeDiff");
     Layers::Detach("CpProgress");
     Layers::Detach("CPTimes");
+    //Layers::Detach("KeysSettings");
     Layers::Detach("Markers");
     Layers::Detach("Items");
 
@@ -559,6 +750,9 @@ Void DestroyUI() {
     Layers::Detach("SpecKeys");
     Layers::Detach("SurvivalRanking");
 
+    //Layers::DetachReplay("SpecKeys");
+
+    CustomUI::Unload();
     UIManager.UILayerDestroyAll();
 }
 
@@ -575,12 +769,6 @@ Void UpdateSettings() {
         } else {
             EndTime = -1;
         }
-    }
-
-    if (S_PvPWeapons != Settings::GetPvPWeapons()) {
-        Settings::SetPvPWeapons(S_PvPWeapons);
-
-        UsePvPWeapons = S_PvPWeapons;
     }
 
     if (S_FastRespawn != Settings::GetFastRespawn()) {
@@ -616,12 +804,25 @@ Void UpdateSettings() {
         Settings::SetWorseNewRecordMsg(S_WorseNewRecordMsg);
     }
 
-    if (S_ForceInvisibleSkin != Settings::GetForceInvisibleSkin()) {
-        Settings::SetForceInvisibleSkin(S_ForceInvisibleSkin);
+    declare Boolean ForceInvisibleSkin = S_ForceInvisibleSkin && G_ForceInvisibleSkin;
+    if (ForceInvisibleSkin != Settings::GetForceInvisibleSkin()) {
+        Settings::SetForceInvisibleSkin(ForceInvisibleSkin);
+
+        if (Settings::GetForceInvisibleSkin()) {
+            Obstacle::UpdatePlayersSkin(G_InvisibleSkinId);
+        } else {
+            Obstacle::UpdatePlayersSkin(NullId);
+        }
     }
 
     if (S_EnablePlayerHighlight != Settings::GetEnablePlayerHighlight()) {
         Settings::SetEnablePlayerHighlight(S_EnablePlayerHighlight);
+
+        if (Settings::GetForceInvisibleSkin()) {
+            Obstacle::UpdatePlayersSkin(G_InvisibleSkinId);
+        } else {
+            Obstacle::UpdatePlayersSkin(NullId);
+        }
     }
 
     if (S_ForceRNGSeed != Settings::GetForceRNGSeed()) {

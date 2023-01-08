@@ -1,6 +1,7 @@
 #Include "Libs/smokegun/Tools.Script.txt" as Tools
+#Include "Libs/miltant/Nadeo_Fork/CustomUI.Script.txt" as CustomUI
 
-#Const  Version     "2021-07-08"
+#Const  Version     "2022-25-11"
 #Const  ScriptName  "SpecKeys.Script.txt"
 
 #Struct Keys {
@@ -11,6 +12,7 @@
     Boolean LClick;
     Boolean RClick;
     Boolean Space;
+    Boolean Esc;
 }
 
 Void UpdateLayer(CSmPlayer _Player)
@@ -25,18 +27,23 @@ Void UpdateLayer(CSmPlayer _Player)
 }
 
 Text GetLayer() {
+    CustomUI::Add("Frame_SpecKeys", <0., -35.>, <45., 20.>);
     return """
-<manialink version="3" name="Obstacle:SpecKeys">
-    <frame id="Frame_SpecKeys" posn="-10.625 -35" scale="0.5">
-        <quad id="Down" posn="0 0" sizen="20 20" image="file://Media/Manialinks/Keyboard/Dark/Keyboard_Black_Arrow_Down.png" opacity="0.5"/>
-        <quad id="Up" posn="0 15" sizen="20 20" image="file://Media/Manialinks/Keyboard/Dark/Keyboard_Black_Arrow_Up.png" opacity="0.5"/>
-        <quad id="Right" posn="15 0" sizen="20 20" image="file://Media/Manialinks/Keyboard/Dark/Keyboard_Black_Arrow_Right.png" opacity="0.5"/>
-        <quad id="Left" posn="-15 0" sizen="20 20" image="file://Media/Manialinks/Keyboard/Dark/Keyboard_Black_Arrow_Left.png" opacity="0.5"/>
-        <quad id="Space" posn="35 -2" sizen="20 20" image="file://Media/Manialinks/Keyboard/Dark/Keyboard_Black_Space.png" opacity="0.5"/>
-        <frame posn="35 13">
-            <quad id="MouseRight" sizen="20 20" image="file://Media/Manialinks/Keyboard/Dark/Keyboard_Black_Mouse_Right.png" opacity="0.0"/>
-            <quad id="MouseLeft" sizen="20 20" image="file://Media/Manialinks/Keyboard/Dark/Keyboard_Black_Mouse_Left.png" opacity="0.0"/>
-            <quad id="Mouse" sizen="20 20" image="file://Media/Manialinks/Keyboard/Dark/Keyboard_Black_Mouse_Simple.png" opacity="0.5"/>
+<manialink version="1" name="Obstacle:SpecKeys">
+    <frame id="Frame_SpecKeys" scale="0.5" class="LibCustomUI_Module">
+        <frame posn="0. -35">
+            <frame posn="-17. -35">
+                <quad id="Down" posn="0 0" sizen="20 20" image="file://Media/Manialinks/Keyboard/Dark/Keyboard_Black_Arrow_Down.png" opacity="0.5"/>
+                <quad id="Up" posn="0 15" sizen="20 20" image="file://Media/Manialinks/Keyboard/Dark/Keyboard_Black_Arrow_Up.png" opacity="0.5"/>
+                <quad id="Right" posn="15 0" sizen="20 20" image="file://Media/Manialinks/Keyboard/Dark/Keyboard_Black_Arrow_Right.png" opacity="0.5"/>
+                <quad id="Left" posn="-15 0" sizen="20 20" image="file://Media/Manialinks/Keyboard/Dark/Keyboard_Black_Arrow_Left.png" opacity="0.5"/>
+                <quad id="Space" posn="35 -2" sizen="20 20" image="file://Media/Manialinks/Keyboard/Dark/Keyboard_Black_Space.png" opacity="0.5"/>
+                <frame posn="35 13">
+                    <quad id="MouseRight" sizen="20 20" image="file://Media/Manialinks/Keyboard/Dark/Keyboard_Black_Mouse_Right.png" opacity="0.0"/>
+                    <quad id="MouseLeft" sizen="20 20" image="file://Media/Manialinks/Keyboard/Dark/Keyboard_Black_Mouse_Left.png" opacity="0.0"/>
+                    <quad id="Mouse" sizen="20 20" image="file://Media/Manialinks/Keyboard/Dark/Keyboard_Black_Mouse_Simple.png" opacity="0.5"/>
+                </frame>
+            </frame>
         </frame>
     </frame>
 <script><!--
@@ -63,6 +70,12 @@ Text GetLayer() {
     #Const KC_RIGHT 110
     #Const KC_LEFT 66
 
+    #Const KC_LCTRL 65
+    #Const KC_RCTRL 108
+    #Const KC_ALTS 67
+
+    #Const KC_ESC 67
+
     #Struct Keys {
         Boolean Up;
         Boolean Right;
@@ -71,6 +84,7 @@ Text GetLayer() {
         Boolean LClick;
         Boolean RClick;
         Boolean Space;
+        Boolean Esc;
     }
 
     declare CMlFrame Frame_SpecKeys;
@@ -88,15 +102,13 @@ Text GetLayer() {
     Void UpdatePlayer() {
         declare netwrite Keys MyKeys for UI;
 
-        declare SpacePressed = IsKeyPressed(KC_SPACE);
         declare UpPressed = IsKeyPressed(KC_W) || IsKeyPressed(KC_Z) || IsKeyPressed(KC_HOME) || IsKeyPressed(KC_UP);
         declare DownPressed = IsKeyPressed(KC_S) || IsKeyPressed(KC_END) || IsKeyPressed(KC_DOWN);
         declare LeftPressed = IsKeyPressed(KC_A) || IsKeyPressed(KC_Q) || IsKeyPressed(KC_DEL) || IsKeyPressed(KC_LEFT);
         declare RightPressed = IsKeyPressed(KC_D) || IsKeyPressed(KC_PGDOWN) || IsKeyPressed(KC_RIGHT);
 
-
-        if (Previous.Space != SpacePressed) {
-            Previous.Space = SpacePressed;
+        if (Previous.Space != IsKeyPressed(KC_SPACE)) {
+            Previous.Space = IsKeyPressed(KC_SPACE);
             MyKeys.Space = Previous.Space;
         }
 
@@ -128,6 +140,11 @@ Text GetLayer() {
         if (Previous.RClick != IsKeyPressed(KC_RCLICK)) {
             Previous.RClick = IsKeyPressed(KC_RCLICK);
             MyKeys.RClick = Previous.RClick;
+        }
+
+        if (Previous.Esc != IsKeyPressed(KC_ESC)) {
+            Previous.Esc = IsKeyPressed(KC_ESC);
+            MyKeys.Esc = Previous.Esc;
         }
     }
 
@@ -180,6 +197,7 @@ Text GetLayer() {
     }
 
     main() {
+        {{{CustomUI::InjectMLInit()}}}
         wait(InputPlayer != Null && Page != Null);
 
         Frame_SpecKeys <=> (Page.GetFirstChild("Frame_SpecKeys") as CMlFrame);
@@ -199,9 +217,15 @@ Text GetLayer() {
         Previous.Space = False;
         Previous.RClick = False;
         Previous.LClick = False;
+        Previous.Esc = False;
 
         while (True) {
             yield;
+            
+            // for (I, 0, 255) {
+            //     if (IsKeyPressed(I))
+            //         log(I);
+            // }
 
             if (Frame_SpecKeys.Visible != IsSpectator)
                 Frame_SpecKeys.Visible = IsSpectator;
@@ -212,7 +236,7 @@ Text GetLayer() {
             else {
                 UpdateSpec();
             }
-
+            {{{CustomUI::InjectMLLoop()}}}
         }
     }
 --></script>

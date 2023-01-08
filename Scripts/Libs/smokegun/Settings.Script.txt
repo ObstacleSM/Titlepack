@@ -11,6 +11,7 @@ declare Integer G_PointsMin;
 declare Integer G_PointsDeduced;
 declare Integer G_RoundCooldown;
 declare Integer G_WarmupRounds;
+declare Integer G_WarmupRoundsTime;
 declare Integer G_MinTimeLeft;
 declare Integer G_MaxTimeLeft;
 declare Integer G_CheckpointMarkersCount;
@@ -109,6 +110,14 @@ Integer GetWarmupRounds() {
 
 Void SetWarmupRounds(Integer _Value) {
 	G_WarmupRounds = _Value;
+}
+
+Integer GetWarmupRoundsTime() {
+	return G_WarmupRoundsTime;
+}
+
+Void SetWarmupRoundsTime(Integer _Value) {
+	G_WarmupRoundsTime = _Value;
 }
 
 Integer GetMinTimeLeft() {

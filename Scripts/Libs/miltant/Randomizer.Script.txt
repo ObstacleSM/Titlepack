@@ -52,6 +52,9 @@ Integer GetOrder(CSmMapLandmark _Landmark) {
         declare metadata Meta_IsPortal for _Landmark = False;
         if (Meta_IsPortal) return 8;
     }
+    if (_Landmark.Order == 0 && ""^Map.Id == "0vfVqusHpG8I8cy1z6IcaX7p0pf") {
+        if (_Landmark.Tag == "Portal" || _Landmark.Tag == "CPSpawn") return 4;
+    }
 
     if (_Landmark.Order >= 0)
         return _Landmark.Order;

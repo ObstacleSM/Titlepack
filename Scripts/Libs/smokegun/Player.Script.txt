@@ -20,6 +20,22 @@
 #Const  Version     "2021-07-11"
 #Const  ScriptName  "Player.Script.txt"
 
+
+/*********************************************
+  STRUCTURE
+ *********************************************/
+
+#Struct Keys {
+    Boolean Up;
+    Boolean Right;
+    Boolean Down;
+    Boolean Left;
+    Boolean LClick;
+    Boolean RClick;
+    Boolean Space;
+    Boolean Esc;
+}
+
 /*********************************************
   FUNCTIONS
  *********************************************/
@@ -41,6 +57,7 @@ Integer getStartTime(CSmPlayer _Player) {
 
 Void setStartTime(CSmPlayer _Player, Integer _Value) {
     declare netwrite Integer Net_StartTime for _Player;
+
     Net_StartTime = _Value;
 }
 
@@ -114,6 +131,16 @@ Void setUsedPvPCollisions(CSmPlayer _Player, Boolean _Value) {
     Net_UsedPvPCollisions = _Value;
 }
 
+Boolean usedSpeedHack(CSmPlayer _Player) {
+    declare netwrite Boolean Net_UsedSpeedHack for _Player = False;
+    return Net_UsedSpeedHack;
+}
+
+Void setUsedSpeedHack(CSmPlayer _Player, Boolean _Value) {
+    declare netwrite Boolean Net_UsedSpeedHack for _Player = False;
+    Net_UsedSpeedHack = _Value;
+}
+
 Ident getV2PortalCache(CSmPlayer _Player) {
     declare Ident Net_V2PortalCache for _Player = NullId;
     return Net_V2PortalCache;
@@ -124,14 +151,15 @@ Void setV2PortalCache(CSmPlayer _Player, Ident _Value) {
     Net_V2PortalCache = _Value;
 }
 
-Ident getLastSpawn(CSmPlayer _Player) {
-    declare Ident Net_LastSpawn for _Player = NullId;
-    return Net_LastSpawn;
+
+Vec3 getLastSpawnPosition(CSmPlayer _Player) {
+    declare Vec3 Net_LastSpawnPosition for _Player = <0., 0., 0.>;
+    return Net_LastSpawnPosition;
 }
 
-Void setLastSpawn(CSmPlayer _Player, Ident _Value) {
-    declare Ident Net_LastSpawn for _Player = NullId;
-    Net_LastSpawn = _Value;
+Void setLastSpawnPosition(CSmPlayer _Player, Vec3 _Value) {
+    declare Vec3 Net_LastSpawnPosition for _Player = <0., 0., 0.>;
+    Net_LastSpawnPosition = _Value;
 }
 
 Ident getLastCheckpoint(CSmPlayer _Player) {
@@ -297,6 +325,7 @@ Void InitPlayer(CSmPlayer _Player) {
     setUsedAltGlitch(_Player, False);
     setUsedPvPWeapons(_Player, UsePvPWeapons);
     setUsedPvPCollisions(_Player, UsePvPCollisions);
+    setUsedSpeedHack(_Player, False);
 
     setBestRun(_Player, -1);
     setLastRun(_Player, -1);

@@ -183,13 +183,19 @@ Text Build(Text _LayerName, Text[] _InfoLineLogos, Integer _ItemType, Boolean _C
 					<quad id="Quad_SortAscDesc"				valign="bottom" size="{{{ToolboxHeight - 2.}}} {{{ToolboxHeight - 2.}}}" image="{{{IMG_Browser_SortDesc}}}"/>
 				</frame>
 
-				<frame id="Frame_SteamWorkshop" pos="{{{130.5 - 7 * ToolboxHeight}}} 1">
+				<frame id="Frame_SearchName" pos="{{{130.5 - 7 * ToolboxHeight}}} 1" hidden="1">
+					<quad 								valign="bottom" size="{{{ToolboxHeight - 2.}}} {{{ToolboxHeight - 2.}}}" image="{{{IMG_Browser_PictoBG}}}" opacity="0.7"/>
+					<quad id="Quad_SearchName_Button"	valign="bottom" size="{{{ToolboxHeight - 2.}}} {{{ToolboxHeight - 2.}}}" z-index="1" bgcolor="fff" opacity="0." scriptevents="1"/>
+					<label id="Label_SearchName"		valign="bottom" size="{{{ToolboxHeight - 2.}}} {{{ToolboxHeight - 2.}}}" pos="1 0" halign="left" text="S"/>
+				</frame>
+
+				<frame id="Frame_SteamWorkshop" pos="{{{130.5 - 8 * ToolboxHeight}}} 1">
 					<quad 										valign="bottom" size="{{{ToolboxHeight - 2.}}} {{{ToolboxHeight - 2.}}}" image="{{{IMG_Browser_PictoBG}}}" opacity="0.7"/>
 					<quad id="Quad_SteamWorkshop_Button"		valign="bottom" size="{{{ToolboxHeight - 2.}}} {{{ToolboxHeight - 2.}}}" z-index="1" bgcolor="fff" opacity="0." scriptevents="1"/>
 					<label	id="Label_SteamWorkshop"		valign="center" halign="center" size="{{{ToolboxHeight - 2.}}} {{{ToolboxHeight - 2.}}}" pos="{{{(ToolboxHeight - 2.) / 2.}}} {{{(ToolboxHeight - 2.) / 2. + 0.2}}}" z-index="1" textsize="{{{ToolboxHeight - 4.5}}}" textcolor="FFF" text=""/>
 				</frame>
 
-				<frame id="Frame_SelectAll" hidden="1" pos="{{{130.5 - 8 * ToolboxHeight}}} 1">
+				<frame id="Frame_SelectAll" hidden="1" pos="{{{130.5 - 9 * ToolboxHeight}}} 1">
 					<quad 									valign="bottom" size="{{{ToolboxHeight - 2.}}} {{{ToolboxHeight - 2.}}}" image="{{{IMG_Browser_PictoBG}}}" opacity="0.7"/>
 					<quad id="Quad_SelectAll_Button"		valign="bottom" size="{{{ToolboxHeight - 2.}}} {{{ToolboxHeight - 2.}}}" z-index="1" bgcolor="fff" opacity="0." scriptevents="1"/>
 					<quad id="Quad_SelectAll"				valign="bottom" size="{{{ToolboxHeight - 2.}}} {{{ToolboxHeight - 2.}}}" image="{{{IMG_Browser_SelectAll}}}"/>

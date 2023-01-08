@@ -96,11 +96,18 @@ CUILayer CreateTabPaneLayer(Text[Text] TabsImages, Integer TabFramePosnX, Intege
 			while (True)
 			{
 				yield;
-				if (! PageIsVisible) continue;
-				
+				declare netwrite Boolean _AltMenu_Visible for UI = False;
+
+				if (! PageIsVisible) {
+					_AltMenu_Visible = False;
+					continue;
+				}
+
 				if(_AltMenuActive) {
+					_AltMenu_Visible = True;
 					MainTabsFrame.Show();
 				} else {
+					_AltMenu_Visible = False;
 					MainTabsFrame.Hide();
 				}
 				

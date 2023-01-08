@@ -2115,10 +2115,15 @@ Void Build(Text _Game, Boolean _Restore) {
 	// Spectator mode confirmation
 	declare SpecConfirmSize = <ItemSizeX-PlayerCardLeftShift+1, ItemSizeY>;
 	ML_SpecConfirm = """
+<dico>
+    <language id="en">
+        <spectatormode>Switch to spectator mode?</spectatormode>
+    </language>
+</dico>
 <frame posn="0 0 4" hidden="1" id="Frame_SpecConfirm">
 	<quad posn="0 0" sizen="{{{SpecConfirmSize.X}}} {{{SpecConfirmSize.Y}}}" bgcolor="111e" scriptevents="1" />
 	<frame posn="0 {{{(-ItemSizeY/2.)-0.25}}} 1">
-		<label posn="3. 0" sizen="{{{SpecConfirmSize.X*0.6}}} 5" valign="center2" textsize="2" text="{{{_("Switch to spectator mode?")}}}" /> 
+		<label posn="3. 0" sizen="{{{SpecConfirmSize.X*0.6}}} 5" valign="center2" textsize="2" textid="spectatormode" text="{{{_("Switch to spectator mode?")}}}" /> 
 		<format style="TextButtonNav" />
 		<label posn="{{{(SpecConfirmSize.X*0.6)+(SpecConfirmSize.X*0.15)}}} 0" sizen="{{{SpecConfirmSize.X*0.14}}} 5" halign="center" valign="center2" focusareacolor1="333f" focusareacolor2="eeef" textcolor="fff" text="{{{_("Yes")}}}" scriptevents="1" id="Button_SpecYes" />
 		<label posn="{{{(SpecConfirmSize.X*0.6)+(SpecConfirmSize.X*0.30)}}} 0" sizen="{{{SpecConfirmSize.X*0.14}}} 5" halign="center" valign="center2" focusareacolor1="333f" focusareacolor2="eeef" textcolor="fff" text="{{{_("No")}}}" scriptevents="1" id="Button_SpecNo" />

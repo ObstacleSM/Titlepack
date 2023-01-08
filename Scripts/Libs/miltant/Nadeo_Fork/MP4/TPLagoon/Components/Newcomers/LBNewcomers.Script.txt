@@ -1,0 +1,188 @@
+#Include "Libs/miltant/Nadeo_Fork/Common/ManialinkTools/Manialink3WPrevAnims.Script.txt"			as Manialink
+#Include "Libs/miltant/Nadeo_Fork/MP4/Common/Components/MenuButtonsOld/LBMenuButtons.Script.txt"					as MenuButtons
+#Const C_ImgBase	"file://Media/Images/Obstacle/Newcomers/"
+
+Text Build() {
+
+	declare Real	SizeXQuad                = 59.3;
+	declare Real	SizeYQuad                = 34.1;
+	MenuButtons::SetLabelButtonPosition(<-3.9, -10.2>);
+
+	declare Text MLText = """
+<manialink version="3" name="L_Newcomers">
+
+{{{MenuButtons::IncludeInFrameModels(SizeXQuad, SizeYQuad, 7.)}}}
+	<frame id="Frame_All">
+{{{MenuButtons::IncludeInManialink()}}}
+
+	</frame>
+
+	<script><!--
+		#Include "TextLib" as Newcomers_TextLib
+{{{Manialink::GetIncludes()}}}
+{{{MenuButtons::Includes()}}}
+
+{{{Manialink::Load()}}}
+
+{{{MenuButtons::Declares()}}}
+
+{{{MenuButtons::Functions()}}}
+        Void Reset()
+        {
+        }
+
+        Void Init()
+        {
+            Reset();
+            MenuButtons_Init();
+
+			declare Text[] NewcomersImg = ["{{{C_ImgBase}}}aurel.jpeg",
+                                        "{{{C_ImgBase}}}hysteria1.jpeg",
+                                        "{{{C_ImgBase}}}hysteria2.jpeg",
+                                        "{{{C_ImgBase}}}hysteria3.jpeg"
+                                       ];
+
+			declare CMlFrame ButtonsFrame <=> (Page.GetFirstChild("MenuButtons_ButtonsFrame") as CMlFrame);
+			for(I, 0, NewcomersImg.count-1)
+			{
+                log(""^I);
+				declare CMlFrame ButtonFrame     <=> (ButtonsFrame.GetFirstChild("MenuButtons_FrameInstance-"^I) as CMlFrame);
+				if(ButtonFrame == Null) continue;
+				declare CMlQuad MenuButtons_IMG <=> (ButtonFrame.GetFirstChild("MenuButtons_IMG") as CMlQuad);
+				//MenuButtons_IMG.BgColor = <1.,1.,0.>;
+				// MenuButtons_IMG.Show();
+				// MenuButtons_IMG.ChangeImageUrl(NewcomersImg[I]);
+			}
+		}
+
+		Void UpdateDisplay()
+		{
+		}
+
+		Void ShowPage()
+		{
+			G_HideTime = -1;
+			EnableMenuNavigation(True,False,Null,3);
+			Reset();
+			SendCustomEvent("UpdateBarreSection", ["Newcomers"]);
+			UpdateDisplay();
+		}
+
+		Void HidePage()
+		{
+			SendCustomEvent("DetachPage", ["Newcomers"]);
+		}
+
+		Void LaunchTransitionHabillage(Real _TargetPosX, Integer _DecaleTime, Integer _Speed, Boolean _FadeIn)
+		{
+			declare Text[] Frame_Habillage = ["TargetMove_Title",
+										"TargetMove_Line",
+										"TargetMove_Angle"];
+				
+			declare Integer DecaleTime = _DecaleTime;
+			for(I, 0, Frame_Habillage.count-1)
+			{
+
+				declare CMlFrame MyFrame      <=> (Page.MainFrame.GetFirstChild(Frame_Habillage[I])	as CMlFrame);
+				//MyFrame.RelativePosition.X = 35.;
+				LibManialink_AnimStop(MyFrame);
+				LibManialink_SetTargetPosition(MyFrame, <_TargetPosX, MyFrame.RelativePosition.Y>);
+				LibManialink_PresetAnimInsert(MyFrame, DecaleTime, _Speed +150, "EaseOutQuad");
+				if(_FadeIn)
+				{
+					declare CMlQuad Quad_Line0 <=> (MyFrame.GetFirstChild("Quad_Line0")	as CMlQuad);
+					declare CMlQuad Quad_Line1 <=> (MyFrame.GetFirstChild("Quad_Line1")	as CMlQuad);
+					if(Quad_Line0 == Null ||Quad_Line1 == Null) continue;
+					Quad_Line0.Opacity = 0.;
+					Quad_Line1.Opacity = 0.;
+
+					LibManialink_AnimStop(Quad_Line0);
+					LibManialink_AnimStop(Quad_Line1);
+					LibManialink_SetTargetOpacity(Quad_Line0, 1.0);
+					LibManialink_PresetAnimInsert(Quad_Line0, DecaleTime, _Speed, "EaseOutQuad");
+					LibManialink_SetTargetOpacity(Quad_Line1, 1.0);
+					LibManialink_PresetAnimInsert(Quad_Line1, DecaleTime, _Speed, "EaseOutQuad");
+					if(Frame_Habillage[I] == "TargetMove_Line")
+					{
+						Quad_Line0.Size.X = 0.;
+						LibManialink_SetTargetSize(Quad_Line0, <258., Quad_Line0.Size.Y>);
+						LibManialink_PresetAnimInsert(Quad_Line0, DecaleTime, _Speed, "EaseOutQuad");
+					}
+				}
+				DecaleTime += 150;
+			}
+			if(_FadeIn)
+			{
+				declare Vec2[] Page_MenuButtons_ButtonPositions	for Page;
+				declare CMlFrame ButtonsFrame <=> (Page.GetFirstChild("MenuButtons_ButtonsFrame")               as CMlFrame);
+			}
+			
+
+		}
+		
+		main() {
+			Init();
+{{{MenuButtons::IncludeInMain()}}}
+			while(True) {
+				yield;
+				if(! PageIsVisible) continue;
+				LibManialink_AnimLoop();
+{{{MenuButtons::IncludeInWhile(False)}}}
+
+				
+				if(G_HideTime < Now && G_HideTime != -1)
+				{
+					HidePage();
+					G_HideTime = -1;
+				}
+
+				foreach(Event in PendingEvents) {
+					switch(Event.Type) {
+						case CMlEvent::Type::MenuNavigation: {
+							switch(Event.MenuNavAction) {
+								case CMlEvent::EMenuNavAction::Cancel : {
+									SendCustomEvent("GotoPrevious", [""]);
+								}
+							}
+						}
+						case CMlEvent::Type::PluginCustomEvent: {
+							switch(Event.CustomEventType) {
+								case "Back" : {
+									SendCustomEvent("GotoPrevious", [""]);
+								}
+								case "Show" : {
+									declare PreviousPage = Event.CustomEventData[1];
+									if(PreviousPage == "SectionsSelector")
+									{
+										SetMenuPosX(50.);
+										LaunchTransition(True, 0., 350, True);
+									}
+									else
+									{
+										LaunchTransition(True, 0., 0);
+									}
+									ShowPage();
+								}
+								case "Hide" : {
+									declare NextPage = Event.CustomEventData[1];
+									if(NextPage == "SectionsSelector" || NextPage == "BrowseReplays" || NextPage == "BrowseTracks")
+									{
+										HidePage();
+									}
+									else
+									{
+										HideMenu();
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	--></script>
+</manialink>
+	""";
+	
+	return MLText;
+}

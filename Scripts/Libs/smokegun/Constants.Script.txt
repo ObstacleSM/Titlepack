@@ -11,12 +11,12 @@
 #Const C_ItemOffzone "Obstacle\\OffzoneShield.Item.gbx"
 #Const C_ItemAmmo "Obstacle\\Ammo.Item.gbx"
 #Const C_InvisibleSkin "Skins\\Models\\ArenaPlayer\\Invisible.zip"
-#Const C_ObstacleModel "Items\\character.Item.Gbx"
+#Const C_ObstacleModel "Items\\Speed.Item.Gbx"
 
 //
-#Const C_HostUrl "https://api.obstacle.ovh/api/"
+#Const C_HostUrl "https://api.obstacle.ovh/"
 #Const C_WebsiteUrl "https://www.obstacle.ovh"
-//#Const C_HostUrl "http://localhost:3000/api/"
+//#Const C_HostUrl "http://localhost:3000/"
 #Const C_Request_ReplaceOrCreateMap 0
 #Const C_Request_ReplaceOrCreatePlayer 1
 #Const C_Request_PlayerFinished 2

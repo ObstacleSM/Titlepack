@@ -1,22 +1,27 @@
 #Include "Libs/smokegun/Tools.Script.txt" as Tools
+#Include "Libs/miltant/Nadeo_Fork/CustomUI.Script.txt" as CustomUI
 
-#Const  Version     "2021-07-11"
+#Const  Version     "2022-25-11"
 #Const  ScriptName  "Glitches.Script.txt"
 
 
 Void UpdateLayer(CSmPlayer _Player) { }
 
 Text GetLayer() {
+    CustomUI::Add("Frame_Glitches", <0., -77.>, <35., 1.5>);
     return """
 <manialink version="3" name="Obstacle:Glitches">
-    <frame id="Frame_Glitches" pos="0 -77" halign="center">
-        <label id="Label_RSBug" pos="11 -0.5" halign="center" valign="center2" text="RS" textfont="OswaldMono" textsize="1" hidden="1"/>
-        <label id="Label_ALTGlitch" pos="16 -0.5" halign="center" valign="center2" text="ALT" textfont="OswaldMono" textsize="1" hidden="1"/>
-        <label id="Label_PvPWeapons" pos="-11 -0.5" halign="center" valign="center2" text="BMP" textfont="OswaldMono" textsize="1" hidden="1"/>
-        <label id="Label_PvPCollisions" pos="-16 -0.5" halign="center" valign="center2" text="BST" textfont="OswaldMono" textsize="1" hidden="1"/>
+    <frame id="Frame_Glitches" halign="center" class="LibCustomUI_Module">
+        <frame pos="0 -77">
+            <label id="Label_RSBug" pos="11 -0.5" halign="center" valign="center2" text="RS" textfont="OswaldMono" textsize="1" hidden="1"/>
+            <label id="Label_ALTGlitch" pos="16 -0.5" halign="center" valign="center2" text="ALT" textfont="OswaldMono" textsize="1" hidden="1"/>
+            <label id="Label_PvPWeapons" pos="-11 -0.5" halign="center" valign="center2" text="BMP" textfont="OswaldMono" textsize="1" hidden="1"/>
+            <label id="Label_PvPCollisions" pos="-16 -0.5" halign="center" valign="center2" text="BST" textfont="OswaldMono" textsize="1" hidden="1"/>
+        </frame>
     </frame>
 <script><!--
     #Include "TextLib" as TL
+    #Include "MathLib" as ML
 
     Integer GetTime(CPlayer _Player) {
         if (_Player == Null)
@@ -26,6 +31,7 @@ Text GetLayer() {
     }
 
     main() {
+        {{{CustomUI::InjectMLInit()}}}
         wait(InputPlayer != Null && Page != Null);
 
         declare Frame_Glitches      <=> (Page.GetFirstChild("Frame_Glitches") as CMlFrame);
@@ -63,6 +69,8 @@ Text GetLayer() {
             if (Label_PvPCollisions.Visible != Net_UsedPvPCollisions) {
                 Label_PvPCollisions.Visible = Net_UsedPvPCollisions;
             }
+
+            {{{CustomUI::InjectMLLoop()}}}
         }
     }
 --></script>

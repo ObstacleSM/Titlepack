@@ -1,20 +1,24 @@
 #Include "Libs/smokegun/Tools.Script.txt" as Tools
+#Include "Libs/miltant/Nadeo_Fork/CustomUI.Script.txt" as CustomUI
 
-#Const  Version     "2018-10-26"
+#Const  Version     "2022-25-11"
 #Const  ScriptName  "CpProgress.Script.txt"
 
 
 Void UpdateLayer(CSmPlayer _Player) { }
 
 Text GetLayer() {
+    CustomUI::Add("Frame_CPProgress", <0., -83.>, <15., 15.>);
     return """
 <manialink version="3" name="Obstacle:CpProgress">
-    <frame pos="0 -83">
-        <label id="Label_CheckpointsTotal" pos="0 4" size="10 10" textsize="3" translate="1" halign="center" valign="center2" text="CP 64" textfont="OswaldMono"/>
-        <label id="Label_CPProgress" pos="0 -3" size="7 7" textsize="5" translate="1" halign="center" valign="center2" text="64" textfont="OswaldMono"/>
+    <frame id="Frame_CPProgress" class="LibCustomUI_Module">
+        <frame pos="0 -83">
+            <label id="Label_CheckpointsTotal" pos="0 4" size="10 10" textsize="3" translate="1" halign="center" valign="center2" text="CP 64" textfont="OswaldMono"/>
+            <label id="Label_CPProgress" pos="0 -3" size="7 7" textsize="5" translate="1" halign="center" valign="center2" text="64" textfont="OswaldMono"/>
 
-        <quad pos="-7.5 1.5" z-index="0" size="15 0.2" bgcolor="FFFA"/>
-        <quad pos="0 0" z-index="0" size="15 15" style="BgRaceScore2" substyle="BgCardPlayer" halign="center" valign="center"/>
+            <quad pos="-7.5 1.5" z-index="0" size="15 0.2" bgcolor="FFFA"/>
+            <quad pos="0 0" z-index="0" size="15 15" style="BgRaceScore2" substyle="BgCardPlayer" halign="center" valign="center"/>
+        </frame>
     </frame>
 <script><!--
     #Include "TextLib" as TL
@@ -27,6 +31,7 @@ Text GetLayer() {
     }
 
     main() {
+        {{{CustomUI::InjectMLInit()}}}
         wait(InputPlayer != Null && Page != Null);
 
         declare Label_CPProgress <=> (Page.GetFirstChild("Label_CPProgress") as CMlLabel);
@@ -67,6 +72,7 @@ Text GetLayer() {
                 else
                     Label_CheckpointsTotal.SetText(Net_CheckpointsTotal^" CP");
             }
+            {{{CustomUI::InjectMLLoop()}}}
         }
     }
 --></script>

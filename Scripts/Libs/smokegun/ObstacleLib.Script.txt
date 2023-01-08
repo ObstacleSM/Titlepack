@@ -34,7 +34,7 @@
   CONSTANTS
  *********************************************/
 
-#Const  Version     "2021-07-11"
+#Const  Version     "2021-10-19"
 #Const  ScriptName  "ObstacleLib.Script.txt"
 
 
@@ -77,6 +77,10 @@ Boolean IsPvPWeaponsMap() {
 Boolean IsPvPCollisionsMap() {
     declare metadata Meta_PvP_Collisions for Map = False;
     return Meta_PvP_Collisions;
+}
+Boolean IsSameWallJumpMap() {
+    declare metadata Meta_SameWallJump for Map = True;
+    return Meta_SameWallJump;
 }
 
 Integer GetCheckpointsTotal() {
@@ -176,6 +180,7 @@ Void UpdatePlayersSkin(Ident _SkinId) {
 
         if (Player.IsHighlighted != Settings::GetEnablePlayerHighlight()) {
             Player.IsHighlighted = Settings::GetEnablePlayerHighlight();
+            Player.HasShield = Settings::GetEnablePlayerHighlight();
         }
     }
 }
@@ -403,10 +408,8 @@ Void Private_CpRestart(CSmPlayer _Player, Integer _Delay, Ident _LastCheckpoint,
     // Respawn player
     if (_Player.SpawnStatus == CSmPlayer::ESpawnStatus::Spawned && CanFastRespawn)
         RespawnPlayer(_Player, Checkpoint.Waypoint);
-    else if (_CPSpawn != NullId) {
+    else if (_CPSpawn != NullId)
         SM::SpawnNoLadder(_Player, 0, MapLandmarks_PlayerSpawn[_CPSpawn].PlayerSpawn, Now + _Delay);
-        Player::setLastSpawn(_Player, _CPSpawn);
-    }
     else return;
 
     declare metadata Meta_EmptyWeapon for Checkpoint = False;
@@ -441,7 +444,6 @@ Void Private_FullRestart(CSmPlayer _Player, Integer _Delay) {
     declare IsFirstRespawn = Player::getStartTime(_Player) <= 0;
 
     SM::SpawnNoLadder(_Player, 0, Spawn.PlayerSpawn, Now + _Delay);
-    Player::setLastSpawn(_Player, Spawn.Id);
 
     Private_RestartEffect(_Player, Spawn.Id);
 
@@ -453,6 +455,7 @@ Void Private_FullRestart(CSmPlayer _Player, Integer _Delay) {
         Player::setUsedAltGlitch(_Player, False);
         Player::setUsedPvPWeapons(_Player, UsePvPWeapons);
         Player::setUsedPvPCollisions(_Player, UsePvPCollisions);
+        Player::setUsedSpeedHack(_Player, False);
         
         Player::setCpProgress(_Player, 0);
         Player::setRespawnCount(_Player, 0);
@@ -462,6 +465,9 @@ Void Private_FullRestart(CSmPlayer _Player, Integer _Delay) {
     if (G_Mode == Constants::C_Mode_Sprint && IsFirstRespawn) {
         Player::setStartTime(_Player, _Player.StartTime);
     }
+    
+    declare netwrite Net_NewSpawn for _Player = 0;
+    Net_NewSpawn = Now;
 
 
     Player::setLastCheckpoint(_Player, NullId);
@@ -484,8 +490,8 @@ Void ObsRespawnPlayer(CSmPlayer _Player, Boolean _forceRestart) {
     declare shouldRestart = Player::wantsRestart(_Player, _forceRestart);
 
     if (shouldRestart) {
-        declare Editor_WayPointSpawn_Tag for This = "";
-        Editor_WayPointSpawn_Tag = "";
+        declare Editor_WayPointSpawn_Flag for This = 0;
+        Editor_WayPointSpawn_Flag = 0;
     }
 
     if (!Player::isInitialized(_Player)) {
@@ -498,13 +504,15 @@ Void ObsRespawnPlayer(CSmPlayer _Player, Boolean _forceRestart) {
 
     declare Delay = -1;
     declare CPSpawnId = NullId;
+    
+    log(LastCP);
     if (LastCP != NullId)
-        CPSpawnId = Tools::GetClosestSpawn(LastCP);
+        CPSpawnId = Tools::GetClosestSpawn(LastCP, Player::getCpProgress(_Player));
     if (StartTime > Now + Delay)
         Delay = StartTime - Now;
 
     // Check if there is a cp spawn, if not we full restart
-    if ((CPSpawnId != NullId || G_Editor_WayPointSpawn != NullId) && !shouldRestart)
+    if ((CPSpawnId != NullId || G_Editor_WayPointSpawn != NullId) && LastCP != NullId && !shouldRestart)
         Private_CpRestart(_Player, Delay, LastCP, CPSpawnId);
     else
         Private_FullRestart(_Player, Delay);
@@ -550,14 +558,15 @@ Void ObsRespawnPlayer(CSmPlayer _Player) {
  *            Ident     _Portal Id of the portal landmark
  */
 Void Private_UsePortal(CSmPlayer _Player, Ident _Portal) {
-    declare SpawnId = Tools::GetClosestSpawn(_Portal);
+    declare SpawnId = NullId;
+
+    SpawnId = Tools::GetClosestSpawn(_Portal, Player::getCpProgress(_Player));
 
     // Quit if there is no exit for the portal
     if (!MapLandmarks_PlayerSpawn.existskey(SpawnId))
         return;
 
     SM::SpawnNoLadder(_Player, 0, MapLandmarks_PlayerSpawn[SpawnId].PlayerSpawn, Now);
-    Player::setLastSpawn(_Player, SpawnId);
 
     // Send message
     Message::SendBigMessage(_Player, _("Portal!"), 2500, 0);
@@ -583,11 +592,13 @@ Boolean JumpToCheckpointIdent_ByPassSpawn(CSmPlayer _Player, Ident _Target) {
 
 
 Boolean JumpToCheckpointIdent(CSmPlayer _Player, Ident _Target) {
-    declare Spawn = Tools::GetClosestSpawn(_Target);
+    declare Spawn = Tools::GetClosestSpawn(_Target, Player::getCpProgress(_Player));
     if (Spawn == NullId)
         return False;
 
     Player::setUsedJump(_Player, True);
+    Player::clearLastCPTimes(_Player);
+    Player::setLastCheckpoint(_Player, NullId);
     Private_CpRestart(_Player, 3500, _Target, Spawn, False);
 
     if (RNG::GetOrder(MapLandmarks_Sector[_Target]) != 0)
@@ -669,9 +680,12 @@ Void Private_HandleFinish(CSmPlayer _Player, Ident _GoalId) {
 
     Player::setLastRun(_Player, Time);
     Player::setLastCPTimes(_Player, _GoalId, Time);
+    Player::setCpProgress(_Player, -1);
 
     // Update time diff before updating best run
     TimeDiff::UpdateLayer(_Player, Time, BestRun);
+    declare netwrite Net_NewGoal for _Player = 0;
+    Net_NewGoal = Now;
 
     // Check if last run is  if last run is better
     if (Time < BestRun || BestRun < 0) {
@@ -728,23 +742,21 @@ Void Private_CheckpointEffect(CSmPlayer _Player, Ident _CheckpointId) {
     if (MapVersion <= 2) {
         if (TL::Length(CheckpointName) > 10) {
             declare CheckPointType = TL::ToInteger(TL::SubString(CheckpointName, 14, 1));
-            switch (CheckPointType) {
-                case 3: {
-                            Private_UsePortal(_Player, _CheckpointId);
-                        }
-                default: {
-                             Weapons::ApplyWeaponForCheckpointType(_Player, CheckPointType);
-                         }
+            if (CheckPointType == 3) { // CheckpointType3
+                Private_UsePortal(_Player, _CheckpointId);
+            } else { // CheckpointType1, CheckpointType2
+                Weapons::ApplyWeaponForCheckpointType(_Player, CheckPointType);
             }
-        } else {
+        } else if (CheckpointName == "Portal") { // Portal
+            Private_UsePortal(_Player, _CheckpointId);
+        } else { // ?
             Weapons::ApplyWeaponForCheckpointType(_Player, 0);
         }
-    } else {
+    } else { // contemporary customizable effects
         Weapons::ApplyEffects(_Player, Checkpoint);
 
-        declare metadata Meta_IsPortal for Checkpoint = False;
-        if (Meta_IsPortal)
-            Private_UsePortal(_Player, Checkpoint.Id);
+        if (Tools::IsPortal(Checkpoint))
+            Private_UsePortal(_Player, _CheckpointId);
     }
 }
 
@@ -756,6 +768,8 @@ Void Private_CheckpointEffect(CSmPlayer _Player, Ident _CheckpointId) {
  */
 Void Private_HandleCheckpoint(CSmPlayer _Player, Ident _CheckpointId) {
     declare Checkpoint <=> MapLandmarks[_CheckpointId];
+    declare Order = RNG::GetOrder(Checkpoint);
+
     declare LastCPTimes = Player::getLastCPTimes(_Player);
     declare BestCPTimes = Player::getBestCPTimes(_Player);
 
@@ -764,11 +778,18 @@ Void Private_HandleCheckpoint(CSmPlayer _Player, Ident _CheckpointId) {
     Player::setLastCPTimes(_Player, _CheckpointId, time);
     Player::setV2PortalCache(_Player, NullId);
 
-    // lazy fix might not fix cp progress completely
-    if (Player::usedJump(_Player) && RNG::GetOrder(Checkpoint) != 0)
-        Player::setCpProgress(_Player, RNG::GetOrder(Checkpoint));
-    else
+    if (Player::usedJump(_Player)) {
+        if (Order == 0) {
+            if (!LastCPTimes.existskey(Checkpoint.Id)) {
+                Player::setCpProgress(_Player, Player::getCpProgress(_Player) + 1);
+            }
+        } else {
+            Player::setCpProgress(_Player, Order);
+        }
+    }
+    else {
         Player::setCpProgress(_Player, LastCPTimes.count + 1);
+    }
 
     Player::setLastCheckpoint(_Player, _CheckpointId);
     Private_CheckpointEffect(_Player, _CheckpointId);
@@ -872,16 +893,19 @@ Boolean HandleCapture(CSmPlayer _Player) {
                 if (Tools::IsPortal(Landmark)) {
                     declare HasANormalCP = False;
 
-                    foreach (Landmark in MapLandmarks) {
-                        if (Tools::IsCheckpoint(Landmark) && !Tools::IsPortal(Landmark) && RNG::GetOrder(Landmark) == Order) {
+                    foreach (CP in MapLandmarks) {
+                        if (Tools::IsCheckpoint(CP) && !Tools::IsPortal(CP)
+                            && RNG::GetOrder(CP) == CpProgress + 1)
+                        {
                             HasANormalCP = True;
                             break;
                         }
                     }
 
                     if (HasANormalCP) {
-                        Private_UsePortal(_Player, Landmark.Id);
                         Player::setV2PortalCache(_Player, Landmark.Id);
+                        Player::setLastCheckpoint(_Player, Landmark.Id);
+                        Private_UsePortal(_Player, Landmark.Id);
                     } else {
                         Private_HandleCheckpoint(_Player, Landmark.Id);
                     }

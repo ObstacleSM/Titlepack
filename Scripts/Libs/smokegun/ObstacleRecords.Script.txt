@@ -19,7 +19,7 @@
 /*********************************************
  CONSTANTS
 *********************************************/
-#Const Version "2021-07-13"
+#Const Version "2021-07-14"
 #Const ScriptName "ObstacleRecords.Script.txt"
 
 #Struct SRequestData {
@@ -103,7 +103,7 @@ Void ReplaceOrCreateMap() {
     }
     """;
 
-    SendPost("Maps/replaceOrCreate", payload, Constants::C_Request_ReplaceOrCreateMap);
+    SendPost("update_map", payload, Constants::C_Request_ReplaceOrCreateMap);
 }
 
 // Update player infos
@@ -114,13 +114,22 @@ Void ReplaceOrCreatePlayer(CSmPlayer _Player) {
     "nickname": {{{Json::GetText(_Player.User.Name)}}}
     }""";
 
-    SendPost("Players/replaceOrCreate", payload, Constants::C_Request_ReplaceOrCreatePlayer);
+    SendPost("update_player", payload, Constants::C_Request_ReplaceOrCreatePlayer);
 }
 
 // Send records
 Void PlayerFinished(CSmPlayer _Player) {
     declare LastRun for _Player.Score = -1;
     declare RespawnCount for _Player.Score = 0;
+    declare Flags = RunFlags::GetFlagsSum(
+        Player::usedRSBug(_Player),
+        Player::usedAltGlitch(_Player),
+        Player::usedPvPWeapons(_Player),
+        Player::usedPvPCollisions(_Player),
+        Player::usedSpeedHack(_Player)
+    );
+
+    log("flags:" ^ Flags);
 
     declare payload = """
     {
@@ -128,15 +137,10 @@ Void PlayerFinished(CSmPlayer _Player) {
     "respawnCount": {{{Json::GetInteger(RespawnCount)}}},
     "playerId": {{{Json::GetText(_Player.User.Login)}}},
     "mapId": {{{Json::GetText(""^Map.Id)}}},
-    "flags": {{{Json::GetInteger(RunFlags::GetFlagsSum(
-        Player::usedRSBug(_Player),
-        Player::usedAltGlitch(_Player),
-        Player::usedPvPWeapons(_Player),
-        Player::usedPvPCollisions(_Player)
-    ))}}}
+    "flags": {{{Json::GetInteger(Flags)}}}
     }""";
 
-    SendPost("Records/player-finished", payload, Constants::C_Request_PlayerFinished);
+    SendPost("player_finished", payload, Constants::C_Request_PlayerFinished);
 }
 
 

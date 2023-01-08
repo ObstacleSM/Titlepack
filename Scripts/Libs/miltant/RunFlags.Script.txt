@@ -2,7 +2,7 @@
 * Obstacle Library                              *
 * Author:  miltant                              *
 *                                               *
-* Unconventional techniques flagging librairy   *
+* Unconventional techniques flagging library   *
 ************************************************/
 
 #Include "MathLib" as ML
@@ -15,6 +15,7 @@
 #Const C_Flag_ALTGlitch 4
 #Const C_Flag_PvPWeapons 16
 #Const C_Flag_PvPCollisions 64
+#Const C_Flag_SpeedHack 256
 
 // ---------------------------------- //
 // Globals
@@ -24,11 +25,12 @@ declare Integer G_Flag_RSBug;
 declare Integer G_Flag_ALTGlitch;
 declare Integer G_Flag_PvPWeapons;
 declare Integer G_Flag_PvPCollisions;
+declare Integer G_Flag_SpeedHack;
 
 
 
 // ---------------------------------- //
-// Tool: ternary digit comparison `Boolean(_A & _B)`
+// Tool: binary digit comparison `Boolean(_A & _B)`
 // ---------------------------------- //
 //
 
@@ -53,6 +55,9 @@ Integer Flag_PvPWeapons() {
 Integer Flag_PvPCollisions() {
 	return G_Flag_PvPCollisions;
 }
+Integer Flag_SpeedHack() {
+	return G_Flag_SpeedHack;
+}
 
 Void SetFlag_RSBug(Integer Flag_RSBug) {
 	G_Flag_RSBug = Flag_RSBug;
@@ -66,6 +71,9 @@ Void SetFlag_PvPWeapons(Integer Flag_PvPWeapons) {
 Void SetFlag_PvPCollisions(Integer Flag_PvPCollisions) {
 	G_Flag_PvPCollisions = Flag_PvPCollisions;
 }
+Void SetFlag_SpeedHack(Integer Flag_SpeedHack) {
+	G_Flag_SpeedHack = Flag_SpeedHack;
+}
 
 
 Void LoadFlags(Integer _Flags) {
@@ -73,29 +81,38 @@ Void LoadFlags(Integer _Flags) {
 	G_Flag_ALTGlitch     = IsFlagActive(_Flags, C_Flag_ALTGlitch);
 	G_Flag_PvPWeapons    = IsFlagActive(_Flags, C_Flag_PvPWeapons);
 	G_Flag_PvPCollisions = IsFlagActive(_Flags, C_Flag_PvPCollisions);
+	G_Flag_SpeedHack = IsFlagActive(_Flags, C_Flag_SpeedHack);
 }
 
-Integer Private_GetFlagsSum(Integer Flag_RSBug, Integer Flag_ALTGlitch, Integer Flag_PvPWeapons, Integer Flag_PvPCollisions) {
+Integer Private_GetFlagsSum(Integer Flag_RSBug, Integer Flag_ALTGlitch, Integer Flag_PvPWeapons, Integer Flag_PvPCollisions, Integer Flag_SpeedHack) {
 	return Flag_RSBug * C_Flag_RSBug
 	     + Flag_ALTGlitch * C_Flag_ALTGlitch
 	     + Flag_PvPWeapons * C_Flag_PvPWeapons
-	     + Flag_PvPCollisions * C_Flag_PvPCollisions;
+	     + Flag_PvPCollisions * C_Flag_PvPCollisions
+	     + Flag_SpeedHack * C_Flag_SpeedHack;
 }
 
-Integer GetFlagsSum(Boolean Flag_RSBug, Boolean Flag_ALTGlitch, Boolean Flag_PvPWeapons, Boolean Flag_PvPCollisions) {
+
+// there are three states for each flag, for forward compatibility
+// we set each flag to either 1 or 2
+// and leave the rest of the sum to 0s as unspecified states for future flags
+// (eg. tas runs PauseChamp ?)
+Integer GetFlagsSum(Boolean Flag_RSBug, Boolean Flag_ALTGlitch, Boolean Flag_PvPWeapons, Boolean Flag_PvPCollisions, Boolean Flag_SpeedHack) {
 	declare _1 = 1;
 	declare _2 = 1;
 	declare _3 = 1;
 	declare _4 = 1;
+	declare _5 = 1;
 
 	if (!Flag_RSBug) _1 *= 2;
 	if (!Flag_ALTGlitch) _2 *= 2;
 	if (!Flag_PvPWeapons) _3 *= 2;
 	if (!Flag_PvPCollisions) _4 *= 2;
+	if (!Flag_SpeedHack) _5 *= 2;
 
-	return Private_GetFlagsSum(_1, _2, _3, _4);
+	return Private_GetFlagsSum(_1, _2, _3, _4, _5);
 }
 
 Integer GetFlagsSum() {
-	return Private_GetFlagsSum(G_Flag_RSBug, G_Flag_ALTGlitch, G_Flag_PvPWeapons, G_Flag_PvPCollisions);
+	return Private_GetFlagsSum(G_Flag_RSBug, G_Flag_ALTGlitch, G_Flag_PvPWeapons, G_Flag_PvPCollisions, G_Flag_SpeedHack);
 }

@@ -37,7 +37,7 @@
 #Include "Libs/miltant/Nadeo_Fork/MP4/TPLagoon/XMLController.Script.txt"												as XMLController
 #Include "Libs/miltant/Nadeo_Fork/MP4/TPLagoon/TokenManager.Script.txt"												as TokenManager
 
-#Const C_ReqTimeout				10000
+#Const C_ReqTimeout				1000
 
 declare Text[Text] G_GlobalParam;
 
@@ -69,6 +69,10 @@ Text Private_LoadXml(Text _Path) {
 	}
 	if (!Success) 	Logger::Warn("[MenuController] Private_LoadXml(): Failed to load: "^_Path);
 	else 		 	Logger::Log("[MenuController] Private_LoadXml(): XML successfully loaded: "^_Path);
+
+	log("req>");
+	log(Req);
+	log(">req");
 
 	Http.Destroy(Req);
 	

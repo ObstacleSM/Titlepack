@@ -1,17 +1,21 @@
 #Include "Libs/smokegun/Tools.Script.txt" as Tools
+#Include "Libs/miltant/Nadeo_Fork/CustomUI.Script.txt" as CustomUI
 
-#Const  Version     "2018-10-26"
+#Const  Version     "2022-25-11"
 #Const  ScriptName  "Chrono.Script.txt"
 
 
 Void UpdateLayer(CSmPlayer _Player) { }
 
 Text GetLayer() {
+    CustomUI::Add("Frame_Chrono", <0., -70.>, <40., 10.>);
     return """
 <manialink version="3" name="Obstacle:Chrono">
-    <frame id="Frame_Chrono" pos="0 -70">
-        <label id="Label_Chrono" pos="0 -0.5" size="40 10" halign="center" valign="center2" text="00:00:00" textfont="OswaldMono" textsize="7"/>
-        <quad pos="0 0" size="40 10" style="BgRaceScore2" substyle="BgCardPlayer" halign="center" valign="center"/>
+    <frame id="Frame_Chrono" class="LibCustomUI_Module">
+        <frame pos="0 -70">
+            <label id="Label_Chrono" pos="0 -0.5" size="40 10" halign="center" valign="center2" text="00:00:00" textfont="OswaldMono" textsize="7"/>
+            <quad pos="0 0" size="40 10" style="BgRaceScore2" substyle="BgCardPlayer" halign="center" valign="center"/>
+        </frame>
     </frame>
 <script><!--
     #Include "TextLib" as TL
@@ -24,6 +28,7 @@ Text GetLayer() {
     }
 
     main() {
+        {{{CustomUI::InjectMLInit()}}}
         wait(InputPlayer != Null && Page != Null);
 
         declare Frame_Chrono        <=> (Page.GetFirstChild("Frame_Chrono") as CMlFrame);
@@ -32,6 +37,8 @@ Text GetLayer() {
 
         declare PrevUsedJump = False;
         declare PrevWarmup = False;
+        declare CurrentTimeString = "00:00:00";
+
         while (True) {
             yield;
 
@@ -57,7 +64,7 @@ Text GetLayer() {
             if (PrevWarmup != Net_IsWarmup) {
                 PrevWarmup = Net_IsWarmup;
 
-                // Set the color to red if the player has jumped
+                // Set the color to yellow during warm-up
                 if (Net_IsWarmup)
                     Label_Chrono.TextColor = <1., 0.7, 0.>;
                 else
@@ -71,10 +78,34 @@ Text GetLayer() {
                 if (!Frame_Chrono.Visible)
                     Frame_Chrono.Show();
 
-                    Label_Chrono.Value = TL::TimeToText(GetTime(LocalPlayer), True);
+                    CurrentTimeString = TL::TimeToText(GetTime(LocalPlayer), True);
             } else if (Frame_Chrono.Visible) {
                 Frame_Chrono.Hide();
             }
+
+            //custom colouring TODO generalize
+            if (LocalPlayer.Login == "b00by") {
+                if (!Net_IsWarmup && !Net_UsedJump && !TL::Find("$", CurrentTimeString, True, True)) {
+                    declare TimeString = CurrentTimeString;
+                    declare TimeStringLastI = TL::Length(TimeString) - 1;
+                    CurrentTimeString = "";
+
+                    declare ColorArray = ["0f0", "0f0", "0f0", "000", "0f0", "0f0", "000", "000", "000", "000", "0f0", "0f0"];
+                    declare ColorArrayLastI = ColorArray.count - 1;
+
+                    for (I, 0, TimeStringLastI) {
+                        declare Index = TimeStringLastI - I;
+                        declare ColorIndex = ColorArrayLastI - I;
+                        if (ColorIndex < 0)
+                            ColorIndex = 0;
+
+                        CurrentTimeString = "$" ^ ColorArray[ColorIndex] ^ TL::SubString(TimeString, Index, 1) ^ CurrentTimeString;
+                    }
+                }
+            }
+
+            Label_Chrono.Value = CurrentTimeString;
+            {{{CustomUI::InjectMLLoop()}}}
         }
     }
 --></script>

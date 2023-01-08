@@ -1,15 +1,15 @@
 <maniaplanet_title version="4">
 	<id>obstacle@smokegun</id>
 	<name>obstacle@smokegun</name>
-	<desc>Made in maker 'Storm Maker'</desc>
+	<desc>Do pew pew to go zooom</desc>
 	<url>ObstacleMP4</url>
 	<download_url></download_url>
-	<title_version>1.9.1</title_version>
+	<title_version>1.2.1</title_version>
 	<allowed_client_title_version></allowed_client_title_version>
 	<maker>SMStormMaker@nadeo</maker>
 	<base>SMStorm</base>
 	<player_model>ArenaPlayer</player_model>
-	<scriptcloud_enabled>false</scriptcloud_enabled>
+	<scriptcloud_enabled>true</scriptcloud_enabled>
 	<limit_camera_fov>false</limit_camera_fov>
 	<use_hmd>false</use_hmd>
 	<unlock_features>0</unlock_features>
@@ -31,7 +31,7 @@
 	</menu>
 	<menu_style name=""/>
 	<solo>
-		<mode name="Modes\ShootMania\ObstacleSolo.Script.txt"/>
+		<mode name=""/>
 		<datapack name=""/>
 		<default_maprecord_type>2</default_maprecord_type>
 		<score_context>
@@ -68,7 +68,7 @@
 		</score_context>
 	</solo>
 	<network>
-		<mode name="Modes\ShootMania\Obstacle.Script.txt"/>
+		<mode name=""/>
 		<playlist name=""/>
 	</network>
 	<splitscreen>
@@ -81,9 +81,9 @@
 		<internalitems/>
 	</editor>
 	<music folder=""/>
-	<mod name=""/>
+	<mod name="Skins\Storm\Mod\Snow_Storm.zip"/>
 	<hud3dfont name=""/>
+	<hud_default_module name=""/>
 	<files/>
 	<folders/>
-	<hud_default_module name=""/>
 </maniaplanet_title>

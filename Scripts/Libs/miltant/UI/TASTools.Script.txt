@@ -1,0 +1,392 @@
+#Include "TextLib" as TL
+#Include "MathLib" as ML
+#Include "Libs/miltant/Nadeo_Fork/CustomUI.Script.txt" as CustomUI
+
+#Const  Version     "2022-25-11"
+#Const  ScriptName  "TASTools.Script.txt"
+
+
+Void UpdateLayer(CSmPlayer _Player) { }
+
+Void Yield() {
+    // let's communicate with the openplanet plugin through System.ExtraTool_Data
+
+    // 1) retrieve plugin's data and communicate it to the manialink layer through netwrite
+
+    foreach (Command in TL::Split(" ", System.ExtraTool_Data)) {
+        if (TL::ToInteger(Command) != 0) {
+            continue;
+        }
+
+        switch (TL::Length(Command)) {
+            case 1: {
+                //?
+            }
+            case 2: {
+                log(Command);
+                declare Toggle = TL::SubText(Command, 0, 1) == "+"; // Command[0]
+                log(Toggle);
+                
+                switch (TL::SubText(Command, 1, 1)) { // Command[1]
+                    case "S": {
+                        declare netwrite Boolean TAS_Toggle_S for Teams[0];
+                        TAS_Toggle_S = Toggle;
+                    }
+                    case "W": {
+                        declare netwrite Boolean TAS_Toggle_W for Teams[0];
+                        TAS_Toggle_W = Toggle;
+                    }
+                    case "A": {
+                        declare netwrite Boolean TAS_Toggle_A for Teams[0];
+                        TAS_Toggle_A = Toggle;
+                    }
+                    case "D": {
+                        declare netwrite Boolean TAS_Toggle_D for Teams[0];
+                        TAS_Toggle_D = Toggle;
+                    }
+                    case "Jump": {
+                        declare netwrite Boolean TAS_Toggle_Jump for Teams[0];
+                        TAS_Toggle_Jump = Toggle;
+                    }
+                    case "Fire": {
+                        declare netwrite Boolean TAS_Toggle_Fire for Teams[0];
+                        TAS_Toggle_Fire = Toggle;
+                    }
+                    case "FreeLook": {
+                        declare netwrite Boolean TAS_Toggle_FreeLook for Teams[0];
+                        TAS_Toggle_FreeLook = Toggle;
+                    }
+                    case "Alt": {
+                        declare netwrite Boolean TAS_Toggle_Alt for Teams[0];
+                        TAS_Toggle_Alt = Toggle;
+                    }
+                    case "ReSpawn": {
+                        declare netwrite Boolean TAS_Toggle_ReSpawn for Teams[0];
+                        TAS_Toggle_ReSpawn = Toggle;
+                    }
+                    case "Delete": {
+                        declare netwrite Boolean TAS_Toggle_Delete for Teams[0];
+                        TAS_Toggle_Delete = Toggle;
+                    }
+                }
+            }
+        }
+    }
+
+    // 2) retrieve manialink's data through custom events and pass it to the plugin
+
+    System.ExtraTool_Data = "";
+
+    foreach (Event in UIManager.PendingEvents) {
+        if (Event.Type == CUIConfigEvent::EType::OnLayerCustomEvent && Event.CustomEventType == "TAS_escalate") {
+            if (Event.CustomEventData.count == 1)
+                System.ExtraTool_Data ^= " " ^ Event.CustomEventData[0];
+            else if(Event.CustomEventData[1] == "True")
+                System.ExtraTool_Data ^= " +" ^ Event.CustomEventData[0];
+            else
+                System.ExtraTool_Data ^= " -" ^ Event.CustomEventData[0];
+
+            switch (Event.CustomEventData[0]) {
+                case "*": { // record
+                    
+                }
+                case "s": { // setup
+
+                }
+            }
+        }
+    }
+}
+
+Text GetLayer() {
+    CustomUI::Add("Frame_Chrono", <0., -70.>, <57., 10.>);
+    CustomUI::Add("Frame_Keys", <20., -40.>, <91., 19.>);
+    return """
+<manialink version="3" name="Obstacle:TASTools">
+    <frame id="Frame_Chrono" class="LibCustomUI_Module">
+        <frame pos="0 -70">
+            <label id="Label_Chrono" pos="0 -0.5" size="40 10" halign="center" valign="center2" text="00:00:00" textfont="OswaldMono" textsize="7"/>
+            <quad pos="0 0" size="40 10" style="BgRaceScore2" substyle="BgCardPlayer" halign="center" valign="center"/>
+            
+            <frame pos="-25 0" size="7 10" halign="center" valign="center">
+                <label pos="0 0" z-index="0" size="7 10" text="<" valign="center2" halign="center"/>
+                <quad pos="0 0" size="7 10" style="BgRaceScore2" substyle="BgCardPlayer" halign="center" valign="center" id="Quad_Previous" scriptevents="1"/>
+            </frame>
+
+            <frame pos="25 0" size="7 10" halign="center" valign="center">
+                <label pos="0 0" z-index="0" size="7 10" text=">" valign="center2" halign="center"/>
+                <quad pos="0 0" size="7 10" style="BgRaceScore2" substyle="BgCardPlayer" halign="center" valign="center" id="Quad_Next" scriptevents="1"/>
+            </frame>
+        </frame>
+    </frame>
+
+    <frame id="Frame_Keys" size="91 19" class="LibCustomUI_Module">
+        <frame pos="20 -40">
+            <label pos="5 -5" z-index="0" size="8 8" text="W" valign="center2" halign="center" scriptevents="1" textsize="2" id="Label_W"/>
+            <quad pos="1 -1" z-index="0" size="8 8" bgcolor="335A" id="Quad_W"/>
+            
+            <label pos="14 -5" z-index="0" size="8 8" text="S" halign="center" valign="center2" scriptevents="1" textsize="2" id="Label_S"/>
+            <quad pos="10 -1" z-index="0" size="8 8" bgcolor="335A" id="Quad_S"/>
+            
+            <label pos="23 -5" z-index="0" size="8 8" text="A" halign="center" valign="center2" scriptevents="1" textsize="2" id="Label_A"/>
+            <quad pos="19 -1" z-index="0" size="8 8" bgcolor="335A" id="Quad_A"/>
+            
+            <label pos="32 -5" z-index="0" size="8 8" text="D" halign="center" valign="center2" scriptevents="1" textsize="2" id="Label_D"/>
+            <quad pos="28 -1" z-index="0" size="8 8" bgcolor="335A" id="Quad_D"/>
+            
+            <label pos="41 -5" z-index="0" size="8 8" text="Jmp" halign="center" valign="center2" scriptevents="1" textsize="2" id="Label_Jump"/>
+            <quad pos="37 -1" z-index="0" size="8 8" bgcolor="335A" id="Quad_Jump"/>
+            
+            <label pos="50 -5" z-index="0" size="8 8" text="Fire" halign="center" valign="center2" scriptevents="1" textsize="2" id="Label_Fire"/>
+            <quad pos="46 -1" z-index="0" size="8 8" bgcolor="335A" id="Quad_Fire"/>
+            
+            <label pos="59 -5" z-index="0" size="8 8" text="Fl" halign="center" valign="center2" scriptevents="1" textsize="2" id="Label_FreeLook"/>
+            <quad pos="55 -1" z-index="0" size="8 8" bgcolor="335A" id="Quad_FreeLook"/>
+            
+            <label pos="68 -5" z-index="0" size="8 8" text="Alt" halign="center" valign="center2" scriptevents="1" textsize="2" id="Label_Alt"/>
+            <quad pos="64 -1" z-index="0" size="8 8" bgcolor="335A" id="Quad_Alt"/>
+            
+            <label pos="77 -5" z-index="0" size="8 8" text="RS" halign="center" valign="center2" scriptevents="1" textsize="2" id="Label_ReSpawn"/>
+            <quad pos="73 -1" z-index="0" size="8 8" bgcolor="335A" id="Quad_ReSpawn"/>
+            
+            <label pos="86 -5" z-index="0" size="8 8" text="Del" halign="center" valign="center2" scriptevents="1" textsize="2" id="Label_Delete"/>
+            <quad pos="82 -1" z-index="0" size="8 8" bgcolor="335A" id="Quad_Delete"/>
+            
+            
+            <label pos="9.5 -16.2" z-index="0" size="17 2" text="yaw" valign="center2" textsize="1" halign="center" textcolor="1A1A1A"/>
+            <entry pos="18 -10" z-index="0" size="17 8" default="0" halign="right" valign="top" scriptevents="1" id="Entry_Yaw" textcolor="1A1A1A"/>
+            <quad pos="1 -10" z-index="0" size="17 8" bgcolor="FFFF"/>
+            
+            <label pos="27.2 -16.2" z-index="0" size="17 2" text="pitch" valign="center2" textsize="1" halign="center" textcolor="1A1A1A"/>
+            <entry pos="36 -10" z-index="0" size="17 8" default="0" halign="right" scriptevents="1" id="Entry_Pitch" textcolor="1A1A1A"/>
+            <quad pos="19 -10" z-index="0" size="17 8" bgcolor="FFFF"/>
+            
+            <label pos="37 -10" z-index="0" size="17 8" scriptevents="1" id="Label_Record"/>
+            <label pos="45.5 -12.3" z-index="0" size="15 3" text="Record" halign="center" valign="center2" textsize="2"/>
+            <label pos="38 -14" z-index="0" size="15 3.5" text="Segment" textsize="2"/>
+            <quad pos="37 -10" z-index="0" size="17 8" bgcolor="533A"/>
+            
+            <label pos="55 -10" z-index="0" size="17 8" scriptevents="1" id="Label_Setup"/>
+            <label pos="63.5 -12.3" z-index="0" size="15 3" text="Setup" halign="center" valign="center2" textsize="2"/>
+            <label pos="56 -14" z-index="0" size="15 3.5" text="Physics" textsize="2"/>
+            <quad pos="55 -10" z-index="0" size="17 8" bgcolor="533A"/>
+            
+            <label pos="81.5 -16.2" z-index="0" size="17 2" text="speed" valign="center2" textsize="1" halign="center"/>
+            <entry pos="90 -10" z-index="0" size="17 8" default="0" halign="right" scriptevents="1" id="Entry_Speed"/>
+            <quad pos="73 -10" z-index="0" size="17 8" bgcolor="533A"/>
+            
+            <quad pos="0 0" z-index="0" size="100 19" style="BgRaceScore2" substyle="BgCardPlayer"/>
+        </frame>
+    </frame>
+<script><!--
+    #Include "TextLib" as TL
+
+    Integer GetTime(CPlayer _Player) {
+        if (_Player == Null)
+            return 0;
+        declare netread Net_StartTime156 for _Player = 786159453;
+        return 0;
+    }
+
+    Void ToggleUISwitch(CMlQuad Quad, CMlLabel Label, Boolean Toggle) {
+        if (Toggle) {
+            Quad.BgColor = <1.0, 1.0, 1.0>;
+            Label.TextColor = <0.1, 0.1, 0.1>;
+        }
+        else {
+            Quad.BgColor = <0.1, 0.1, 0.14>;
+            Label.TextColor = <0.8, 0.8, 0.85>;
+        }
+    }
+
+    main() {
+        {{{CustomUI::InjectMLInit()}}}
+        wait(InputPlayer != Null && Page != Null);
+
+        declare Frame_Keys          <=> (Page.GetFirstChild("Frame_Keys") as CMlFrame);
+        declare Quad_S              <=> (Frame_Keys.GetFirstChild("Quad_S") as CMlQuad);
+        declare Quad_W              <=> (Frame_Keys.GetFirstChild("Quad_W") as CMlQuad);
+        declare Quad_A              <=> (Frame_Keys.GetFirstChild("Quad_A") as CMlQuad);
+        declare Quad_D              <=> (Frame_Keys.GetFirstChild("Quad_D") as CMlQuad);
+        declare Quad_Jump           <=> (Frame_Keys.GetFirstChild("Quad_Jump") as CMlQuad);
+        declare Quad_Fire           <=> (Frame_Keys.GetFirstChild("Quad_Fire") as CMlQuad);
+        declare Quad_FreeLook       <=> (Frame_Keys.GetFirstChild("Quad_FreeLook") as CMlQuad);
+        declare Quad_Alt            <=> (Frame_Keys.GetFirstChild("Quad_Alt") as CMlQuad);
+        declare Quad_ReSpawn        <=> (Frame_Keys.GetFirstChild("Quad_ReSpawn") as CMlQuad);
+        declare Quad_Delete         <=> (Frame_Keys.GetFirstChild("Quad_Delete") as CMlQuad);
+
+        declare Label_S              <=> (Frame_Keys.GetFirstChild("Label_S") as CMlLabel);
+        declare Label_W              <=> (Frame_Keys.GetFirstChild("Label_W") as CMlLabel);
+        declare Label_A              <=> (Frame_Keys.GetFirstChild("Label_A") as CMlLabel);
+        declare Label_D              <=> (Frame_Keys.GetFirstChild("Label_D") as CMlLabel);
+        declare Label_Jump           <=> (Frame_Keys.GetFirstChild("Label_Jump") as CMlLabel);
+        declare Label_Fire           <=> (Frame_Keys.GetFirstChild("Label_Fire") as CMlLabel);
+        declare Label_FreeLook       <=> (Frame_Keys.GetFirstChild("Label_FreeLook") as CMlLabel);
+        declare Label_Alt            <=> (Frame_Keys.GetFirstChild("Label_Alt") as CMlLabel);
+        declare Label_ReSpawn        <=> (Frame_Keys.GetFirstChild("Label_ReSpawn") as CMlLabel);
+        declare Label_Delete         <=> (Frame_Keys.GetFirstChild("Label_Delete") as CMlLabel);
+
+        declare Frame_Chrono        <=> (Page.GetFirstChild("Frame_Chrono") as CMlFrame);
+        declare Label_Chrono        <=> (Frame_Chrono.GetFirstChild("Label_Chrono") as CMlLabel);
+        
+        Frame_Chrono.Visible = True;
+
+        declare PrevUsedJump = False;
+        declare PrevWarmup = False;
+        declare CurrentTimeString = "00:00:00";
+
+        while (True) {
+            {{{CustomUI::InjectMLLoop()}}}
+            yield;
+
+            declare netread TAS_Toggle_S for Teams[0] = False;
+            declare netread TAS_Toggle_W for Teams[0] = False;
+            declare netread TAS_Toggle_A for Teams[0] = False;
+            declare netread TAS_Toggle_D for Teams[0] = False;
+            declare netread TAS_Toggle_Jump for Teams[0] = False;
+            declare netread TAS_Toggle_Fire for Teams[0] = False;
+            declare netread TAS_Toggle_FreeLook for Teams[0] = False;
+            declare netread TAS_Toggle_Alt for Teams[0] = False;
+            declare netread TAS_Toggle_ReSpawn for Teams[0] = False;
+            declare netread TAS_Toggle_Delete for Teams[0] = False;
+
+
+            foreach (Event in PendingEvents) {
+                switch (Event.Type) {
+                    //case CMlScriptEvent::Type::KeyPress: {
+                        //left/right arrows?
+                        //switch (Event.CharPressed) {  }
+                    //}
+                    case CMlScriptEvent::Type::MouseClick: {
+                        switch (Event.ControlId) {
+                            case "Quad_Previous": {
+                                SendCustomEvent("TAS_escalate", ["-"]);
+                            }
+                            case "Quad_Next": {
+                                SendCustomEvent("TAS_escalate", ["+"]);
+                            }
+                            case "Label_S": {
+                                SendCustomEvent("TAS_escalate", ["S", "" ^ TAS_Toggle_S]);
+                            }
+                            case "Label_W": {
+                                SendCustomEvent("TAS_escalate", ["W", "" ^ TAS_Toggle_W]);
+                            }
+                            case "Label_A": {
+                                SendCustomEvent("TAS_escalate", ["A", "" ^ TAS_Toggle_A]);
+                            }
+                            case "Label_D": {
+                                SendCustomEvent("TAS_escalate", ["D", "" ^ TAS_Toggle_D]);
+                            }
+                            case "Label_Jump": {
+                                SendCustomEvent("TAS_escalate", ["j", "" ^ TAS_Toggle_Jump]);
+                            }
+                            case "Label_Fire": {
+                                SendCustomEvent("TAS_escalate", ["f", "" ^ TAS_Toggle_Fire]);
+                            }
+                            case "Label_FreeLook": {
+                                SendCustomEvent("TAS_escalate", ["l", "" ^ TAS_Toggle_FreeLook]);
+                            }
+                            case "Label_Alt": {
+                                SendCustomEvent("TAS_escalate", ["a", "" ^ TAS_Toggle_Alt]);
+                            }
+
+                            case "Label_ReSpawn": {
+                                SendCustomEvent("TAS_escalate", ["r", "" ^ TAS_Toggle_ReSpawn]);
+                            }
+                            case "Label_Delete": {
+                                SendCustomEvent("TAS_escalate", ["R", "" ^ TAS_Toggle_Delete]);
+                            }
+                            case "Label_Record": {
+                                SendCustomEvent("TAS_escalate", ["*"]);
+                            }
+                            case "Label_Setup": {
+                                SendCustomEvent("TAS_escalate", ["s"]);
+                            }
+                        }
+                    }
+                    default: {
+
+                    }
+                }
+            }
+
+            ToggleUISwitch(Quad_S, Label_S, TAS_Toggle_S);
+            ToggleUISwitch(Quad_W, Label_W, TAS_Toggle_W);
+            ToggleUISwitch(Quad_A, Label_A, TAS_Toggle_A);
+            ToggleUISwitch(Quad_D, Label_D, TAS_Toggle_D);
+            ToggleUISwitch(Quad_Jump, Label_Jump, TAS_Toggle_Jump);
+            ToggleUISwitch(Quad_Fire, Label_Fire, TAS_Toggle_Fire);
+            ToggleUISwitch(Quad_FreeLook, Label_FreeLook, TAS_Toggle_FreeLook);
+            ToggleUISwitch(Quad_Alt, Label_Alt, TAS_Toggle_Alt);
+            ToggleUISwitch(Quad_ReSpawn, Label_ReSpawn, TAS_Toggle_ReSpawn);
+            ToggleUISwitch(Quad_Delete, Label_Delete, TAS_Toggle_Delete);
+
+
+            if (!PageIsVisible)
+                continue;
+
+            declare LocalPlayer <=> InputPlayer;
+            if (GUIPlayer != Null) LocalPlayer <=> GUIPlayer;
+            if (LocalPlayer == Null) continue;
+
+            declare netread Net_UsedJump for LocalPlayer = False;
+            if (PrevUsedJump != Net_UsedJump) {
+                PrevUsedJump = Net_UsedJump;
+
+                // Set the color to red if the player has jumped
+                if (Net_UsedJump)
+                    Label_Chrono.TextColor = <0.7, 0., 0.>;
+                else
+                    Label_Chrono.TextColor = <1., 1., 1.>;
+            }
+
+            declare netread Net_IsWarmup for Teams[0] = False;
+            if (PrevWarmup != Net_IsWarmup) {
+                PrevWarmup = Net_IsWarmup;
+
+                // Set the color to yellow during warm-up
+                if (Net_IsWarmup)
+                    Label_Chrono.TextColor = <1., 0.7, 0.>;
+                else
+                    Label_Chrono.TextColor = <1., 1., 1.>;
+            }
+
+            declare netread Net_StartTime for LocalPlayer = -1;
+            declare LastStartTime for LocalPlayer = -1;
+
+            if (Net_StartTime > 0) {
+                if (!Frame_Chrono.Visible)
+                    Frame_Chrono.Show();
+
+                    CurrentTimeString = TL::TimeToText(GetTime(LocalPlayer), True);
+            } else if (Frame_Chrono.Visible) {
+                Frame_Chrono.Hide();
+            }
+
+            //custom colouring
+            if (LocalPlayer.Login == "b00by") {
+                if (!Net_IsWarmup && !Net_UsedJump && !TL::Find("$", CurrentTimeString, True, True)) {
+                    declare TimeString = CurrentTimeString;
+                    declare TimeStringLastI = TL::Length(TimeString) - 1;
+                    CurrentTimeString = "";
+
+                    declare ColorArray = ["0f0", "0f0", "0f0", "000", "0f0", "0f0", "000", "000", "000", "000", "0f0", "0f0"];
+                    declare ColorArrayLastI = ColorArray.count - 1;
+
+                    for (I, 0, TimeStringLastI) {
+                        declare Index = TimeStringLastI - I;
+                        declare ColorIndex = ColorArrayLastI - I;
+                        if (ColorIndex < 0)
+                            ColorIndex = 0;
+
+                        CurrentTimeString = "$" ^ ColorArray[ColorIndex] ^ TL::SubString(TimeString, Index, 1) ^ CurrentTimeString;
+                    }
+                }
+            }
+
+            Label_Chrono.Value = CurrentTimeString;
+        }
+    }
+--></script>
+</manialink>""";
+}

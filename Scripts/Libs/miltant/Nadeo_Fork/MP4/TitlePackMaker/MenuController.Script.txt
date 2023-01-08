@@ -185,6 +185,7 @@ Void CommonLoops() {
 				if(PrevPage == "SectionsSelector") SectionsManager::SetActualSection(PrevPage);
 			}
 			case "TaskBar_Save" : {
+				log(XMLController::GenerateXML());
 				MakerAPI::SaveState(XMLController::GenerateXML());
 				DialogBoxController::ShowMessage(_("|Noun|Notice"), _("Save successful."));
 			}

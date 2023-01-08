@@ -587,7 +587,7 @@ Text Inject_Functions()
 					MaxLabelWidth = LabelWidth;	
 				}
 			}
-			declare Text[] SectionName = ["Solo", "Online Play", "Local Play", "Editors", "News"];
+			declare Text[] SectionName = ["Campaign", "Online Play", "Local Play", "Editors", "News"];
 			declare Text[] Sections_Name         for Page;
 			declare Integer[] Page_ActiveSections for Page;
 			for(I, 0, Page_ActiveSections.count - 1)
