@@ -1,5 +1,7 @@
 # Obstacle titlepack
+This repo hosted the Shootmania Obstacle Titlepack until its Summer 2023 Update.
 
+[Click here for the current Obstacle repository.](https://github.com/Obstacle-Reborn/Titlepack)
 ## Installation
 
 To download it locally [click here](https://github.com/ObstacleSM/Titlepack/archive/master.zip)
